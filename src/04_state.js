@@ -26,7 +26,7 @@ function newGame(o) {
     ending: null, stats: { kills: 0, deaths: 0, births: 0, prayers: 0, answered: 0, casts: 0, quests: 0, raids: 0 },
     flags: {}, tut: { prayer: false, oracle: false, chron: false, counsel: false, skipped: false }, favored: [], policy: 'none',
     stag: 0, faithZero: 0, raidDay: 0, dayKills: 0, dayGood: 0, dayEvil: 0, lastNotable: 0, spot: [], track: [],
-    idx: {}, sidx: {}, qidx: {}, pidx: {}, killBal: 0, oracleNext: 0, nextQuestDay: 0, bossTries: 0, townAlert: 0, wave: 0, chapNo: 0, lastChapTick: 0, reunions: {}, nameUse: {}, userScheduled: {},
+    idx: {}, sidx: {}, qidx: {}, pidx: {}, killBal: 0, oracleNext: 0, nextQuestDay: 0, bossTries: 0, townAlert: 0, wave: 0, chapNo: 0, lastChapTick: 0, arcs: [], fores: [], notes: [], used: {}, bigActs: [], lostFores: 0, lastScene: {}, recapDone: false, reunions: {}, nameUse: {}, userScheduled: {},
   };
   initWorldState();
   rebuildIdx();

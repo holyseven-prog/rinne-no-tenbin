@@ -91,9 +91,9 @@ const Store = {
   set(k, v) { try { localStorage.setItem(k, v); delete this.mem[k]; return true; } catch (e) { this.mem[k] = v; if (!this.warned) { this.warned = 1; if (typeof UI !== 'undefined' && UI.toast) UI.toast(t('storage_warn'), '#ffb060'); } return false; } },
 };
 const Game = {
-  scene: 'boot', speedIdx: 1, paused: false, modals: [], power: null, acc: 0, settings: { bgm: 0.6, se: 0.7, speed: 1, text: 2, lang: 'ja' }, selId: 0, follow: 0, hover: null, mouse: { x: 640, y: 360 }, keys: {},
+  scene: 'boot', speedIdx: 1, paused: false, modals: [], power: null, acc: 0, settings: { bgm: 0.6, se: 0.7, speed: 0, text: 2, lang: 'ja', names: 'key', theme: 'black', autoSlow: true, advisor: true, tutDone: false }, selId: 0, follow: 0, hover: null, mouse: { x: 640, y: 360 }, keys: {},
   setSpeed(n) { const i = SPEEDS.indexOf(n); if (i >= 0) { this.speedIdx = i; this.paused = false; UI.refresh(true); } },
-  get timeStopped() { return this.paused || this.modals.length > 0 || this.scene !== 'play'; },
+  get timeStopped() { return this.paused || this.modals.length > 0 || this.scene !== 'play' || !!(this.tut && this.tut.on && this.tut.freeze); },
 };
 
 /* ---------- UI object ---------- */
@@ -112,19 +112,20 @@ const UI = {
       h('div', { style: 'display:flex;gap:4px;align-items:center' },
         E.spBtns = ['⏸', '×1', '×4', '×16', '×64'].map((s, i) => h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => { Snd.se('ok'); if (i === 0) Game.paused = !Game.paused; else { Game.speedIdx = i - 1; Game.paused = false; } UI.refresh(true); } }, s)),
         h('span', { style: 'flex:1' }), E.weatherTxt = h('span', { class: 'sm' }),
-        h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', title: t('help'), onclick: () => Screens.help() }, '?'),
-        h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', title: t('menu'), onclick: () => Screens.pause() }, '☰')));
+        E.namesBtn = h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Game.cycleNames() }, t('names_btn')),
+        h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Screens.help() }, '?'),
+        h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Screens.pause() }, '☰')));
     // --- left: minimap + tutorial
     E.miniWin = h('div', { class: 'win', style: 'left:8px;top:64px;width:214px;height:146px;padding:3px' }, E.miniCv = h('canvas', { width: 192, height: 120, style: 'display:block;margin:4px auto 0;cursor:pointer' }));
     E.miniCv.addEventListener('mousedown', ev => { const r = E.miniCv.getBoundingClientRect(); const sc = Scale.s; const x = (ev.clientX - r.left) / sc / 3, y = (ev.clientY - r.top) / sc / 3; Render.centerOn(x, y); Game.follow = 0; });
     E.miniWin.appendChild(h('div', { class: 'sm', style: 'position:absolute;left:8px;top:-2px;display:none' }, t('minimap')));
-    E.tutWin = h('div', { class: 'win glass', style: 'left:8px;top:216px;width:214px;padding:4px 8px' });
-    E.selWin = h('div', { class: 'win glass', style: 'left:8px;top:392px;width:292px;display:none;padding:5px 8px' });
+    E.goalWin = UI.buildGoal();
+    E.selWin = h('div', { class: 'win glass', style: 'left:8px;top:350px;width:300px;display:none;padding:5px 8px' });
     // --- right: prayers & favored
     E.prayWin = h('div', { class: 'win glass', style: 'left:1018px;top:64px;width:254px;padding:4px 8px' }, h('h3', null, t('prayers')), E.prayList = h('div'));
-    E.favWin = h('div', { class: 'win glass', style: 'left:1018px;top:466px;width:254px;padding:4px 8px' }, h('h3', null, t('favored')), E.favList = h('div'));
+    E.favWin = h('div', { class: 'win glass', style: 'left:1018px;top:568px;width:254px;height:64px;overflow:hidden;padding:2px 8px' }, h('h3', { style: 'margin:0 0 2px;font-size:13px' }, t('favored')), E.favList = h('div'));
+    E.feedWin = UI.buildFeed();
     // --- log
-    E.log = h('div', { style: 'position:absolute;left:300px;top:100px;width:700px;height:80px;pointer-events:none' });
     E.bossWin = h('div', { class: 'win', style: 'left:440px;top:62px;width:400px;display:none;padding:2px 10px;border-color:#d8a0ff' }, h('div', { style: 'display:flex;align-items:center;gap:8px' }, E.bossName = h('b', { style: 'color:#e0b0ff;font-size:14px;white-space:nowrap' }), h('div', { class: 'gauge', style: 'flex:1;height:12px;border-color:#d8a0ff' }, E.bossBar = h('i', { style: 'background:linear-gradient(#e0a0ff,#8a30d0)' })), E.bossNum = h('span', { class: 'sm', style: 'width:44px;text-align:right' })));
     // --- bottom
     E.powWin = h('div', { class: 'win', style: 'left:232px;top:636px;width:776px;height:78px;padding:4px 6px;display:flex;gap:6px' });
@@ -137,15 +138,24 @@ const UI = {
     E.infoWin = h('div', { class: 'win glass', style: 'left:8px;top:636px;width:216px;height:78px;padding:3px 6px;font-size:12px;line-height:1.35' });
     E.utilWin = h('div', { class: 'win', style: 'left:1018px;top:636px;width:254px;height:78px;padding:4px 6px;display:flex;gap:5px;align-items:stretch' },
       E.eyeBtn = h('div', { class: 'btn', style: 'flex:1;text-align:center;white-space:normal;padding:2px', onclick: () => { Game.power = Game.power === 'eye' ? null : 'eye'; UI.refresh(true); } }, h('div', null, h('span', { class: 'kbd' }, 'X'), t('eye'))),
-      h('div', { class: 'btn', style: 'flex:1;text-align:center;white-space:normal;padding:2px', onclick: () => Screens.counsel() }, h('div', null, h('span', { class: 'kbd' }, 'G'), t('counsel'))),
-      h('div', { class: 'btn', style: 'flex:1.3;text-align:center;white-space:normal;padding:2px', onclick: () => Screens.chronicle() }, h('div', null, h('span', { class: 'kbd' }, 'H'), t('chronicle'))));
-    E.banner = h('div', { class: 'win', style: 'left:340px;top:170px;width:600px;text-align:center;display:none;padding:10px 14px;font-size:20px' });
+      E.counselBtn = h('div', { class: 'btn', style: 'flex:1;text-align:center;white-space:normal;padding:2px', onclick: () => Screens.counsel() }, h('div', null, h('span', { class: 'kbd' }, 'G'), t('counsel'))),
+      E.chronBtn = h('div', { class: 'btn', style: 'flex:1.3;text-align:center;white-space:normal;padding:2px', onclick: () => Screens.chronicle() }, h('div', null, h('span', { class: 'kbd' }, 'H'), t('chronicle'))));
+    E.banner = h('div', { class: 'win', style: 'left:330px;top:120px;width:620px;text-align:center;display:none;padding:10px 14px;font-size:20px;z-index:20' });
     E.targetBar = h('div', { class: 'win', style: 'left:340px;top:612px;width:600px;text-align:center;display:none;padding:2px 8px;font-size:14px;border-color:#ffe9a0' });
-    [E.faithWin, E.balWin, E.timeWin, E.bossWin, E.miniWin, E.tutWin, E.selWin, E.prayWin, E.favWin, E.log, E.powWin, E.infoWin, E.utilWin, E.banner, E.targetBar].forEach(x => root.appendChild(x));
+    [E.faithWin, E.balWin, E.timeWin, E.bossWin, E.miniWin, E.goalWin, E.selWin, E.prayWin, E.feedWin, E.favWin, E.powWin, E.infoWin, E.utilWin, E.banner, E.targetBar].forEach(x => root.appendChild(x));
     this.lastPray = ''; this.lastFav = ''; this.resRefs = null; this.tutSig = '';
+    this.attachTips(); this.renderFeed();
     this.refresh(true);
   },
   show(v) { const root = $('ui'); root.style.display = v ? 'block' : 'none'; },
+  attachTips() {
+    const E = this.el;
+    Tip.attach(E.faithWin, () => [t('tip_faith'), t('tip_faith_d')]); Tip.attach(E.balWin, () => [t('tip_bal'), t('tip_bal_d')]); Tip.attach(E.dateTxt, () => [t('tip_date'), t('tip_date_d')]);
+    E.spBtns.forEach(b => Tip.attach(b, () => [t('tip_speed'), t('tip_speed_d')])); Tip.attach(E.namesBtn, () => [t('tip_names'), t('tip_names_d'), '›' + t('names_' + (Game.settings.names || 'key'))]);
+    Tip.attach(E.miniWin, () => [t('tip_mini'), t('tip_mini_d')]); Tip.attach(E.favWin, () => [t('tip_fav'), t('tip_fav_d')]);
+    Tip.attach(E.eyeBtn, () => [t('tip_eye'), t('tip_eye_d')]); Tip.attach(E.counselBtn, () => [t('tip_counsel'), t('tip_counsel_d')]); Tip.attach(E.chronBtn, () => [t('tip_chron'), t('tip_chron_d')]);
+    E.powBtns.forEach((b, i) => { const p = POWERS[i]; Tip.attach(b, () => { const hh = Game.selId ? hById(Game.selId) : null; const L = [p.n[li()] + '　' + t('tip_cost') + ' ' + powerCost(p.id), t('tipp_' + p.id), '›' + t('tip_good') + '：' + t('tipg_' + p.id), '›' + t('tip_risk') + '：' + t('tipr_' + p.id)]; L.push(hh && hh.alive && p.id !== 'force' ? t('tip_succ') + ' ' + Math.round(successProb(p.id, hh) * 100) + '%（' + hh.name[li()] + '）' : t('tip_pick')); return L; }); });
+  },
   toast(text, col) {
     const E = this.el; if (!E.log) return;
     const d = h('div', { class: 'toast', style: { color: col || '#fff', top: '0px' } }, text);
@@ -157,8 +167,8 @@ const UI = {
   tickToasts(now) { for (let i = this.toasts.length - 1; i >= 0; i--) { const o = this.toasts[i]; const age = now - o.t; if (age > 5200) { o.d.remove(); this.toasts.splice(i, 1); this.layoutToasts(); } else if (age > 4400) o.d.style.opacity = 0; } },
   banner(title, sub, cls) {
     const b = this.el.banner; if (!b) return; b.innerHTML = ''; b.style.display = 'block'; b.style.borderColor = cls === 'crit' ? '#ffe060' : cls === 'fail' ? '#a0a0c0' : cls === 'twist' ? '#d090ff' : '#fff';
-    b.appendChild(h('div', { style: { fontSize: '26px', fontWeight: 'bold', color: cls === 'crit' ? '#ffe060' : cls === 'fail' ? '#a8a8c8' : cls === 'twist' ? '#d8a0ff' : '#fff' } }, title)); if (sub) b.appendChild(h('div', { style: 'font-size:15px;margin-top:3px', class: 'sm' }, sub));
-    this.bannerT = performance.now() + 2600;
+    b.appendChild(h('div', { style: { fontSize: '26px', fontWeight: 'bold', color: cls === 'crit' ? '#ffe060' : cls === 'fail' ? '#a8a8c8' : cls === 'twist' ? '#d8a0ff' : '#fff' } }, title)); if (sub) (Array.isArray(sub) ? sub : [sub]).forEach((l, i) => b.appendChild(h('div', { style: 'font-size:15px;margin-top:3px;line-height:1.4;' + (i === 0 ? 'color:#fff' : ''), class: 'sm' }, l)));
+    this.bannerT = performance.now() + (Game.tut && Game.tut.on ? 60000 : 5200);
   },
   refresh(force) {
     if (!G || !this.el.faithWin) return;
@@ -183,7 +193,7 @@ const UI = {
     else info = t('key_hint');
     E.infoWin.textContent = ''; info.split('\n').forEach((l, i) => E.infoWin.appendChild(h('div', i ? { class: 'gold' } : { class: 'dim' }, l)));
     if (this.bannerT && now > this.bannerT) { E.banner.style.display = 'none'; this.bannerT = 0; }
-    this.refreshPrayers(); this.refreshFav(); this.refreshTut(); this.refreshRes();
+    this.refreshPrayers(); this.refreshFav(); this.refreshGoal(); this.refreshRes();
   },
   drawBalance() {
     const cv = this.el.balCv, c = cv.getContext('2d'); c.clearRect(0, 0, 220, 40);
@@ -195,18 +205,19 @@ const UI = {
     pan(lx, ly, '#ffd860'); pan(rx, ry, '#8a50c8'); c.fillStyle = '#ffe9a0'; c.beginPath(); c.arc(lx, ly + 8, 4, 0, 7); c.fill(); c.fillStyle = '#b070f0'; c.beginPath(); c.arc(rx, ry + 8, 4, 0, 7); c.fill();
   },
   refreshPrayers() {
-    const E = this.el; const prs = openPrayers().sort((a, b) => b.urg - a.urg).slice(0, 5);
-    const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0)).join(',') + LANG;
+    const E = this.el; const allP = openPrayers().sort((a, b) => b.urg - a.urg); const prs = allP.slice(0, 4); this.prayMore = allP.length - prs.length;
+    const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0)).join(',') + LANG + this.prayMore;
     if (sig !== this.lastPray) {
       this.lastPray = sig; E.prayList.innerHTML = '';
       if (!prs.length) E.prayList.appendChild(h('div', { class: 'sm dim', style: 'padding:6px 0' }, t('no_prayers')));
       prs.forEach(p => {
         const hh = hById(p.hid); if (!hh) return;
-        const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : ''), onclick: () => Screens.prayerClick(p.id) },
+        const rc = recommendFor(p); const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
           h('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, h('b', null, hh.name[li()] + ' ', h('span', { class: 'sm' }, JOBS[hh.job].n[li()])), h('span', { class: 'gold sm' }, t('pk_' + p.kind))),
-          h('div', { class: 'sm', style: 'line-height:1.25;height:30px;overflow:hidden' }, pr(S['pray_' + p.kind][p.v % S['pray_' + p.kind].length])),
+          h('div', { class: 'sm', style: 'line-height:1.22;height:32px;overflow:hidden;font-size:13px' }, pr(S['pray_' + p.kind][p.v % S['pray_' + p.kind].length])),
+          h('div', { style: 'font-size:12px;color:#9affb0;margin-top:1px' }, t('rec_label') + '：' + POWER_BY_ID[rc.pid].n[li()] + ' ' + rc.mark + ' ' + Math.round(rc.p * 100) + '%'),
           h('div', { class: 'gauge', style: 'height:5px;border-width:1px;margin-top:2px' }, p._bar = h('i', { style: 'background:' + (p.urg > 0.75 ? '#ff7050' : p.urg > 0.5 ? '#ffd060' : '#fff3a0') })));
-        p._bar.style.width = '100%'; card._p = p; E.prayList.appendChild(card);
+        p._bar.style.width = '100%'; card._p = p; Tip.attach(card, () => [t('pk_' + p.kind), t('tipk_' + p.kind), t('tip_pray_d'), t('tip_urg'), '›' + t('rec_label') + '：' + POWER_BY_ID[rc.pid].n[li()] + '（' + t('tip_succ') + ' ' + Math.round(rc.p * 100) + '%）']); E.prayList.appendChild(card);
       });
     }
     // timers
@@ -255,10 +266,10 @@ const UI = {
     E.selWin.appendChild(R.sub = h('div', { class: 'sm' }));
     E.selWin.appendChild(h('div', { style: 'display:flex;align-items:center;gap:6px;margin-top:2px' }, h('span', { class: 'sm', style: 'width:22px' }, t('res_hp')), h('div', { class: 'gauge hp', style: 'flex:1;height:10px;border-width:1px' }, R.hpBar = h('i')), R.hpNum = h('span', { class: 'sm', style: 'width:60px;text-align:right' })));
     R.needs = {}; const grid = h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:1px 10px;margin-top:3px' });
-    ['hunger', 'safety', 'wealth', 'belong', 'honor', 'faith'].forEach(k => { const b = h('i'); R.needs[k] = b; grid.appendChild(h('div', { style: 'display:flex;align-items:center;gap:4px' }, h('span', { class: 'sm', style: 'width:34px;font-size:11px' }, t('n_' + k)), h('div', { class: 'gauge need', style: 'flex:1;height:7px;border-width:1px' }, b))); });
+    ['hunger', 'safety', 'wealth', 'belong', 'honor', 'faith'].forEach(k => { const b = h('i'); R.needs[k] = b; const row = h('div', { style: 'display:flex;align-items:center;gap:4px' }, h('span', { class: 'sm', style: 'width:34px;font-size:11px' }, t('n_' + k)), h('div', { class: 'gauge need', style: 'flex:1;height:7px;border-width:1px' }, b)); Tip.attach(row, () => [t('n_' + k), t('tip_need_' + k)]); grid.appendChild(row); });
     E.selWin.appendChild(grid);
     E.selWin.appendChild(R.state = h('div', { class: 'sm', style: 'margin-top:3px' })); E.selWin.appendChild(R.gold = h('div', { class: 'sm' }));
-    E.selWin.appendChild(R.motive = h('div', { class: 'sm', style: 'line-height:1.25;color:#a8e0ff' })); E.selWin.appendChild(R.karma = h('div', { class: 'sm' }));
+    E.selWin.appendChild(R.motive = h('div', { class: 'sm', style: 'line-height:1.25;color:#a8e0ff' })); E.selWin.appendChild(R.karma = h('div', { class: 'sm' })); Tip.attach(R.motive, () => [t('motive'), t('tip_motive')]); Tip.attach(R.karma, () => [t('karma'), t('tip_karma')]);
     E.selWin.appendChild(h('div', { style: 'margin-top:4px;display:flex;gap:4px;flex-wrap:wrap' },
       R.fav = h('span', { class: 'btn', style: 'font-size:12px;padding:0 6px', onclick: () => { const s = soulOf(hh); if (!toggleFav(s.id)) UI.toast(t('f_full') , '#ffb060'); UI.lastFav = ''; UI.refresh(true); } }),
       R.track = h('span', { class: 'btn', style: 'font-size:12px;padding:0 6px', onclick: () => { chronTrackToggle(hh.id); UI.refresh(true); } }),
@@ -291,9 +302,8 @@ function doCast(pid, tid, dir) {
   Snd.se('power' + (idx + 1)); setTimeout(() => Snd.se(res.outcome === 'crit' ? 'crit' : res.outcome === 'success' ? 'success' : res.outcome === 'twist' ? 'twist' : 'fail'), 300);
   if (res.outcome !== 'fail') { Snd.playSong('divine'); Game.bgmName = 'divine'; Game.divineUntil = performance.now() + 9000; }
   const nmz = res.name ? res.name[li()] : '';
-  let sub = (nmz ? nmz + ' — ' : '') + POWER_BY_ID[pid].n[li()] + '（' + t('succ') + ' ' + Math.round(res.p * 100) + '%）';
-  if (res.biasKind && res.outcome !== 'fail') sub += '\n' + (nmz ? nmz + ' ' : '') + t('bias_' + res.biasKind);
-  if (res.side) sub += '\n' + t('side_' + res.side);
-  UI.banner(t('out_' + res.outcome), sub.split('\n').join(' / '), res.outcome);
+  const head = (nmz ? nmz + ' ← ' : '') + POWER_BY_ID[pid].n[li()] + '（' + t('succ') + ' ' + Math.round(res.p * 100) + '%）';
+  UI.banner(t('out_' + res.outcome) + ' ' + t('out_sub_' + res.outcome), [head].concat(castReason(res)), res.outcome);
+  if (Game.tut && Game.tut.on) Game.tut.afterCast(res);
   UI.refresh(true);
 }

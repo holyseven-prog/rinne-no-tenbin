@@ -12,7 +12,7 @@ function logEvent(type, actors, payload, tags, tension, emotion, where) {
   const pos = where && isNum(where.x) ? { x: Math.round(where.x), y: Math.round(where.y) } : null;
   const ev = { id: G.nid++, t: G.tick, type, actors: (actors || []).slice(), payload: payload || {}, tags: tags || [], tension: tension || 0, emotion: emotion || 0, place: placeKey(pos), pos, used: false, names: {} };
   (actors || []).forEach(i => { const e = G.idx[i]; if (e && e.name) ev.names[i] = e.name; });
-  G.events.push(ev);
+  G.events.push(ev); if (typeof memUpdate === 'function') memUpdate(ev);
   if (G.events.length > 480) { let k = 0; G.events = G.events.filter(e => { if (k < 120 && e.used) { k++; return false; } return true; }); if (G.events.length > 480) G.events.splice(0, G.events.length - 400); }
   G.log.push({ t: G.tick, type, a: ev.actors.slice(0, 3) }); if (G.log.length > 80) G.log.shift();
   if (pos) G.lastEvPos = pos;
@@ -103,7 +103,7 @@ function dayUpdate() {
   G.stats.faithSum = (G.stats.faithSum || 0) + G.faith; G.stats.faithN = (G.stats.faithN || 0) + 1;
 }
 function yearlyUpdate() {
-  const yr = yearOf(G.tick);
+  const yr = yearOf(G.tick); yearEndFores();
   if (!G.awakened) {
     const avg = G.balYear[G.balYear.length - 1] || 0;
     G.awakenOff = clamp((G.awakenOff || 0) + (avg - 10) / 100 * 0.6, -2, 2);

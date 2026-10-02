@@ -267,6 +267,7 @@ const Render = {
     for (const it of list) {
       const e = it.e; const sx = Math.round(it.x * TS + 8 - cx), sy = Math.round(it.y * TS + 14 - cy);
       c.fillStyle = 'rgba(0,0,0,0.28)'; c.beginPath(); c.ellipse(sx, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.5, 0, 0, 7); c.fill();
+      if (it.k === 0) { const sl = soulOf(e); if (sl && sl.fav) { c.strokeStyle = '#ffd860'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } else if (G.track.indexOf(e.id) >= 0) { c.strokeStyle = '#60d8ff'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } if (e.id === Game.flashId) { const k = 8 + Math.sin(this.time / 4) * 3; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.ellipse(sx, sy - 6, k, k * 1.2, 0, 0, 7); c.stroke(); } }
       let spr, ox = 0, oy = 0;
       if (it.k === 0) {
         const moving = e.path && e.path.length > 0 || Math.abs(e.x - e.px) > 0.01 || Math.abs(e.y - e.py) > 0.01;
@@ -343,4 +344,62 @@ const Mini = {
     c.strokeStyle = '#fff'; c.lineWidth = 1; c.strokeRect(camx / TS * sx + 0.5, camy / TS * sy + 0.5, 640 / TS * sx, 360 / TS * sy);
     if (!G.awakened) { c.fillStyle = '#7a30a0'; c.fillRect(60 * sx, 13 * sy, 3, 3); }
   },
+};
+
+/* ---------- name labels (R1) ---------- */
+const JOB_BADGE = { swordsman: ['剣', '劍', '#c04040'], mage: ['魔', '魔', '#6a4ac0'], priest: ['僧', '僧', '#9a9ab8'], thief: ['盗', '盜', '#3a6a40'], farmer: ['農', '農', '#a88850'], merchant: ['商', '商', '#c88a30'], smith: ['鍛', '鐵', '#7a7a86'], herbalist: ['薬', '藥', '#3a8a4a'], historian: ['史', '史', '#3a4a9a'] };
+Render.heroId = 0; Render.labelFrame = 0;
+Render.nameMode = function () {
+  if (G && G.gen === 1 && G.tick < START_TICK + 3 * TICK_DAY && !G.flags.noAllNames) return 'all';
+  if (Game.keys && Game.keys.n) return 'all';
+  return (Game.settings && Game.settings.names) || 'key';
+};
+Render.drawLabels = function () {
+  const cv = document.getElementById('labels'); if (!cv) return; const c = cv.getContext('2d'); c.clearRect(0, 0, 1280, 720);
+  if (!G || (Game.scene !== 'play' && Game.scene !== 'ending')) return;
+  const mode = this.nameMode(); const L = LANG === 'ja' ? 0 : 1;
+  if ((this.labelFrame++ % 45) === 0) { const a = G.humans.filter(h => h.alive && isAdv(h)).sort((x, y) => advPower(y) - advPower(x))[0]; this.heroId = a ? a.id : 0; }
+  const cam = this.cam, cx = Math.round(cam.x), cy = Math.round(cam.y);
+  const prayers = {}; G.prayers.forEach(p => { if (p.state === 'open') prayers[p.hid] = p; });
+  const bp = G.parties.find(p => p.boss && p.state !== 'done'); const bset = {}; if (bp) bp.members.forEach(i => bset[i] = 1);
+  const list = [];
+  for (const h of G.humans) {
+    if (!h.alive || h.inside) continue;
+    const x = lerp(h.px, h.x, 0.5), y = lerp(h.py, h.y, 0.5); const sx = (x * TS + 8 - cx) * 2, top = (y * TS - 8 - cy) * 2;
+    if (sx < -40 || sx > 1320 || top < -30 || top > 740) continue;
+    const s = soulOf(h); const fav = !!(s && s.fav);
+    let pri = 0;
+    if (h.id === this.sel || h.id === Game.hoverId || h.id === Game.flashId) pri = 6;
+    else if (fav) pri = 5; else if (prayers[h.id]) pri = 4; else if (G.track.indexOf(h.id) >= 0 || G.spot.indexOf(h.id) >= 0) pri = 3;
+    else if (h.id === this.heroId || bset[h.id]) pri = 2;
+    list.push({ h, sx, top, pri, fav, pray: !!prayers[h.id] });
+  }
+  list.sort((a, b) => b.pri - a.pri || a.top - b.top);
+  const fam = getComputedStyle(document.body).fontFamily;
+  const placed = [];
+  const hit = r => placed.some(p => r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y);
+  c.textBaseline = 'middle'; c.textAlign = 'left';
+  for (const it of list) {
+    const h = it.h; const showName = mode === 'all' ? true : mode === 'none' ? it.pri >= 5 : it.pri > 0;
+    const nm = (it.fav ? '★' : it.pray ? '！' : (G.track.indexOf(h.id) >= 0 ? '◆' : (it.pri === 2 && h.id === this.heroId ? '⚔' : ''))) + h.name[L];
+    const bd = JOB_BADGE[h.job] || JOB_BADGE.farmer;
+    if (showName) {
+      c.font = 'bold 13px ' + fam; const w = Math.ceil(c.measureText(nm).width) + 18; const x0 = Math.round(it.sx - w / 2), y0 = Math.round(it.top - (it.pray ? 34 : 24));
+      const r = { x: x0, y: y0 - 8, w: w, h: 16 };
+      if (it.pri < 4 && hit(r)) { /* too crowded: fall back to badge */ } else {
+        placed.push(r);
+        const s = soulOf(h); const k = s ? s.k : null; let col = '#ffffff';
+        if (k) { if (k.good - k.evil > 2.5) col = '#cfe6ff'; else if (k.evil - k.good > 2.5) col = '#ffcfcf'; }
+        if (it.fav) col = '#ffd860'; if (it.pray) col = '#fff0a0';
+        c.fillStyle = bd[2]; c.fillRect(x0, y0 - 7, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], x0 + 7, y0 + 0.5);
+        c.textAlign = 'left'; c.font = 'bold 13px ' + fam; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(nm, x0 + 17, y0 + 0.5); c.fillStyle = col; c.fillText(nm, x0 + 17, y0 + 0.5);
+        continue;
+      }
+    }
+    if (mode !== 'none' || it.pri > 0) {
+      const r = { x: Math.round(it.sx) - 20, y: Math.round(it.top) - 15, w: 14, h: 14 };
+      if (hit(r) && it.pri < 2) continue; placed.push(r);
+      c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(r.x - 1, r.y - 1, 16, 16); c.fillStyle = bd[2]; c.fillRect(r.x, r.y, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], r.x + 7, r.y + 7.5); c.textAlign = 'left';
+    }
+  }
 };

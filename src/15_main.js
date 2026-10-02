@@ -21,15 +21,16 @@ function attachHooks() {
   G.fx = G.fx || []; G.fxOn = true; Render.parts.length = 0; Render.nums.length = 0;
   G.onEvent = ev => {
     const l = evLine(ev);
-    if (l && (ev.tension >= 0.5 || ['death', 'birth', 'marriage', 'promotion', 'reincarnation'].indexOf(ev.type) >= 0)) UI.toast(l, ev.tension >= 0.8 ? '#ffb8a0' : (ev.type === 'birth' || ev.type === 'marriage') ? '#a8ffc0' : '#ffffff');
+    if (l && (ev.tension >= 0.5 || ['death', 'birth', 'marriage', 'promotion', 'reincarnation'].indexOf(ev.type) >= 0)) UI.pushFeed(l, ev.tension >= 0.8 ? '#ffb8a0' : (ev.type === 'birth' || ev.type === 'marriage') ? '#a8ffc0' : '#ffffff', ev.pos, ev.tension >= 0.8);
+    if (['death', 'siege', 'boss_sortie', 'destined_reunion'].indexOf(ev.type) >= 0 || (ev.type === 'monster_raid' && ev.payload.cad >= 0)) { const a = ev.actors[0] && G.idx[ev.actors[0]]; if (ev.type !== 'death' || (a && (soulOf(a).fav || G.spot.indexOf(a.id) >= 0 || G.track.indexOf(a.id) >= 0 || isAdv(a)))) Game.autoSlow(); }
     if (ev.type === 'monster_raid' || ev.type === 'siege') { Snd.se('hit'); Render.shake = 3; }
     if (ev.type === 'promotion') Snd.se('level');
   };
-  G.onPrayer = p => { Snd.se('pray'); UI.lastPray = ''; };
+  G.onPrayer = p => { Snd.se('pray'); UI.lastPray = ''; if (p.urg > 0.8 && G.tick > START_TICK + 3 * TICK_DAY) Game.autoSlow(); };
   G.onPrayerEnd = p => { UI.lastPray = ''; };
   G.onReincarnate = (hh, s) => { Snd.se('reincarnate'); UI.lastFav = ''; };
   G.onDeath = hh => { UI.lastFav = ''; };
-  G.onChapter = ch => { if (ch.no > 1) { UI.toast(t('new_chapter') + '：' + renderChapter(ch).title, '#ffe9a0'); Snd.se('page'); } };
+  G.onChapter = ch => { if (ch.no > 1) { UI.pushFeed(t('new_chapter') + '：' + renderChapter(ch).title, '#ffe9a0', null, false); Snd.se('page'); } };
   G.onEnd = e => { Screens.ending(); };
   G.onAwaken = () => { Game.cutscene(); };
 }
@@ -45,7 +46,7 @@ Object.assign(Game, {
   loadSettings() {
     try { const s = Store.get('rinne_tenbin_v1_settings'); if (s) Object.assign(this.settings, JSON.parse(s)); } catch (e) { }
     LANG = this.settings.lang === 'zh' ? 'zh' : 'ja'; document.documentElement.lang = LANG === 'ja' ? 'ja' : 'zh-TW';
-    Snd.vol.bgm = this.settings.bgm; Snd.vol.se = this.settings.se; this.speedIdx = clamp(this.settings.speed, 0, 3);
+    Snd.vol.bgm = this.settings.bgm; Snd.vol.se = this.settings.se; this.speedIdx = clamp(this.settings.speed, 0, 3); this.applyTheme();
   },
   saveSettings() { this.settings.lang = LANG; Store.set('rinne_tenbin_v1_settings', JSON.stringify(this.settings)); },
   setLang(l) {
@@ -58,12 +59,14 @@ Object.assign(Game, {
   demo() { newGame({ seed: 20240601, god: 'mercy', lang: LANG }); G.fxOn = true; G.fx = []; G.tick = START_TICK + TICK_DAY * 2 + 6 * 12; for (let i = 0; i < 300; i++) tick(); Render.cam.x = 17 * TS; Render.cam.y = 8 * TS; Game.demoMode = true; },
   beginPlay(godId, gen) {
     Screens.closeAll(); Screens.clearScr();
-    newGame({ god: godId, seed: (Date.now() ^ (Math.random() * 1e9)) & 0xffffff, lang: LANG, gen: gen || 1 }); Game.afterNew();
+    newGame({ god: godId, seed: (Date.now() ^ (Math.random() * 1e9)) & 0xffffff, lang: LANG, gen: gen || 1 }); Game.afterNew(!gen || gen === 1);
   },
-  afterNew() {
-    attachHooks(); Game.demoMode = false; Game.scene = 'play'; Game.paused = false; Game.selId = 0; Render.sel = 0; Game.power = null; Game.follow = 0; Game.speedIdx = clamp(Game.settings.speed, 0, 3); Game.acc = 0; Game.lastDay = dayIdx(G.tick);
+  applyTheme() { document.body.classList.toggle('theme-blue', this.settings.theme === 'blue'); document.body.classList.toggle('theme-black', this.settings.theme !== 'blue'); },
+  afterNew(isNew) {
+    attachHooks(); this.applyTheme(); Game.demoMode = false; Game.scene = 'play'; Game.paused = false; Game.selId = 0; Render.sel = 0; Game.power = null; Game.follow = 0; Game.speedIdx = clamp(Game.settings.speed, 0, 3); Game.acc = 0; Game.lastDay = dayIdx(G.tick);
     Screens.closeAll(); Screens.clearScr(); UI.show(true); UI.build(); UI.resId = 0; Render.centerOn(PLAZA.x, PLAZA.y - 2);
-    Snd.playSong('town_day'); Game.bgmName = 'town_day';
+    Snd.playSong('town_day'); Game.bgmName = 'town_day'; Game.tut = null; $('tut').style.display = 'none';
+    if (isNew === true && !Game.settings.tutDone) setTimeout(() => Tut.start(), 300);
   },
   nextGen() { Game.beginPlay(G.god, G.gen + 1); },
   toTitle() { Game.scene = 'title'; Snd.stopSong(0.6); Game.demo(); Snd.playSong('title'); Screens.title(); UI.show(false); },
@@ -80,6 +83,7 @@ Object.assign(Game, {
   frame(dt) {
     const sc = this.scene; const c = Render.c;
     this.fitT = (this.fitT || 0) + dt; if (this.fitT > 0.5) { this.fitT = 0; if (window.innerWidth !== Scale.w || window.innerHeight !== Scale.h) Scale.fit(); }
+    if (sc !== 'play' && sc !== 'ending' && !this.labelsCleared) { this.labelsCleared = true; const lc = $('labels'); if (lc) lc.getContext('2d').clearRect(0, 0, 1280, 720); } else if (sc === 'play') this.labelsCleared = false;
     if (sc === 'boot') { c.fillStyle = '#000'; c.fillRect(0, 0, 640, 360); return; }
     if (sc === 'opening') { drawOpening(c, this.op, dt); return; }
     if (!G) return;
@@ -101,9 +105,11 @@ Object.assign(Game, {
     if (moved) this.follow = 0;
     if (this.follow) { const e = G.idx[this.follow]; if (e && e.alive) { Render.cam.x += (e.x * TS + 8 - 320 - Render.cam.x) * Math.min(1, dt * 5); Render.cam.y += (e.y * TS - 180 - Render.cam.y) * Math.min(1, dt * 5); if (Math.abs(e.x * TS + 8 - 320 - Render.cam.x) < 2) { } } else this.follow = 0; }
     Render.clampCam(); Render.draw(stopped ? 0 : this.acc, {});
+    if (sc === 'play' || sc === 'ending') { if (this.mouseCanvas && !Game.modals.length) { const wx = Render.cam.x + this.mouse.x / 2, wy = Render.cam.y + this.mouse.y / 2; const hv = pickEntityAt(wx, wy); this.hoverId = hv ? hv.id : 0; } else this.hoverId = 0; Render.drawLabels(); }
     const now = performance.now();
     this.miniT += dt; if (this.miniT > 0.12 && UI.el.miniCv) { this.miniT = 0; Mini.draw(UI.el.miniCv, Render.cam.x, Render.cam.y); }
-    this.hudT += dt; if (this.hudT > 0.16) { this.hudT = 0; UI.refresh(); }
+    this.hudT += dt; if (this.hudT > 0.16) { this.hudT = 0; UI.refresh(); if (this.tut) this.tut.update(); }
+    if (sc === 'play' && !stopped && dayIdx(G.tick) !== this.advDayChecked) { this.advDayChecked = dayIdx(G.tick); this.advisorTick(); }
     UI.tickToasts(now);
     this.bgmT += dt; if (this.bgmT > 1) { this.bgmT = 0; const b = pickBgm(); if (b && b !== this.bgmName && now > (this.divineUntil || 0) && !Screens.stack.some(s => s.name === 'cutscene')) { this.bgmName = b; Snd.playSong(b); } }
     if (sc === 'play' && dayIdx(G.tick) !== this.lastDay) { this.lastDay = dayIdx(G.tick); if (now - this.saveT > 8000) { this.saveT = now; Save.write(0); } }
@@ -141,7 +147,7 @@ function onKeyDown(e) {
     case 'r': Screens.residents(); break;
     case 's': if (!e.shiftKey || true) Screens.souls(); break;
     case 'g': Screens.counsel(); break;
-    case 'n': Game.nextNotable(); break;
+    case 'n': if (!e.repeat) Game.nextNotable(); break;
   }
 }
 function onKeyUp(e) { const k = e.key; Game.keys[k] = false; if (k.length === 1) Game.keys[k.toLowerCase()] = false; }

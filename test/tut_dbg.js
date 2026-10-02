@@ -1,0 +1,22 @@
+const puppeteer = require('puppeteer-core');
+const path = require('path');
+const URL = 'file:///' + path.resolve(__dirname, '../index.html').split(path.sep).join('/');
+(async () => {
+  const br = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--autoplay-policy=no-user-gesture-required', '--no-sandbox'] });
+  const pg = await br.newPage(); await pg.setViewport({ width: 1280, height: 720 });
+  pg.on('console', m => console.log('console', m.type(), m.text())); pg.on('pageerror', e => console.log('pageerror', e.message));
+  await pg.evaluateOnNewDocument(() => { try { localStorage.setItem('rinne_tenbin_v1_settings', JSON.stringify({ speed: 0, lang: 'ja', tutDone: false })); } catch (e) { } });
+  await pg.goto(URL); await new Promise(r => setTimeout(r, 500));
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  await pg.mouse.click(640, 360); await wait(300);
+  await pg.evaluate(() => { __RT.ui.Game.pendingGod = 'mercy'; __RT.ui.Screens.opEnd(); }); await wait(800);
+  const pos = () => pg.evaluate(() => { const T = __RT.ui.Game.tut; const hh = __RT.G().idx[T.hid]; const R = __RT.ui.Render; return { x: (hh.x * 16 + 8 - R.cam.x) * 2, y: (hh.y * 16 - 2 - R.cam.y) * 2, cam: [R.cam.x, R.cam.y], h: [hh.x, hh.y] }; });
+  let p = await pos(); console.log('pos', JSON.stringify(p)); await pg.mouse.click(p.x, p.y); await wait(300);
+  console.log(await pg.evaluate(() => JSON.stringify({ i: __RT.ui.Game.tut.i, sel: __RT.ui.Game.selId, hid: __RT.ui.Game.tut.hid })));
+  await pg.evaluate(() => __RT.ui.Game.tut.next()); await wait(300);
+  await pg.keyboard.press('2'); await wait(300);
+  console.log(await pg.evaluate(() => JSON.stringify({ i: __RT.ui.Game.tut.i, power: __RT.ui.Game.power, faith: __RT.G().faith })));
+  p = await pos(); console.log('pos2', JSON.stringify(p)); console.log('pick', await pg.evaluate((x,y)=>{ const R=__RT.ui.Render; const e=pickEntityAt(R.cam.x+x/2,R.cam.y+y/2); const el=document.elementFromPoint(x,y); return JSON.stringify({pick:e&&e.id, el: el&&(el.id||el.className||el.tagName)}); }, p.x, p.y)); await pg.mouse.click(p.x, p.y); await wait(500);
+  console.log(await pg.evaluate(() => JSON.stringify({ i: __RT.ui.Game.tut.i, power: __RT.ui.Game.power, casts: __RT.G().stats.casts, modals: __RT.ui.Game.modals, sel: __RT.ui.Game.selId, errs: __RT.errors() })));
+  await br.close();
+})();

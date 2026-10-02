@@ -30,7 +30,7 @@ function resolvePrayer(pr, outcome, pid, h) {
   if (!pr || pr.state !== 'open') return;
   pr.state = outcome === 'twist' ? 'twisted' : 'answered'; pr.by = pid; pr.out = outcome;
   const gain = outcome === 'crit' ? 10 : outcome === 'success' ? 6 : 2.5;
-  G.faith = Math.min(G.faithMax, G.faith + gain); G.lastAnswer = G.tick; G.stats.answered++;
+  G.faith = Math.min(G.faithMax, G.faith + gain); G.lastAnswer = G.tick; G.stats.answered++; G._gain = gain; G._pk = pr.kind;
   h.needs.faith = Math.max(0, h.needs.faith - 40); h.disappoint = Math.max(0, (h.disappoint || 0) - 1);
   if (G.onPrayerEnd) G.onPrayerEnd(pr);
   if (!G.tut.prayer) G.tut.prayer = true;
@@ -55,16 +55,20 @@ function castPower(pid, tid, dir) {
   const outcome = rollOutcome(p);
   const pk0 = h ? ((prayerOf(h) || {}).kind || '') : '';
   G.faith -= cost; G.hist.push({ p: pid, t: G.tick }); G.stats.casts++;
-  const res = { ok: true, outcome, cost, pid, p, tid, name: h ? h.name : s ? s.name : null, dir };
+  const res = { ok: true, outcome, cost, pid, p, tid, name: h ? h.name : s ? s.name : null, dir }; const bal0 = G.balance; G._gain = 0; G._pk = '';
   if (pid === 'oracle') doOracle(h, outcome, dir || 'kind', res);
   else if (pid === 'grace') doGrace(h, outcome, res);
   else if (pid === 'trial') doTrial(h, outcome, res);
   else if (pid === 'soul') doSoul(h, s, outcome, dir || 'good', res);
   else doForce(outcome, dir || 'light', res);
   if (pid === 'oracle') G.tut.oracle = true;
+  if (pid === 'soul') res.dir = dir || 'good'; if (pid === 'force') res.dir = dir || 'light';
+  res.gain = G._gain || 0; res.pk = G._pk || ''; res.bal = G.balance - bal0; G._gain = 0; G._pk = '';
   G.stats.lastCast = res;
   if (G.fxOn) { G.fx.push({ t: 'divine', x: h ? h.x : tgtH ? tgtH.x : PLAZA.x, y: h ? h.y : tgtH ? tgtH.y : PLAZA.y, pid, out: outcome }); }
-  logEvent(outcome === 'crit' && pid !== 'force' ? 'miracle' : 'divine_act', h ? [h.id] : tgtH ? [tgtH.id] : [], { pid, out: outcome, dir: dir || '', kind: pk0 }, ['divine'], outcome === 'crit' ? 0.85 : outcome === 'fail' ? 0.3 : 0.5, outcome === 'crit' ? 1 : 0.6, h || tgtH || PLAZA);
+  const rsv = h ? G.fores.some(f => f.state === 'open' && f.hid === h.id && (f.type === 'dream' || f.type === 'wish')) : false;
+  if (h && (outcome === 'crit' || outcome === 'success') && pid !== 'force') { G.bigActs.push({ pid, out: outcome, name: h.name, t: G.tick }); G.bigActs.sort((a, b) => (b.out === 'crit') - (a.out === 'crit')); if (G.bigActs.length > 6) G.bigActs.length = 6; }
+  logEvent(outcome === 'crit' && pid !== 'force' ? 'miracle' : 'divine_act', h ? [h.id] : tgtH ? [tgtH.id] : [], { pid, out: outcome, dir: dir || '', kind: pk0, resolved: rsv }, ['divine'], outcome === 'crit' ? 0.85 : outcome === 'fail' ? 0.3 : 0.5, outcome === 'crit' ? 1 : 0.6, h || tgtH || PLAZA);
   if (G.onCast) G.onCast(res);
   return res;
 }
@@ -122,7 +126,7 @@ function doSoul(h, s, out, dir, res) {
   if (out === 'fail') return;
   const f = (soul.fav ? 1.5 : 1);
   if (out === 'twist') { const keys = ['good', 'evil', 'deed', 'attach']; soul.k[rpick(keys)] += 2; res.side = 'random'; return; }
-  soul.k[dir] += (out === 'crit' ? 8 : 4) * f;
+  soul.k[dir] += (out === 'crit' ? 8 : 4) * f; res.kamt = (out === 'crit' ? 8 : 4) * f;
   if (h) { h.guilt = 0; if (dir === 'good') { h.needs.faith = Math.max(0, h.needs.faith - 20); } const pr = prayerOf(h); if (pr && PRAYER_ANS[pr.kind].indexOf('soul') >= 0) { applyPrayerBoon(pr, h, 'soul', out === 'crit'); resolvePrayer(pr, out, 'soul', h); } }
 }
 function doForce(out, dir, res) {

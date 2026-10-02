@@ -183,7 +183,7 @@ function onActStart(h, a) {
     }
   }
   if (a.k === 'shopP') { if (h.gold >= 12 && G.town.potions >= 1) { h.gold -= 12; G.town.gold += 12; G.town.potions -= 1; h.pots = Math.min(3, h.pots + 1); } }
-  if (a.k === 'shopG') { const c = gearCost(h); if (h.gold >= c && G.town.gearStock >= 1 && h.gear < 6) { h.gold -= c; G.town.gold += c; G.town.gearStock -= 1; h.gear++; const st = hStats(h); h.maxHp = st.hp; } }
+  if (a.k === 'shopG') { const c = gearCost(h); if (h.gold >= c && G.town.gearStock >= 1 && h.gear < 6) { h.gold -= c; G.town.gold += c; G.town.gearStock -= 1; h.gear++; const st = hStats(h); h.maxHp = st.hp; if (h.gear === 3 || h.gear === 5) logEvent('gear', [h.id], { g: h.gear }, [], 0.35, 0.5, h); } }
   if (a.k === 'pray') { h.needs.faith = Math.max(0, h.needs.faith - 45); G.faith = Math.min(G.faithMax, G.faith + (h.job === 'priest' ? 0.45 : 0.18)); }
   if (a.k === 'social') socialInteract(h);
 }
@@ -235,6 +235,7 @@ function socialInteract(h) {
     return;
   }
   if (h.quarrel && h.quarrel.who === best.id && G.tick - h.quarrel.t > TICK_DAY * 0.7) { h.quarrel = null; h.rel[best.id] += 35; best.rel[h.id] += 35; logEvent('reconcile', [h.id, best.id], {}, ['relation'], 0.5, 0.7, h); return; }
+  if (!h.spouse && !best.spouse && sameGen && aff >= 52 && aff < 62 && !h.love && !best.love && h.sex !== best.sex && !h.noticed && rchance(0.25)) { h.noticed = G.tick; logEvent('love_notice', [h.id, best.id], {}, ['relation'], 0.5, 0.6, h); return; }
   if (!h.spouse && !best.spouse && sameGen && aff >= 62 && !h.love && !best.love && h.sex !== best.sex) {
     h.love = best.id; best.love = h.id; logEvent('love_start', [h.id, best.id], {}, ['relation'], 0.55, 0.8, h); G.dayGood += 0.5; return;
   }
@@ -302,6 +303,7 @@ function expirePrayers() {
       p.state = 'expired'; const h = hById(p.hid);
       G.faith = Math.max(0, G.faith - TUNE.pen * 0.6 * (0.5 + p.urg));
       if (h && h.alive) { h.needs.faith = Math.min(100, h.needs.faith + 10); h.disappoint = (h.disappoint || 0) + 1; }
+      if (h && h.alive) logEvent('prayer_expired', [h.id], { kind: p.kind }, [], 0.4, 0.4, h);
       if (G.onPrayerEnd) G.onPrayerEnd(p);
     } else { const h = hById(p.hid); if (!h || !h.alive) { p.state = 'void'; } }
   }
