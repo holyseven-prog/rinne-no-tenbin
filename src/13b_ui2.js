@@ -4,6 +4,8 @@ Object.assign(S, {
   h_spot_none: ['まだ主役はいません。史官が見守っています。', '還沒有人成為主角。史官正在觀察。'],
   weather_label: ['天気の演出（雨・雪・落ち葉）', '天氣演出（雨、雪、落葉）'],
   fullui_label: ['最初から全部のUIを出す', '從一開始就顯示全部 UI'], locked_tip: ['まだ使いません。チュートリアルの後で使えるようになります。', '現在還用不到，教學結束後就會開放。'],
+  tip_boss: ['魔王の目覚め', '魔王覺醒'], tip_boss_d: ['この線が満ちると魔王が目覚め、戦いの時代が始まります。天秤が闇に傾くと早まり、光に傾くと遅くなります。', '這條滿了，魔王就會醒來，進入戰鬥的時代。天秤偏向暗側會變快，偏向光側會變慢。'], tip_boss_st: ['いまの進み具合：{p}%（目覚めまで約{y}年）', '目前進度：{p}%（約 {y} 年後覺醒）'], tip_boss_on: ['魔王はすでに目覚めています。討伐隊を支えましょう。', '魔王已經覺醒。請支援討伐隊。'],
+  tip_hero: ['勇者の成長', '勇者成長'], tip_hero_d: ['冒険者の強さの目安（上位3人の平均レベル）です。魔王を倒せる強さに近づくほど満ちます。依頼をこなす、装備を買う、「恩寵」や「試煉」で助けると上がります。', '冒險者強度的指標（前 3 名的平均等級）。越接近能打倒魔王的強度就越滿。完成委託、購買裝備、用「恩寵」「試煉」幫忙都會提升。'], tip_hero_st: ['上位3人の平均Lv {l}（目標Lv12／{p}%）', '前 3 名平均 Lv {l}（目標 Lv12／{p}%）'],
   feed_none: ['（まだ何もありません）', '（還沒有事件）'], goal: ['もくひょう', '目標'],
   goal_text: ['魔王が目覚める前に、勇者を育てて魔王を倒そう。', '在魔王覺醒之前，培育勇者並打倒魔王。'],
   goal_text2: ['魔王が目覚めた！討伐隊を守り、魔王を倒そう。', '魔王覺醒了！守護討伐隊，打倒魔王。'],
@@ -135,6 +137,8 @@ UI.buildGoal = function () {
   R.body = h('div', null, R.text, R.b1.row, R.b2.row, R.b3.row);
   w.append(R.head, R.body); this.goalR = R; Tip.attach(R.head.firstChild, () => [t('tip_goal'), t('tip_goal_d')]);
   Tip.attach(R.b1.row, () => [t('tip_bal'), t('tip_bal_d')]);
+  Tip.attach(R.b2.row, () => { const y = Math.max(0, (G.awakenTick - G.tick) / TICK_YEAR); return [t('tip_boss'), t('tip_boss_d'), G.awakened ? t('tip_boss_on') : fmt(t('tip_boss_st'), { p: Math.round(clamp((G.tick - START_TICK) / (G.awakenTick - START_TICK), 0, 1) * 100), y: y.toFixed(1) })]; });
+  Tip.attach(R.b3.row, () => { const advs = G.humans.filter(x => x.alive && isAdv(x)).sort((a, b) => b.lvl - a.lvl).slice(0, 3); const avg = advs.length ? advs.reduce((a, x) => a + x.lvl, 0) / advs.length : 0; return [t('tip_hero'), t('tip_hero_d'), fmt(t('tip_hero_st'), { l: avg.toFixed(1), p: Math.round(clamp(avg / 12, 0, 1) * 100) })]; });
   return w;
 };
 UI.goalSig = '';

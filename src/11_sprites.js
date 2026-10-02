@@ -126,7 +126,7 @@ const Mini = {
 };
 
 /* ---------- name labels (R1) ---------- */
-const JOB_BADGE = { swordsman: ['剣', '劍', '#c04040'], mage: ['魔', '魔', '#6a4ac0'], priest: ['僧', '僧', '#9a9ab8'], thief: ['盗', '盜', '#3a6a40'], farmer: ['農', '農', '#a88850'], merchant: ['商', '商', '#c88a30'], smith: ['鍛', '鐵', '#7a7a86'], herbalist: ['薬', '藥', '#3a8a4a'], historian: ['史', '史', '#3a4a9a'] };
+const JOB_BADGE = { swordsman: ['剣', '劍', '#c04040'], mage: ['魔', '魔', '#6a4ac0'], priest: ['僧', '僧', '#9a9ab8'], thief: ['盗', '盜', '#3a6a40'], farmer: ['農', '農', '#a88850'], merchant: ['商', '商', '#c88a30'], smith: ['鍛', '鐵', '#7a7a86'], herbalist: ['薬', '藥', '#3a8a4a'], weaponer: ['武', '武', '#b04830'], armorer: ['防', '防', '#3a6aa8'], historian: ['史', '史', '#3a4a9a'] };
 Render.heroId = 0; Render.labelFrame = 0;
 Render.nameMode = function () {
   if (G && G.gen === 1 && G.tick < START_TICK + 3 * TICK_DAY && !G.flags.noAllNames) return 'all';
@@ -158,6 +158,12 @@ Render.drawLabels = function () {
   const placed = [];
   const hit = r => placed.some(p => r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y);
   c.textBaseline = 'middle'; c.textAlign = 'left';
+  { // building names (civic buildings always, houses on hover) - R: houses look alike
+    const mxw = Game.mouseCanvas ? Game.mouse.x / 2 + cam.x : -999, myw = Game.mouseCanvas ? Game.mouse.y / 2 + cam.y : -999; const m0 = this.nameMode();
+    const lab = (txt, wx, wy, col) => { const sx = (wx - cx) * 2, sy = (wy - cy) * 2; if (sx < -100 || sx > 1380 || sy < -30 || sy > 760) return; c.font = 'bold 13px ' + fam; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(txt, sx, sy); c.fillStyle = col; c.fillText(txt, sx, sy); c.textAlign = 'left'; };
+    W.blds.forEach(b => { if (b.kind === 'castle' || b.kind === 'mill') return; const civic = b.kind !== 'house' && b.kind !== 'hut'; const hover = mxw >= b.x * TS && mxw < (b.x + b.w) * TS && myw >= b.y * TS - 10 && myw < (b.y + b.h) * TS; if (!(hover || (civic && m0 !== 'none'))) return; lab(PLACES[b.kind][L], (b.x + b.w / 2) * TS, b.y * TS + (b.kind === 'church' ? -46 : -2), civic ? '#ffe9a0' : '#ffffff'); });
+    if (m0 !== 'none') { lab(PLACES.fountain[L], 28 * TS + 8, 19 * TS - 20, '#bfe4ff'); lab(PLACES.well[L], 25 * TS + 8, 21 * TS - 2, '#bfe4ff'); lab(PLACES.well[L], 31 * TS + 8, 21 * TS - 2, '#bfe4ff'); }
+  }
   for (const it of list) {
     const h = it.h; const showName = mode === 'all' ? true : mode === 'none' ? it.pri >= 5 : it.pri > 0;
     const nm = (it.fav ? '★' : it.pray ? '！' : (G.track.indexOf(h.id) >= 0 ? '◆' : (it.pri === 2 && h.id === this.heroId ? '⚔' : ''))) + h.name[L];
@@ -170,7 +176,7 @@ Render.drawLabels = function () {
         const s = soulOf(h); const k = s ? s.k : null; let col = '#ffffff';
         if (k) { if (k.good - k.evil > 2.5) col = '#cfe6ff'; else if (k.evil - k.good > 2.5) col = '#ffcfcf'; }
         if (it.fav) col = '#ffd860'; if (it.pray) col = '#fff0a0';
-        c.imageSmoothingEnabled = false; { const ic = iconCanvas(h.job) || iconCanvas('farmer'); c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(x0, y0 - 7, 14, 14); c.drawImage(ic, x0, y0 - 7, 14, 14); }
+        c.fillStyle = bd[2]; c.fillRect(x0, y0 - 7, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], x0 + 7, y0 + 0.5);
         c.textAlign = 'left'; c.font = 'bold 13px ' + fam; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(nm, x0 + 17, y0 + 0.5); c.fillStyle = col; c.fillText(nm, x0 + 17, y0 + 0.5);
         continue;
       }
@@ -178,7 +184,7 @@ Render.drawLabels = function () {
     if (mode !== 'none' || it.pri > 0) {
       const r = { x: Math.round(it.sx) - 20, y: Math.round(it.top) - 15, w: 14, h: 14 };
       if (hit(r) && it.pri < 2) continue; placed.push(r);
-      c.imageSmoothingEnabled = false; c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(r.x - 1, r.y - 1, 16, 16); c.drawImage(iconCanvas(h.job) || iconCanvas('farmer'), r.x, r.y, 14, 14);
+      c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(r.x - 1, r.y - 1, 16, 16); c.fillStyle = bd[2]; c.fillRect(r.x, r.y, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], r.x + 7, r.y + 7.5); c.textAlign = 'left';
     }
   }
 };

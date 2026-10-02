@@ -175,13 +175,16 @@ const PROPS = {
   anvil: (c, x, y) => { shadowPx(c, x + 8, y + 14, 5, 2); fr(c, '#1c1c2a', x + 3, y + 6, 11, 3); fr(c, '#5a5a6a', x + 4, y + 6, 9, 2); fr(c, '#1c1c2a', x + 6, y + 9, 5, 5); fr(c, '#4a4a5a', x + 7, y + 9, 3, 4); fr(c, '#8a8a9a', x + 4, y + 6, 6, 1); },
 };
 const PROP_KEYS = Object.keys(PROPS);
-let LAMPS = [], FLAGS = [], CHIMS = [], WIN_RECTS_ = [], SPINNERS = [];
+let LAMPS = [], FLAGS = [], CHIMS = [], WIN_RECTS_ = [], SPINNERS = [], SPRAYS = [];
 /* ---------- buildings ---------- */
+const KIND_ROOF = { church: '#6a6e88', guild: '#2f5fc0', tavern: '#8a4a2a', smithy: '#4e4e5c', shop: '#c8382e', armor: '#2f8f9e', apothecary: '#3a9a4a', inn: '#d88a2c', mill: '#a05a30' };
+const HOUSE_ROOF = ['#8a5a3a', '#a0704a', '#7a6a48', '#6a5a5a'];
+const PLAQUE = { guild: 'battle', shop: 'weaponer', armor: 'armorer', smithy: 'smith', tavern: 'mug', inn: 'bed', apothecary: 'potion' };
 function drawBuilding(c, b, sea) {
   const px = b.x * TS, py = b.y * TS, w = b.w * TS, h = b.h * TS; const k = b.kind;
-  const roofHex = PAL.roof[b.roof % PAL.roof.length]; const RR = mkRamp(sea === 3 ? roofHex : roofHex);
+  const roofHex = KIND_ROOF[k] || HOUSE_ROOF[b.roof % 4]; const RR = mkRamp(roofHex);
   const stone = k === 'church' || k === 'smithy' || k === 'castle' || k === 'guild' && false;
-  const wallHex = { church: '#e6e6f0', guild: '#c29a62', tavern: '#cfa878', castle: '#4e465e', smithy: '#a2a2b0', mill: '#eadfc6', inn: '#e0cfa2', shop: '#e8d6aa', apothecary: '#dcd2b0', house: '#e6d4a8', hut: '#cdb88a' }[k] || '#e6d4a8';
+  const wallHex = { church: '#e6e6f0', guild: '#c29a62', tavern: '#cfa878', castle: '#4e465e', smithy: '#a2a2b0', mill: '#eadfc6', inn: '#e0cfa2', shop: '#e8d6aa', armor: '#d6dceb', apothecary: '#dcd2b0', house: '#e6d4a8', hut: '#cdb88a' }[k] || '#e6d4a8';
   const WR = mkRamp(wallHex); const door = mkRamp(k === 'church' ? '#5a4030' : k === 'castle' ? '#2a1a34' : '#7a4a24');
   const wallH = k === 'castle' ? 26 : Math.min(h - 8, Math.round(h * 0.45)); const roofH = h - wallH; const wy0 = py + roofH;
   shadowPx(c, px + w / 2 + 3, py + h, w / 2 + 3, 3, 0.32);
@@ -232,6 +235,7 @@ function drawBuilding(c, b, sea) {
   else if (k === 'inn') { fr(c, '#3a2a1a', sx - 8, sy - 6, 16, 12); fr(c, '#f0e0a0', sx - 7, sy - 5, 14, 10); fr(c, '#c04040', sx - 5, sy - 1, 10, 4); fr(c, '#fff', sx - 5, sy - 3, 4, 3); fr(c, '#4a5ac0', sx + 2, sy - 4, 3, 3); }
   else if (k === 'mill') { fr(c, '#5a3a22', px + w / 2 - 1, py + 6, 2, 2); SPINNERS.push({ x: px + w / 2, y: py + 8, r: 18 }); }
   else if (k === 'house' || k === 'hut') { fr(c, '#2a1c14', dx - 1, dy + 6, 2, 8); if (hsh(b.x, b.y, 9) < 0.5) PROPS.flowerpot(c, dx + 11, dy + 1); }
+  if (PLAQUE[k]) { const ic = iconCanvas(PLAQUE[k]); const bx = Math.round(px + w / 2 - 13), by = py + 8; fr(c, '#1c1626', bx - 1, by - 1, 28, 26); fr(c, '#f4e8c0', bx, by, 26, 24); fr(c, '#c8b078', bx, by + 21, 26, 3); fr(c, KIND_ROOF[k] || '#888', bx + 1, by + 1, 24, 2); if (ic) c.drawImage(ic, bx + 5, by + 4, 16, 16); fr(c, '#5a3a22', bx + 3, by - 4, 2, 3); fr(c, '#5a3a22', bx + 21, by - 4, 2, 3); }
   // winter snow cap on roof
   if (sea === 3 && k !== 'mill') { const t = rt; fr(c, '#f4f8fc', px - ov + inset, t - 1, w + ov * 2 - inset * 2, 3); for (let r = 0; r < rh; r += 4) { const tt = r / rh; const ins = Math.round(inset * (1 - Math.min(1, tt * 1.4))); fr(c, '#f4f8fc', px - ov + ins, t + r, 5 + ((r * 3) % 7), 2); fr(c, '#cfe0ee', px - ov + ins, t + r + 2, 4, 1); fr(c, '#f4f8fc', px + w + ov - ins - 6 - ((r * 5) % 5), t + r, 6 + ((r * 5) % 5), 2); } fr(c, '#f4f8fc', px - ov + 1, rb - 1, w + ov * 2 - 2, 2); for (let xx = 0; xx < w + ov * 2; xx += 7) { fr(c, '#cfe8ff', px - ov + xx, rb + 1, 1, 2 + (xx % 3)); } }
 }
@@ -252,13 +256,18 @@ function drawCastle(c, b, sea, px, py, w, h) {
   if (sea === 3) { fr(c, '#f4f8fc', px, py + 8, w, 2); for (let i = 0; i < 5; i++) fr(c, '#f4f8fc', px + i * 16 + 2, py + 1, 8, 2); }
 }
 /* ---------- fountain / well ---------- */
-function drawFountain(c, tx, ty, sea) { const x = tx * TS, y = ty * TS; shadowPx(c, x + 9, y + 15, 8, 3, 0.3); const S = mkRamp('#9a9aa8'); fr(c, S.o, x, y + 4, 16, 12); fr(c, S.b, x + 1, y + 5, 14, 10); fr(c, S.l, x + 1, y + 5, 14, 1); fr(c, S.d, x + 1, y + 14, 14, 1); fr(c, '#2f78dc', x + 2, y + 7, 12, 6); fr(c, '#7ab4ff', x + 3, y + 8, 4, 1); fr(c, '#7ab4ff', x + 9, y + 10, 3, 1); fr(c, S.b, x + 6, y + 3, 4, 8); fr(c, S.l, x + 6, y + 3, 1, 8); fr(c, '#cfe6ff', x + 7, y - 1, 2, 5); fr(c, '#fff', x + 6, y - 2, 4, 2); fr(c, S.o, x + 5, y + 1, 6, 1); }
+function drawFountain(c, tx, ty, sea) {
+  const x = tx * TS, y = ty * TS; shadowPx(c, x + 9, y + 18, 17, 5, 0.32); const S = mkRamp('#9a9aa8'), Wt = mkRamp('#3a86e8');
+  ell(c, S.o, x + 8, y + 9, 17, 11); ell(c, S.b, x + 8, y + 9, 16, 10); ell(c, S.l, x + 8, y + 7, 15, 8); ell(c, S.d, x + 8, y + 11, 13, 7); ell(c, Wt.b, x + 8, y + 9, 13, 7); ell(c, Wt.l, x + 6, y + 8, 8, 4); fr(c, '#cfe6ff', x + 1, y + 10, 4, 1); fr(c, '#cfe6ff', x + 12, y + 12, 5, 1);
+  fr(c, S.o, x + 5, y - 2, 6, 14); fr(c, S.b, x + 6, y - 1, 4, 12); fr(c, S.l, x + 6, y - 1, 1, 12); fr(c, S.d, x + 9, y, 1, 11); ell(c, S.o, x + 8, y - 4, 6, 3); ell(c, S.l, x + 8, y - 4, 5, 2);
+  SPRAYS.push({ x: x + 8, y: y - 6 });
+}
 function drawWell(c, tx, ty) { const x = tx * TS, y = ty * TS; PROPS.well2(c, x, y); }
 /* ---------- world canvas ---------- */
 const worldCache = {};
 function getWorldCanvas(sea) {
   if (worldCache[sea]) return worldCache[sea];
-  LAMPS = []; FLAGS = []; CHIMS = []; WIN_RECTS.length = 0; SPINNERS = [];
+  LAMPS = []; FLAGS = []; CHIMS = []; SPRAYS = []; WIN_RECTS.length = 0; SPINNERS = [];
   const cv = mkCanvas(MW * TS, MH * TS), c = cv.getContext('2d');
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) paintTile(c, x, y, W.tiles[y * MW + x], sea);
   // props (decorative; placed on grass next to paths and buildings)

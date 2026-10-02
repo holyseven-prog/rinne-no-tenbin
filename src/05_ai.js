@@ -57,7 +57,7 @@ function pickJobForSoul(s) {
   const k = s ? s.k : emptyKarma(); const advN = G.humans.filter(x => x.alive && isAdv(x)).length;
   const w = {
     swordsman: 1 + k.deed * 0.12 + (advN < 12 ? 2.4 : 0), mage: 0.7 + k.deed * 0.08 + (advN < 12 ? 1.4 : 0), priest: 0.7 + k.good * 0.14, thief: 0.4 + k.evil * 0.16,
-    farmer: 2.2, merchant: 1.1, smith: 0.9, herbalist: 0.9,
+    farmer: 2.2, merchant: 0.5, weaponer: 0.3, armorer: 0.3, smith: 0.9, herbalist: 0.9,
   };
   if (s && s.lastJob && s.lastJob !== 'historian' && k.attach >= 3) w[s.lastJob] = (w[s.lastJob] || 1) * (1 + k.attach * 0.25);
   const tot = Object.values(w).reduce((a, b) => a + b, 0); let r = rnd() * tot;
@@ -121,7 +121,7 @@ function actTarget(h, k) {
     case 'rest': { if (h.gold >= 8 && h.hp < h.maxHp * 0.5 && !isHidden(h)) return bldDoor(pickBld('inn')); return bldDoor(W.blds[h.home] || pickBld('house')); }
     case 'pray': return bldDoor(pickBld('church'));
     case 'shopP': return bldDoor(pickBld('apothecary'));
-    case 'shopG': return bldDoor(pickBld('smithy'));
+    case 'shopG': return bldDoor(pickBld(h.gear % 2 ? 'armor' : 'shop'));
     case 'social': { if (hr >= 17 && hr < 24 && h.gold >= 3) return bldDoor(pickBld('tavern')); const p = randWalkableIn(25, 17, 31, 22); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'muster': { const p = randWalkableIn(34, 21, 38, 25); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'train': { const p = randWalkableIn(18, 24, 26, 25); return { tx: p.x, ty: p.y, range: 0 }; }
@@ -135,7 +135,8 @@ function isHidden(h) { return !!h.inside; }
 function workTarget(h) {
   switch (h.job) {
     case 'farmer': { const f = rpick(W.fields); return { tx: f.x, ty: f.y, range: 0 }; }
-    case 'merchant': return bldDoor(pickBld('shop'));
+    case 'weaponer': return bldDoor(pickBld('shop'));
+    case 'armorer': return bldDoor(pickBld('armor'));
     case 'smith': return bldDoor(pickBld('smithy'));
     case 'herbalist': return bldDoor(pickBld('apothecary'));
     case 'priest': return bldDoor(pickBld('church'));
@@ -195,7 +196,7 @@ function onActTick(h, a) {
     case 'work': {
       h.gold += 0.06; if (h.age >= 60) h.gold -= 0.02;
       if (J === 'farmer') G.town.food += 0.42 * SEASON_YIELD[seasonOf(G.tick)] * (G.famine > G.tick ? 0.2 : 1) * (G.balance < -40 ? 0.85 : 1);
-      else if (J === 'merchant') { h.gold += 0.1; G.town.gold += 0.02; }
+      else if (J === 'merchant' || J === 'weaponer' || J === 'armorer') { h.gold += 0.1; G.town.gold += 0.02; }
       else if (J === 'smith') G.town.gearStock += 0.032;
       else if (J === 'herbalist') G.town.potions += 0.045;
       else if (J === 'priest') { G.faith = Math.min(G.faithMax, G.faith + 0.02); h.needs.faith = Math.max(0, h.needs.faith - 1); }

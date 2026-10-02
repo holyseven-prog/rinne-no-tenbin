@@ -23,10 +23,9 @@ function mkFrame(theme, glass) {
 }
 /* ---------- hand cursor (FF style, pointing right) ---------- */
 function mkHand(frame) {
-  const rows = ["................", "...oo...........", "..owwo..........", "..owwo..........", "..owwooooooooo..", "..owwwwwwwwwwwo.", "..owwwwwwwwwwwwo", "..owwwwoooooooo.", "..owwwwwwwwwwo..", "...owwwwwwwwo...", "...owwwwwwwo....", "....owwwwwwo....", "....ooooooo....."];
-  const cv = mkCanvas(16, 16), c = cv.getContext('2d'); const dx = frame ? 1 : 0; const col = { o: '#1c1a40', w: '#f6f6ff' };
-  rows.forEach((r, y) => { for (let x = 0; x < 16; x++) { const ch = r[x]; if (ch && ch !== '.') { c.fillStyle = col[ch]; c.fillRect(x - dx, y, 1, 1); } } });
-  c.fillStyle = '#aab0e0'; [[3, 5], [3, 8], [5, 9], [8, 10]].forEach(p => c.fillRect(p[0] - dx, p[1], 1, 1)); c.fillRect(10 - dx, 6, 4, 1);
+  const rows = ["o...............", "oo..............", "owo.............", "owwo............", "owwwo...........", "owwwwo..........", "owwwwwo.........", "owwwwwwo........", "owwwwwwwo.......", "owwwwwooooo.....", "owwowwo.........", "owo.owwo........", "oo..owwo........", "o....owwo.......", ".....owwo.......", "......oo........"];
+  const cv = mkCanvas(16, 16), c = cv.getContext('2d'); const col = frame ? { o: '#3a2a08', w: '#ffd860' } : { o: '#14123a', w: '#ffffff' };
+  rows.forEach((r, y) => { for (let x = 0; x < 16; x++) { const ch = r[x]; if (ch && ch !== '.') { c.fillStyle = col[ch]; c.fillRect(x, y, 1, 1); } } });
   return cvUrl(cv);
 }
 /* ---------- pixel digits 5x7 ---------- */
@@ -60,6 +59,11 @@ const ICON_DEF = {
   smith: [{ m: '#9aa2b8', u: '#5a6078', w: '#8a5a30' }, g => { rbox(g, 'w', 7, 6, 2, 9, true); rbox(g, 'm', 3, 2, 10, 5); rbox(g, 'u', 3, 6, 10, 1, true); gpx(g, 'm', 2, 3); gpx(g, 'm', 13, 3); }],
   herbalist: [{ c: '#4ac06a', u: '#2a8a44', t: '#c8f0c0', w: '#8a5a30' }, g => { rbox(g, 'c', 4, 2, 8, 8); gpx(g, 'c', 8, 1); rbox(g, 'u', 7, 3, 1, 8, true); rbox(g, 't', 5, 4, 2, 2, true); rbox(g, 'w', 7, 10, 2, 5, true); }],
   historian: [{ c: '#3a4c88', u: '#243060', t: '#f4ecd0', g: '#e8c860' }, g => { rbox(g, 'c', 2, 3, 12, 10); rbox(g, 't', 3, 4, 5, 8); rbox(g, 't', 9, 4, 4, 8); rbox(g, 'u', 8, 3, 1, 10, true); gline(g, 'g', 14, 1, 10, 6, 1); }],
+  weaponer: [{ m: '#cfd4e4', g: '#e0b838', c: '#d03a30' }, g => { gline(g, 'm', 12, 1, 4, 10, 2); rbox(g, 'g', 2, 9, 5, 2, true); rbox(g, 'c', 9, 9, 5, 5); gpx(g, 'g', 11, 11); }],
+  armorer: [{ m: '#aab8d8', g: '#e0b838', c: '#4a6ca4' }, g => { rbox(g, 'm', 3, 2, 10, 9); rbox(g, 'm', 4, 10, 8, 3); rbox(g, 'm', 6, 12, 4, 3); rbox(g, 'c', 5, 4, 6, 6); rbox(g, 'g', 7, 5, 2, 4, true); }],
+  mug: [{ g: '#e8a830', c: '#fff8e0', u: '#a06a10' }, g => { rbox(g, 'g', 3, 4, 8, 10); rbox(g, 'c', 3, 3, 8, 3); rbox(g, 'g', 11, 6, 3, 6); rbox(g, 'u', 5, 8, 1, 4, true); rbox(g, 'u', 8, 8, 1, 4, true); }],
+  bed: [{ c: '#c04040', u: '#8a2a2a', t: '#f4f0e8', w: '#8a5a30' }, g => { rbox(g, 'w', 1, 6, 2, 8, true); rbox(g, 'w', 13, 8, 2, 6, true); rbox(g, 'c', 3, 9, 10, 4); rbox(g, 't', 3, 7, 4, 3); rbox(g, 'u', 3, 12, 10, 1, true); }],
+  potion: [{ c: '#4ad07a', u: '#2a8a4a', t: '#fff', w: '#8a5a30' }, g => { rbox(g, 'w', 6, 1, 4, 3, true); rbox(g, 'c', 5, 4, 6, 3); rbox(g, 'c', 3, 7, 10, 7); rbox(g, 'u', 3, 12, 10, 2, true); gpx(g, 't', 5, 9); gpx(g, 't', 5, 10); }],
   /* needs / prayer kinds */
   hunger: [{ c: '#d8a860', u: '#9a6a28', t: '#f4d890' }, g => { rbox(g, 'c', 2, 5, 12, 7); rbox(g, 't', 4, 4, 8, 2, true); rbox(g, 'u', 2, 11, 12, 1, true); [[5, 6], [8, 6], [11, 6]].forEach(p => gpx(g, 'u', p[0], p[1])); }],
   safety: [{ c: '#6a8ae0', u: '#3a50a0', g: '#e8c860' }, g => { rbox(g, 'c', 3, 2, 10, 8); rbox(g, 'c', 4, 9, 8, 3); rbox(g, 'c', 6, 11, 4, 3); rbox(g, 'g', 7, 3, 2, 8, true); rbox(g, 'g', 5, 5, 6, 2, true); }],
@@ -132,16 +136,16 @@ body.theme-blue .win{border-radius:0}
 @keyframes cardflash{0%{filter:brightness(3)}50%{filter:brightness(1.8)}100%{filter:none}}
 .winopen{animation:winopen .15s steps(6) 1}
 @keyframes winopen{from{transform:scale(.7,.08);opacity:.2}to{transform:scale(1,1);opacity:1}}
-body{cursor:url(${this.hand[0]}) 15 6,auto}
-.btn,.card,.win .btn{cursor:var(--hand,url(${this.hand[0]}) 15 6),pointer}
+body{cursor:url(${this.hand[0]}) 0 0,auto}
+.btn,.card,.win .btn{cursor:var(--hand,url(${this.hand[1]}) 0 0),pointer}
 #game{cursor:grab}
 .gauge{border-radius:0;image-rendering:pixelated}
 .title-logo{text-shadow:0 0 18px #6a8aff,3px 3px 0 #000,-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000,0 7px 0 #000}
 .pxn{image-rendering:pixelated;vertical-align:middle}
 `;
-    document.body.style.setProperty('--hand', `url(${this.hand[0]}) 15 6`);
+    document.body.style.setProperty('--hand', `url(${this.hand[1]}) 0 0`);
   },
-  anim(dt) { this.tick += dt; const k = (this.tick * 3) % 2 < 1 ? 0 : 1; if (this._k !== k && this.hand[0]) { this._k = k; document.body.style.setProperty('--hand', `url(${this.hand[k]}) 15 6`); } },
+  anim() {},
 };
 /* pixel digits in HUD numbers */
 UI.pxSet = function (el, str, color, sc) { if (!el) return; const k = str + '|' + color; if (el._pk === k) return; el._pk = k; el.textContent = ''; const im = document.createElement('img'); im.className = 'pxn'; im.src = pxText(str, color, sc || 2); im.style.height = (9 * (sc || 2) / 2) + 'px'; im.style.width = 'auto'; el.appendChild(im); };

@@ -3,7 +3,7 @@
 const TICK_DAY = 144, DAYS_YEAR = 12, TICK_YEAR = 1728, MW = 64, MH = 40, TS = 16, START_TICK = 36;
 const BOSS_BASE_TICK = 6 * TICK_YEAR;
 let G = null, LANG = 'ja';
-const TUNE = Object.assign({ bossHp: 2000, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
+const TUNE = Object.assign({ bossHp: 1650, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lerp = (a, b, t) => a + (b - a) * t;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);

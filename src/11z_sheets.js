@@ -2,9 +2,10 @@
 function __fakeHuman(job, hair, style, skin, cloth, age, sex) { return { job, look: { hair, style, skin, cloth, acc: 0 }, age: age === undefined ? 28 : age, sex: sex || 'M' }; }
 if (typeof window !== 'undefined') {
   window.__sheetChars = function () {
-    const jobs = ['swordsman', 'mage', 'priest', 'thief', 'farmer', 'merchant', 'smith', 'herbalist', 'historian']; const SC = 4, cw = 18 * SC, ch = 26 * SC;
-    const cv = document.createElement('canvas'); cv.width = 16 * cw + 10; cv.height = jobs.length * ch * 1 + 10; const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.fillStyle = '#58a840'; c.fillRect(0, 0, cv.width, cv.height);
-    jobs.forEach((j, r) => { let col = 0; [0, 1, 2, 3].forEach(d => { [0, 1, 2, 3].forEach(f => { const h = __fakeHuman(j, r % 8, r % 4, r % 3, r % 8, 28, r % 2 ? 'F' : 'M'); const s = humanSprite(h, d, f); c.drawImage(s, 5 + col * cw + 8, 5 + r * ch, 16 * SC, 24 * SC); col++; }); }); });
+    const R = (job, sex, age, lvl, hair, style, skin, cloth) => Object.assign(__fakeHuman(job, hair, style, skin, cloth, age, sex), { lvl });
+    const list = [['warrior M', R('swordsman', 'M', 28, 3, 1, 0, 0, 0)], ['hero M', R('swordsman', 'M', 22, 9, 3, 2, 0, 0)], ['hero F', R('swordsman', 'F', 22, 9, 4, 1, 0, 0)], ['priest M', R('priest', 'M', 35, 3, 0, 0, 1, 0)], ['priest F', R('priest', 'F', 30, 3, 1, 1, 0, 0)], ['sage M', R('mage', 'M', 40, 3, 0, 0, 0, 0)], ['mage F', R('mage', 'F', 24, 3, 2, 1, 0, 0)], ['smith M', R('smith', 'M', 36, 2, 0, 1, 1, 0)], ['farmer M', R('farmer', 'M', 30, 1, 2, 0, 0, 1)], ['farmer F', R('farmer', 'F', 28, 1, 3, 1, 0, 2)], ['merchant M', R('merchant', 'M', 33, 1, 1, 0, 1, 3)], ['herbalist F', R('herbalist', 'F', 27, 1, 5, 2, 0, 4)], ['thief', R('thief', 'M', 24, 2, 0, 0, 0, 0)], ['historian', R('historian', 'M', 41, 1, 1, 0, 0, 0)], ['elder M', R('farmer', 'M', 64, 1, 5, 0, 0, 1)], ['elder F', R('herbalist', 'F', 62, 1, 5, 1, 0, 2)], ['child M', R('farmer', 'M', 8, 1, 3, 0, 0, 5)], ['child F', R('merchant', 'F', 8, 1, 4, 1, 0, 6)]];
+    const SC = 4, cw = 17 * SC, ch = 25 * SC; const cols = 7; const cv = document.createElement('canvas'); cv.width = cols * cw + 150; cv.height = list.length * ch + 10; const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.fillStyle = '#58a840'; c.fillRect(0, 0, cv.width, cv.height);
+    list.forEach((e, r) => { c.fillStyle = '#fff'; c.font = '13px monospace'; c.fillText(e[0], 4, 5 + r * ch + 40); [[0, 0], [2, 0], [1, 0], [0, 1], [0, 3], [2, 1], [0, 5]].forEach((p, i) => c.drawImage(humanSprite(e[1], p[0], p[1]), 140 + i * cw, 5 + r * ch, 16 * SC, 24 * SC)); });
     return cv.toDataURL('image/png');
   };
   window.__sheetStates = function () {

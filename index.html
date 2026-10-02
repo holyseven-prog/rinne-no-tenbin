@@ -81,7 +81,7 @@ body .locked{opacity:.22;filter:grayscale(1)}
 const TICK_DAY = 144, DAYS_YEAR = 12, TICK_YEAR = 1728, MW = 64, MH = 40, TS = 16, START_TICK = 36;
 const BOSS_BASE_TICK = 6 * TICK_YEAR;
 let G = null, LANG = 'ja';
-const TUNE = Object.assign({ bossHp: 2000, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
+const TUNE = Object.assign({ bossHp: 1650, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lerp = (a, b, t) => a + (b - a) * t;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -159,6 +159,8 @@ const JOBS = {
   thief: { n: ['盗賊', '盜賊'], hp: 32, atk: 8, def: 3, spd: 1.3, range: 1.5, adv: true },
   farmer: { n: ['農夫', '農夫'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   merchant: { n: ['商人', '商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
+  weaponer: { n: ['武器商人', '武器商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
+  armorer: { n: ['防具商人', '防具商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   smith: { n: ['鍛冶', '鐵匠'], hp: 40, atk: 5, def: 5, spd: 0.9, range: 1.5 },
   herbalist: { n: ['薬師', '藥師'], hp: 28, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   historian: { n: ['史官', '史官'], hp: 26, atk: 1, def: 1, spd: 1.0, range: 1.5 },
@@ -221,7 +223,7 @@ S.pk = {}; // prayer kind names
 
 const PLACES = { // key -> names
   farm: ['西の農地', '西邊農地'], town: ['町リュミエ', '琉米耶鎮'], field: ['魔物の野', '魔物原野'], plateau: ['魔王の台地', '魔王高地'],
-  guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], shop: ['道具屋', '雜貨鋪'],
+  guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], fountain: ['噴水', '噴泉'], well: ['井戸', '水井'], shop: ['武器屋', '武器店'], armor: ['防具屋', '防具店'],
   apothecary: ['薬屋', '藥鋪'], inn: ['宿屋', '旅店'], house: ['民家', '民宅'], mill: ['風車小屋', '風車小屋'], hut: ['農家', '農舍'], castle: ['魔王城', '魔王城'],
   plaza: ['広場', '廣場'], lake: ['湖のほとり', '湖畔'], wood: ['森の道', '森林小徑'],
 };
@@ -271,7 +273,7 @@ function buildWorld() {
   [[18, 11], [22, 11], [33, 11], [37, 11], [40, 11]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, i % 4));
   mk('guild', 18, 19, 6, 4, 2); mk('tavern', 33, 19, 5, 4, 3); mk('shop', 39, 19, 4, 4, 1);
   mk('smithy', 17, 27, 5, 4, 4); mk('apothecary', 23, 27, 4, 4, 5); mk('inn', 30, 27, 6, 4, 0);
-  [[37, 28], [41, 28]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 2) % 4));
+  [[41, 28]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 2) % 4)); mk('armor', 37, 27, 4, 4, 5);
   [[18, 32], [22, 32], [32, 32], [36, 32], [40, 32]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 1) % 4));
   mk('hut', 3, 20, 3, 3, 1); mk('hut', 11, 20, 3, 3, 2); mk('mill', 6, 19, 3, 4, 7);
   mk('castle', 58, 11, 5, 6, 8);
@@ -427,7 +429,7 @@ function initWorldState() {
     ['priest', 45, 3, { adv: false }], ['priest', 33, 2, { adv: false }],
   ];
   for (let i = 0; i < 9; i++) R0.push(['farmer', rint(20, 46), 1 + rint(0, 2)]);
-  for (let i = 0; i < 3; i++) R0.push(['merchant', rint(24, 48), 1 + rint(0, 2)]);
+  for (let i = 0; i < 3; i++) R0.push([['merchant', 'weaponer', 'armorer'][i], rint(24, 48), 1 + rint(0, 2)]);
   for (let i = 0; i < 2; i++) R0.push(['smith', rint(26, 48), 2]);
   for (let i = 0; i < 2; i++) R0.push(['herbalist', rint(24, 44), 2]);
   for (let i = 0; i < 4; i++) R0.push([rpick(['farmer', 'merchant']), rint(4, 11), 1, { child: true }]);
@@ -466,7 +468,7 @@ function initWorldState() {
   // opening prologue chapter (written at tick 0)
   G.pendingProlog = true;
 }
-const JOB_CLOTH = { swordsman: 0, mage: 1, priest: 2, thief: 3, farmer: 4, merchant: 5, smith: 6, herbalist: 7, historian: 2 };
+const JOB_CLOTH = { swordsman: 0, mage: 1, priest: 2, thief: 3, farmer: 4, merchant: 5, weaponer: 5, armorer: 1, smith: 6, herbalist: 7, historian: 2 };
 function hById0(key) { return G.humans.find(h => h.id === G.flags[key]); }
 
 /* ---- monsters ---- */
@@ -557,7 +559,7 @@ function pickJobForSoul(s) {
   const k = s ? s.k : emptyKarma(); const advN = G.humans.filter(x => x.alive && isAdv(x)).length;
   const w = {
     swordsman: 1 + k.deed * 0.12 + (advN < 12 ? 2.4 : 0), mage: 0.7 + k.deed * 0.08 + (advN < 12 ? 1.4 : 0), priest: 0.7 + k.good * 0.14, thief: 0.4 + k.evil * 0.16,
-    farmer: 2.2, merchant: 1.1, smith: 0.9, herbalist: 0.9,
+    farmer: 2.2, merchant: 0.5, weaponer: 0.3, armorer: 0.3, smith: 0.9, herbalist: 0.9,
   };
   if (s && s.lastJob && s.lastJob !== 'historian' && k.attach >= 3) w[s.lastJob] = (w[s.lastJob] || 1) * (1 + k.attach * 0.25);
   const tot = Object.values(w).reduce((a, b) => a + b, 0); let r = rnd() * tot;
@@ -621,7 +623,7 @@ function actTarget(h, k) {
     case 'rest': { if (h.gold >= 8 && h.hp < h.maxHp * 0.5 && !isHidden(h)) return bldDoor(pickBld('inn')); return bldDoor(W.blds[h.home] || pickBld('house')); }
     case 'pray': return bldDoor(pickBld('church'));
     case 'shopP': return bldDoor(pickBld('apothecary'));
-    case 'shopG': return bldDoor(pickBld('smithy'));
+    case 'shopG': return bldDoor(pickBld(h.gear % 2 ? 'armor' : 'shop'));
     case 'social': { if (hr >= 17 && hr < 24 && h.gold >= 3) return bldDoor(pickBld('tavern')); const p = randWalkableIn(25, 17, 31, 22); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'muster': { const p = randWalkableIn(34, 21, 38, 25); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'train': { const p = randWalkableIn(18, 24, 26, 25); return { tx: p.x, ty: p.y, range: 0 }; }
@@ -635,7 +637,8 @@ function isHidden(h) { return !!h.inside; }
 function workTarget(h) {
   switch (h.job) {
     case 'farmer': { const f = rpick(W.fields); return { tx: f.x, ty: f.y, range: 0 }; }
-    case 'merchant': return bldDoor(pickBld('shop'));
+    case 'weaponer': return bldDoor(pickBld('shop'));
+    case 'armorer': return bldDoor(pickBld('armor'));
     case 'smith': return bldDoor(pickBld('smithy'));
     case 'herbalist': return bldDoor(pickBld('apothecary'));
     case 'priest': return bldDoor(pickBld('church'));
@@ -695,7 +698,7 @@ function onActTick(h, a) {
     case 'work': {
       h.gold += 0.06; if (h.age >= 60) h.gold -= 0.02;
       if (J === 'farmer') G.town.food += 0.42 * SEASON_YIELD[seasonOf(G.tick)] * (G.famine > G.tick ? 0.2 : 1) * (G.balance < -40 ? 0.85 : 1);
-      else if (J === 'merchant') { h.gold += 0.1; G.town.gold += 0.02; }
+      else if (J === 'merchant' || J === 'weaponer' || J === 'armorer') { h.gold += 0.1; G.town.gold += 0.02; }
       else if (J === 'smith') G.town.gearStock += 0.032;
       else if (J === 'herbalist') G.town.potions += 0.045;
       else if (J === 'priest') { G.faith = Math.min(G.faithMax, G.faith + 0.02); h.needs.faith = Math.max(0, h.needs.faith - 1); }
@@ -2733,7 +2736,7 @@ const Mini = {
 };
 
 /* ---------- name labels (R1) ---------- */
-const JOB_BADGE = { swordsman: ['剣', '劍', '#c04040'], mage: ['魔', '魔', '#6a4ac0'], priest: ['僧', '僧', '#9a9ab8'], thief: ['盗', '盜', '#3a6a40'], farmer: ['農', '農', '#a88850'], merchant: ['商', '商', '#c88a30'], smith: ['鍛', '鐵', '#7a7a86'], herbalist: ['薬', '藥', '#3a8a4a'], historian: ['史', '史', '#3a4a9a'] };
+const JOB_BADGE = { swordsman: ['剣', '劍', '#c04040'], mage: ['魔', '魔', '#6a4ac0'], priest: ['僧', '僧', '#9a9ab8'], thief: ['盗', '盜', '#3a6a40'], farmer: ['農', '農', '#a88850'], merchant: ['商', '商', '#c88a30'], smith: ['鍛', '鐵', '#7a7a86'], herbalist: ['薬', '藥', '#3a8a4a'], weaponer: ['武', '武', '#b04830'], armorer: ['防', '防', '#3a6aa8'], historian: ['史', '史', '#3a4a9a'] };
 Render.heroId = 0; Render.labelFrame = 0;
 Render.nameMode = function () {
   if (G && G.gen === 1 && G.tick < START_TICK + 3 * TICK_DAY && !G.flags.noAllNames) return 'all';
@@ -2765,6 +2768,12 @@ Render.drawLabels = function () {
   const placed = [];
   const hit = r => placed.some(p => r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y);
   c.textBaseline = 'middle'; c.textAlign = 'left';
+  { // building names (civic buildings always, houses on hover) - R: houses look alike
+    const mxw = Game.mouseCanvas ? Game.mouse.x / 2 + cam.x : -999, myw = Game.mouseCanvas ? Game.mouse.y / 2 + cam.y : -999; const m0 = this.nameMode();
+    const lab = (txt, wx, wy, col) => { const sx = (wx - cx) * 2, sy = (wy - cy) * 2; if (sx < -100 || sx > 1380 || sy < -30 || sy > 760) return; c.font = 'bold 13px ' + fam; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(txt, sx, sy); c.fillStyle = col; c.fillText(txt, sx, sy); c.textAlign = 'left'; };
+    W.blds.forEach(b => { if (b.kind === 'castle' || b.kind === 'mill') return; const civic = b.kind !== 'house' && b.kind !== 'hut'; const hover = mxw >= b.x * TS && mxw < (b.x + b.w) * TS && myw >= b.y * TS - 10 && myw < (b.y + b.h) * TS; if (!(hover || (civic && m0 !== 'none'))) return; lab(PLACES[b.kind][L], (b.x + b.w / 2) * TS, b.y * TS + (b.kind === 'church' ? -46 : -2), civic ? '#ffe9a0' : '#ffffff'); });
+    if (m0 !== 'none') { lab(PLACES.fountain[L], 28 * TS + 8, 19 * TS - 20, '#bfe4ff'); lab(PLACES.well[L], 25 * TS + 8, 21 * TS - 2, '#bfe4ff'); lab(PLACES.well[L], 31 * TS + 8, 21 * TS - 2, '#bfe4ff'); }
+  }
   for (const it of list) {
     const h = it.h; const showName = mode === 'all' ? true : mode === 'none' ? it.pri >= 5 : it.pri > 0;
     const nm = (it.fav ? '★' : it.pray ? '！' : (G.track.indexOf(h.id) >= 0 ? '◆' : (it.pri === 2 && h.id === this.heroId ? '⚔' : ''))) + h.name[L];
@@ -2777,7 +2786,7 @@ Render.drawLabels = function () {
         const s = soulOf(h); const k = s ? s.k : null; let col = '#ffffff';
         if (k) { if (k.good - k.evil > 2.5) col = '#cfe6ff'; else if (k.evil - k.good > 2.5) col = '#ffcfcf'; }
         if (it.fav) col = '#ffd860'; if (it.pray) col = '#fff0a0';
-        c.imageSmoothingEnabled = false; { const ic = iconCanvas(h.job) || iconCanvas('farmer'); c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(x0, y0 - 7, 14, 14); c.drawImage(ic, x0, y0 - 7, 14, 14); }
+        c.fillStyle = bd[2]; c.fillRect(x0, y0 - 7, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], x0 + 7, y0 + 0.5);
         c.textAlign = 'left'; c.font = 'bold 13px ' + fam; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(nm, x0 + 17, y0 + 0.5); c.fillStyle = col; c.fillText(nm, x0 + 17, y0 + 0.5);
         continue;
       }
@@ -2785,7 +2794,7 @@ Render.drawLabels = function () {
     if (mode !== 'none' || it.pri > 0) {
       const r = { x: Math.round(it.sx) - 20, y: Math.round(it.top) - 15, w: 14, h: 14 };
       if (hit(r) && it.pri < 2) continue; placed.push(r);
-      c.imageSmoothingEnabled = false; c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(r.x - 1, r.y - 1, 16, 16); c.drawImage(iconCanvas(h.job) || iconCanvas('farmer'), r.x, r.y, 14, 14);
+      c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(r.x - 1, r.y - 1, 16, 16); c.fillStyle = bd[2]; c.fillRect(r.x, r.y, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], r.x + 7, r.y + 7.5); c.textAlign = 'left';
     }
   }
 };
@@ -2894,6 +2903,44 @@ const SD = {
   childArmS: [Rw(7, "uu"), Rw(7, "ss")],
 };
 
+/* ---- 11a_spritedata2.js ---- */
+/* ================= role parts (V3.3 follow-up): warrior armor, hero cape, sage beard, priest halo, smith build, elder hump, women's dress/bow ================= */
+Object.assign(SD, {
+  helm: {
+    F: { oy: 3, rows: [".....mmm", "...mmmmm", "..mmmmmm", "..mmmmmm", "..mmgggg", "..mmm...", "..mm....", "..mm...."] },
+    B: { oy: 3, rows: [".....mmm", "...mmmmm", "..mmmmmm", "..mmmmmm", "..mmmmmm", "..mmmmmm", "..mmmmmm", "...mmmmm"] },
+    S: { oy: 3, rows: [Rw(6, "mmmm"), Rw(4, "mmmmmmm"), Rw(4, "mmmmmmmm"), Rw(4, "mmmmmmmm"), Rw(4, "mmgggggg"), Rw(4, "mmm"), Rw(4, "mm"), Rw(4, "mm")] },
+    plumeF: { oy: 1, rows: ["......QQ", ".....QQQ"] }, plumeS: { oy: 1, rows: [Rw(4, "QQ"), Rw(3, "QQQ")] },
+  },
+  shieldF: { oy: 15, rows: ["mmmmm...", "mwwwm...", "mwgwm...", "mwwwm...", ".mwwm...", "..mm...."] },
+  shieldS: { oy: 15, rows: [Rw(3, "mmm"), Rw(3, "mwm"), Rw(3, "mgm"), Rw(3, "mwm"), Rw(4, "mm")] },
+  armorF: { oy: 12, rows: ["..mmmmmm", "..mmmmmm", "...mmmmm", "...mmmmm", "....mmmm", "....mmmm", "....mmmm"] },
+  armorS: { oy: 12, rows: [Rw(5, "mmmmmm"), Rw(5, "mmmmmm"), Rw(5, "mmmmmm"), Rw(5, "mmmmmm"), Rw(5, "mmmmmm"), Rw(5, "mmmmmm"), Rw(5, "mmmmmm")] },
+  /* hero */
+  capeBackF: { oy: 13, rows: [".aaaaaaa", ".aaaaaaa", ".aaaaaaa", "aaaaaaaa", "aaaaaaaa", "aaaaaaaa", "aaaaaaaa", "aaaaaaaa", "aaaaaaaa"] },
+  capeB: { oy: 12, rows: ["....gggg", "...aaaaa", "..aaaaaa", "..aaaaaa", "..aaaaaa", "..aaaaaa", "..aaaaaa", "..aaaaaa", "..aaaaaa", "..aaaaaa", "..gggggg"] },
+  capeS: { oy: 12, rows: [Rw(3, "aaa"), Rw(2, "aaaa"), Rw(2, "aaaa"), Rw(2, "aaaa"), Rw(1, "aaaaa"), Rw(1, "aaaaa"), Rw(1, "aaaaa"), Rw(1, "aaaaa"), Rw(1, "aaaa")] },
+  circletF: { oy: 5, rows: ["....gggL"] }, circletS: { oy: 5, rows: [Rw(4, "ggggggg")] },
+  heroOverF: { oy: 12, rows: ["..ggg...", "..ggg...", "........", ".......g", "........", "....tttg"] },
+  /* priest halo */
+  haloF: { oy: 1, rows: [".....ggg", "....g..."] }, haloS: { oy: 1, rows: [Rw(5, "gggg"), Rw(4, "g"), Rw(9, "g")] },
+  /* sage beard (long) */
+  beardLongF: { oy: 10, rows: ["....hhhh", "....hhhh", "....hhhh", ".....hhh", "......hh", "......hh"] },
+  beardLongS: { oy: 10, rows: [Rw(8, "hhh"), Rw(8, "hhhh"), Rw(8, "hhh"), Rw(9, "hh"), Rw(9, "hh"), Rw(9, "h")] },
+  /* smith: broad body, bare arms */
+  broadF: { oy: 13, rows: ["...ccccc", "...ccccc", "...ccccc", "...ccccc", "...ccccc"] },
+  armBareF: ["..uu....", ".sss....", ".sss....", ".sss....", ".sss...."],
+  /* elder: shoulder hump */
+  humpF: { oy: 12, rows: ["...ccccc", "..cccccc"] },
+  /* women */
+  dressF: { oy: 17, rows: ["...ccccc", "..cccccc", "..cccccc", "..tttttt"] },
+  dressS: { oy: 17, rows: [Rw(4, "cccccccc"), Rw(3, "cccccccccc"), Rw(3, "cccccccccc"), Rw(3, "tttttttttt")] },
+  bowF: [[6, 2], [7, 3], [8, 3], [9, 2]], bowS: [[7, 2], [8, 3], [9, 3], [10, 2]],
+  shieldItem: { F: [Rw(12, "mmmm"), Rw(12, "mggm"), Rw(12, "mggm"), Rw(12, "mmmm"), Rw(13, "mm")], oy: 14, S: [Rw(10, "mmm"), Rw(10, "mgm"), Rw(10, "mmm")], soy: 15, B: [], boy: 15 },
+  caneCrook: { F: [Rw(13, "ww")], oy: 11 },
+});
+SD.item.shieldItem = SD.shieldItem;
+
 /* ---- 11b_palette.js ---- */
 /* ================= palette ramps, recolor, auto shading + selective outline (V3.3 S1) ================= */
 function hexRgb(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h.slice(0, 6), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
@@ -2972,80 +3019,112 @@ const JOB_COLOR = { swordsman: '#b84646', mage: '#6a50c8', priest: '#eeeef6', th
 const JOB_TRIM = { swordsman: '#e0d0a0', mage: '#e8c850', priest: '#e8c850', thief: '#6a5a40', farmer: '#7a5a38', merchant: '#8a5a2a', smith: '#5a3a28', herbalist: '#e8e0c0', historian: '#e8e0c0' };
 
 /* ---- 11c_char.js ---- */
-/* ================= character compositor (V3.3 S2): layered pixel maps -> shaded, outlined 16x24 sprites ================= */
-const JOB_ACCENT = { farmer: '#d6b45c', merchant: '#a8703a', smith: '#c04a38', thief: '#26302a', herbalist: '#4aa860', historian: '#2e3e80', swordsman: '#a0a6b8', priest: '#e8c850', mage: '#6a50c8' };
+/* ================= character compositor (V3.3 S2): layered pixel maps -> shaded, outlined 16x24 sprites =================
+   Roles that must be recognisable at a glance: warrior (steel armor, helm, shield), hero (blue cape, gold circlet),
+   priest (white robe, halo, gold cross), sage/mage (violet robe, tall star hat, long white beard), smith (bare arms, apron, hammer),
+   farmer (straw hat, blue straps, fork), elder (bald/white, hunched, beard, cane), child (big head), men / women (hair, dress, bow). */
+const JOB_ACCENT = { weaponer: '#d03a30', armorer: '#9ab0d8', farmer: '#e0bc58', merchant: '#a8703a', smith: '#d04030', thief: '#26302a', herbalist: '#4aa860', historian: '#2e3e80', warrior: '#a0a6b8', hero: '#2f5fe8', priest: '#e8c850', mage: '#6a50c8', swordsman: '#a0a6b8' };
+const ROLE_CLOTH = { weaponer: '#b0603a', armorer: '#4a6ca4', warrior: '#7886ae', hero: '#f0f0fa', priest: '#f4f4fc', mage: '#5a3ab8', smith: '#7c7c8a', farmer: '#e6d6a4', merchant: '#d09a38', thief: '#3a4a3c', herbalist: '#3e9650', historian: '#3a4c88' };
+const ROLE_TRIM = { weaponer: '#e8d8a0', armorer: '#d8e0f0', warrior: '#c8a040', hero: '#e8c850', priest: '#e8c850', mage: '#e8c850', smith: '#5a3a28', farmer: '#3a6ad0', merchant: '#8a5a2a', thief: '#6a5a40', herbalist: '#e8e0c0', historian: '#e8e0c0' };
 const PANTS_COL = ['#42395a', '#4e3c2c', '#2e4c52', '#523240'];
 const ROBE_JOBS = { mage: 1, priest: 1, historian: 1 };
+const SKIRT_JOBS = { farmer: 1, merchant: 1, herbalist: 1, weaponer: 1, armorer: 1 };
 function darkHex(hex, k) { const [r, g, b] = hexRgb(hex); return rgbHex(r * k, g * k, b * k); }
+function mixHex(a, b, k) { const A = hexRgb(a), B = hexRgb(b); return rgbHex(A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k); }
+function roleOf(h) { if (h.age < ADULT_AGE) return 'child'; if (h.job === 'swordsman') return (h.age < 56 && (h.lvl || 1) >= 6) ? 'hero' : 'warrior'; return h.job; }
 function humanRamps(h) {
-  const L = h.look, child = h.age < ADULT_AGE, elder = h.age >= 56, job = h.job;
-  let cloth = CLOTH_COL[L.cloth % CLOTH_COL.length];
-  if (!child && JOB_COLOR[job] && job !== 'farmer' && job !== 'merchant') cloth = JOB_COLOR[job];
-  const R = { s: mkRamp(SKIN_COL[L.skin % SKIN_COL.length]), h: mkRamp(elder ? '#dcdce6' : HAIR_COL[L.hair % HAIR_COL.length]), c: mkRamp(cloth), u: mkRamp(darkHex(cloth, 0.84)), t: mkRamp(JOB_TRIM[job] || '#c8b078'), p: mkRamp(PANTS_COL[(L.cloth + L.hair) % 4]), b: mkRamp('#5a3a24'), m: mkRamp('#aeb4c4'), w: mkRamp('#8a5a30'), g: mkRamp('#e0b838'), a: mkRamp(JOB_ACCENT[job] || '#a8703a') };
+  const L = h.look, role = roleOf(h), child = role === 'child', elder = h.age >= 56, female = h.sex === 'F';
+  let cloth = child ? CLOTH_COL[L.cloth % CLOTH_COL.length] : (ROLE_CLOTH[role] || CLOTH_COL[L.cloth % CLOTH_COL.length]);
+  if (elder && !ROBE_JOBS[role] && role !== 'warrior') cloth = mixHex(cloth, '#8f8472', 0.55);
+  if (!child && (role === 'farmer' || role === 'merchant') && !elder) cloth = mixHex(cloth, CLOTH_COL[L.cloth % CLOTH_COL.length], 0.25);
+  if (female && !child && (role === 'farmer' || role === 'merchant' || role === 'herbalist')) cloth = mixHex(cloth, '#d86a8a', 0.4);
+  const sage = role === 'mage' && !female;
+  const hairHex = elder || sage ? '#eceaf4' : HAIR_COL[L.hair % HAIR_COL.length];
+  const R = { s: mkRamp(SKIN_COL[L.skin % SKIN_COL.length]), h: mkRamp(hairHex), c: mkRamp(cloth), u: mkRamp(role === 'smith' ? '#3a3a46' : darkHex(cloth, 0.84)), t: mkRamp(ROLE_TRIM[role] || '#c8b078'), p: mkRamp(role === 'smith' ? '#3a3a46' : PANTS_COL[(L.cloth + L.hair) % 4]), b: mkRamp('#5a3a24'), m: mkRamp(role === 'warrior' ? '#b4c0d8' : '#aeb4c4'), w: mkRamp('#8a5a30'), g: mkRamp('#e8c040'), a: mkRamp(JOB_ACCENT[role] || '#a8703a') };
   if (child) { R.t = mkRamp(darkHex(cloth, 0.7)); }
   return R;
 }
 const mirRows = rows => rows.map(r => r.split('').reverse().join(''));
 function putL(g, rows, y, dy) { blit(g, rows, 0, y + (dy || 0), false); }
 function putR(g, rows, y, dy) { blit(g, mirRows(rows), 8, y + (dy || 0), false); }
-function putItemF(g, it, dy, ox) { it.F.forEach((r, j) => { const y = it.oy + dy + j; if (y < 0 || y >= 24) return; for (let i = 0; i < 16; i++) { const x = i + (ox || 0); if (r[i] !== '.' && x >= 0 && x < 16) g[y][x] = r[i]; } }); }
 function putItem(g, rows, oy, dy, ox) { rows.forEach((r, j) => { const y = oy + dy + j; if (y < 0 || y >= 24) return; for (let i = 0; i < 16; i++) { const x = i + (ox || 0); if (r[i] !== '.' && x >= 0 && x < 16) g[y][x] = r[i]; } }); }
+function putPix(g, pts, ch, dy) { pts.forEach(p => { const y = p[1] + (dy || 0); if (y >= 0 && y < 24 && p[0] >= 0 && p[0] < 16) g[y][p[0]] = ch; }); }
+function blitO(g, o, dy, mirror, ox) { blit(g, o.rows, ox || 0, o.oy + (dy || 0), mirror); }
+const MALE_STYLES = [0, 3, 5, 6], FEM_STYLES = [1, 2, 7, 3];
 function humanGrid(h, dir, frame) {
-  const g = emptyGrid(16, 24); const child = h.age < ADULT_AGE, elder = h.age >= 56, job = h.job; const L = h.look;
-  const view = dir === 0 ? 'F' : dir === 1 ? 'B' : 'S'; const robe = !child && ROBE_JOBS[job];
+  const g = emptyGrid(16, 24); const child = h.age < ADULT_AGE, elder = h.age >= 56, role = roleOf(h), female = h.sex === 'F'; const L = h.look;
+  const view = dir === 0 ? 'F' : dir === 1 ? 'B' : 'S'; const robe = !child && ROBE_JOBS[role]; const skirt = !child && !robe && female && SKIRT_JOBS[role] && !elder || (!child && !robe && female && elder && SKIRT_JOBS[role]);
   const wf = frame < 4 ? frame : 0; const atk = frame === 5, pray = frame === 6; const bob = frame === 4 ? 1 : 0;
-  const hdy = bob + (elder ? 1 : 0);
-  const style = ((L.style % 4) + (L.hair % 2) * 4) % 8; // 8 outlines from style x hair
-  const hstyle = child ? [0, 3, 5, 7][L.style % 4] : (job === 'smith' && !elder ? [0, 6, 4, 0][L.style % 4] : style);
+  const hdy = bob + (elder && !child ? 2 : 0);
+  const k = (L.style + L.hair) % 4;
+  let hstyle = child ? (female ? 7 : [0, 3, 5, 6][L.style % 4]) : elder ? (female ? 5 : 4) : role === 'hero' ? (female ? 2 : 6) : female ? FEM_STYLES[k] : MALE_STYLES[k];
+  if (role === 'smith' && !female && !elder) hstyle = [0, 6, 0, 3][k]; if (role === 'mage' && !female && !elder) hstyle = 0;
+  const bowOn = female && !elder && role !== 'warrior' && role !== 'mage' && role !== 'priest';
   if (child) {
     const HYc = 9;
     if (view === 'S') {
       blit(g, SD.childLegS[wf], 0, 20); blit(g, SD.childTorsoS, 0, 17); blit(g, SD.childArmS, wf === 1 ? 1 : wf === 3 ? -1 : 0, 18);
-      blit(g, SD.headS, 0, HYc); const hr = SD.hairS[hstyle]; blit(g, hr.rows, 0, hr.oy - HY + HYc);
+      blit(g, SD.headS, 0, HYc); const hr = SD.hairS[hstyle]; blit(g, hr.rows, 0, hr.oy - HY + HYc); if (female) putPix(g, SD.bowS, 'P', HYc - HY);
     } else {
       const lf = wf === 3 ? -1 : 0, rt = wf === 1 ? -1 : 0;
       putL(g, SD.childLegF, 20, lf); putR(g, SD.childLegF, 20, rt); blit(g, SD.childTorsoF, 0, 17, true);
+      if (female) blit(g, ["...ccccc", "..tttttt"], 0, 19, true);
       putL(g, SD.childArmF, 18, wf === 1 ? -1 : wf === 3 ? 1 : 0); putR(g, SD.childArmF, 18, wf === 3 ? -1 : wf === 1 ? 1 : 0);
       blit(g, view === 'F' ? SD.headF : SD.headF.map(r => r.replace(/[erP]/g, 's')), 0, HYc, true);
-      const hr = (view === 'F' ? SD.hairF : SD.hairB)[hstyle]; blit(g, hr.rows, 0, hr.oy - HY + HYc, true);
+      const hr = (view === 'F' ? SD.hairF : SD.hairB)[hstyle]; blit(g, hr.rows, 0, hr.oy - HY + HYc, true); if (female) putPix(g, SD.bowF, 'P', HYc - HY);
     }
     return g;
   }
+  const itn = elder ? 'cane' : (role === 'weaponer' ? 'sword' : role === 'armorer' ? 'shieldItem' : SD.jobItem[role === 'warrior' || role === 'hero' ? 'swordsman' : role]);
   if (view === 'S') {
-    if (robe) { blit(g, SD.robeS, 0, 17); blit(g, [Rw(6, "bbb"), Rw(6, "bbb")], 0, 21 - (wf === 1 || wf === 3 ? 0 : 0)); }
+    if (role === 'hero') blit(g, SD.capeS.rows, 0, SD.capeS.oy + (wf === 1 ? 0 : wf === 3 ? 1 : 0));
+    if (robe) { blit(g, SD.robeS, 0, 17); blit(g, [Rw(6, "bbb"), Rw(6, "bbb")], 0, 21); }
+    else if (skirt) { blit(g, SD.legS[wf].map((r, i) => i < 1 ? '................' : r), 0, LYY + 1 - 1 + 0); blitO(g, SD.dressS, 0, false); }
     else blit(g, SD.legS[wf], 0, LYY);
     blit(g, SD.torsoS, 0, TYY);
-    (SD.over[job] || { S: [] }).S.forEach(o => blit(g, o.rows, 0, o.oy));
-    const adx = wf === 1 ? 1 : wf === 3 ? -1 : 0; const ady = atk ? -3 : 0;
-    if (pray) { blit(g, [Rw(8, "uuu"), Rw(9, "ss")], 0, 15); } else blit(g, SD.armS, adx, 13 + ady);
-    blit(g, SD.headS, 0, HY + hdy);
-    const hr = SD.hairS[hstyle]; blit(g, hr.rows, 0, hr.oy + hdy);
-    if (elder && h.sex === 'M') blit(g, SD.beardS, 0, 10 + hdy);
-    const hat = SD.hat[job]; if (hat) blit(g, hat.S.rows, 0, hat.S.oy + hdy);
-    const itn = SD.jobItem[job] || (elder ? 'cane' : null); if (itn && !pray) { const it = SD.item[itn]; putItem(g, it.S, it.soy, ady, adx); }
+    if (role === 'warrior') blitO(g, SD.armorS, 0, false);
+    (SD.over[role === 'warrior' || role === 'hero' ? 'swordsman' : role === 'weaponer' ? 'merchant' : role === 'armorer' ? 'smith' : role] || { S: [] }).S.forEach(o => blit(g, o.rows, 0, o.oy));
+    const adx = wf === 1 ? 1 : wf === 3 ? -1 : 0; const ady = atk ? -3 : 0; const hx = elder ? 1 : 0;
+    if (pray) blit(g, [Rw(8, "uuu"), Rw(9, "ss")], 0, 15); else blit(g, role === 'smith' ? [Rw(7, "uu"), Rw(7, "ss"), Rw(7, "ss"), Rw(7, "ss"), Rw(7, "ss")] : SD.armS, adx, 13 + ady);
+    blit(g, SD.headS, hx, HY + hdy); const hr = SD.hairS[hstyle]; blit(g, hr.rows, hx, hr.oy + hdy);
+    if (elder && !female) blit(g, SD.beardS, hx, 10 + hdy); if (role === 'mage' && !female) blitO(g, SD.beardLongS, hdy, false);
+    if (role === 'warrior') { blitO(g, SD.helm.S, hdy, false); blitO(g, SD.helm.plumeS, hdy, false); }
+    else { const hat = SD.hat[role === 'weaponer' || role === 'armorer' ? 'merchant' : role]; if (hat) blit(g, hat.S.rows, hx, hat.S.oy + hdy); }
+    if (role === 'hero') blitO(g, SD.circletS, hdy, false); if (role === 'priest') blitO(g, SD.haloS, hdy, false);
+    if (bowOn) putPix(g, SD.bowS, 'P', hdy);
+    if (itn && !pray) { const it = SD.item[itn]; putItem(g, it.S, it.soy, ady, adx); }
     return g;
   }
   // front / back
   const lf = wf === 3 ? -1 : 0, rt = wf === 1 ? -1 : 0;
+  if (role === 'hero' && view === 'F') blitO(g, SD.capeBackF, 0, true);
   if (robe) { blit(g, view === 'F' ? SD.torsoF : SD.torsoB, 0, TYY, true); blit(g, SD.robeF, 0, 17, true); blit(g, SD.robeLegF, 0, 21, true); }
+  else if (skirt) { putL(g, SD.legF.slice(1), LYY + 1, lf); putR(g, SD.legF.slice(1), LYY + 1, rt); blit(g, view === 'F' ? SD.torsoF : SD.torsoB, 0, TYY, true); blitO(g, SD.dressF, 0, true); }
   else { putL(g, SD.legF, LYY, lf); putR(g, SD.legF, LYY, rt); blit(g, view === 'F' ? SD.torsoF : SD.torsoB, 0, TYY, true); }
-  if (!robe && job === 'priest') { /* never */ }
-  const ov = (SD.over[job] || { F: [], B: [] })[view]; ov.forEach(o => { blit(g, o.rows, 0, o.oy, true); });
+  if (role === 'smith') blitO(g, SD.broadF, 0, true);
+  if (elder && !robe) blitO(g, SD.humpF, 0, true);
+  if (role === 'warrior') blitO(g, SD.armorF, 0, true);
+  const ov = (SD.over[role === 'warrior' || role === 'hero' ? 'swordsman' : role === 'weaponer' ? 'merchant' : role === 'armorer' ? 'smith' : role] || { F: [], B: [] })[view]; ov.forEach(o => { if (role === 'hero' && o.oy === 12) return; blit(g, o.rows, 0, o.oy, true); });
+  if (role === 'hero' && view === 'F') blitO(g, SD.heroOverF, 0, true); if (role === 'hero' && view === 'B') blitO(g, SD.capeB, 0, true);
   const alt = wf === 1 ? -1 : wf === 3 ? 1 : 0; const aryR = atk ? -4 : -alt;
-  if (pray) { blit(g, ["...uuuuu", "...uuuss"].map((r, i) => i ? "...uuuss" : r), 0, 14, true); }
+  if (pray) { blit(g, ["...uuuuu", "...uuuss"], 0, 14, true); }
+  else if (role === 'smith') { putL(g, SD.armBareF, 13, alt); putR(g, SD.armBareF, 13, aryR); }
   else { putL(g, SD.armF, 13, alt); putR(g, SD.armF, 13, aryR); }
+  if (role === 'warrior' && view === 'F' && !pray) blitO(g, SD.shieldF, 0, false);
   blit(g, view === 'F' ? SD.headF : SD.headF.map(r => r.replace(/[erP]/g, 's')), 0, HY + hdy, true);
   const hr = (view === 'F' ? SD.hairF : SD.hairB)[hstyle]; blit(g, hr.rows, 0, hr.oy + hdy, true);
-  if (view === 'F' && elder && h.sex === 'M') blit(g, SD.beardF, 0, 10 + hdy, true);
-  const hat = SD.hat[job]; if (hat) { const ht = hat[view]; blit(g, ht.rows, 0, ht.oy + hdy, true); }
-  const itn = SD.jobItem[job] || (elder ? 'cane' : null);
-  if (itn && !pray) { const it = SD.item[itn]; if (view === 'F') putItem(g, it.F, it.oy, atk ? -4 : alt === -1 ? 1 : alt === 1 ? -1 : 0, 0); else if (it.B.length) putItem(g, it.B, it.boy, 0, 0); }
-  if (job === 'merchant' && view === 'S') { /* pack already in over */ }
+  if (view === 'F' && elder && !female) blit(g, SD.beardF, 0, 10 + hdy, true);
+  if (view === 'F' && role === 'mage' && !female) blitO(g, SD.beardLongF, hdy, true);
+  if (role === 'warrior') { const hm = SD.helm[view]; blitO(g, hm, hdy, true); blitO(g, SD.helm.plumeF, hdy, true); }
+  else { const hat = SD.hat[role === 'weaponer' || role === 'armorer' ? 'merchant' : role]; if (hat) { const ht = hat[view]; blit(g, ht.rows, 0, ht.oy + hdy, true); } }
+  if (role === 'hero' && view === 'F') blitO(g, SD.circletF, hdy, true); if (role === 'priest') blitO(g, SD.haloF, hdy, true);
+  if (bowOn) putPix(g, SD.bowF, 'P', hdy);
+  if (itn && !pray) { const it = SD.item[itn]; if (view === 'F') putItem(g, it.F, it.oy, atk ? -4 : alt === -1 ? 1 : alt === 1 ? -1 : 0, 0); else if (it.B.length) putItem(g, it.B, it.boy, 0, 0); if (elder && view === 'F') blitO(g, SD.caneCrook.F ? { oy: SD.caneCrook.oy, rows: SD.caneCrook.F } : null, 0, false); }
   return g;
 }
 function humanSprite(h, dir, frame) {
-  const L = h.look, child = h.age < ADULT_AGE, elder = h.age >= 56;
-  const key = [h.job, L.hair, L.style, L.skin, L.cloth, child ? 1 : 0, elder ? 1 : 0, elder ? h.sex : '', dir, frame].join('.');
+  const L = h.look, role = roleOf(h), elder = h.age >= 56;
+  const key = [role, L.hair, L.style, L.skin, L.cloth, elder ? 1 : 0, h.sex || 'M', dir, frame].join('.');
   if (spriteCache[key]) return spriteCache[key];
   const d = dir === 3 ? 2 : dir; const grid = humanGrid(h, d, frame);
   let cv = bakeGrid(grid, 16, 24, humanRamps(h));
@@ -3231,13 +3310,16 @@ const PROPS = {
   anvil: (c, x, y) => { shadowPx(c, x + 8, y + 14, 5, 2); fr(c, '#1c1c2a', x + 3, y + 6, 11, 3); fr(c, '#5a5a6a', x + 4, y + 6, 9, 2); fr(c, '#1c1c2a', x + 6, y + 9, 5, 5); fr(c, '#4a4a5a', x + 7, y + 9, 3, 4); fr(c, '#8a8a9a', x + 4, y + 6, 6, 1); },
 };
 const PROP_KEYS = Object.keys(PROPS);
-let LAMPS = [], FLAGS = [], CHIMS = [], WIN_RECTS_ = [], SPINNERS = [];
+let LAMPS = [], FLAGS = [], CHIMS = [], WIN_RECTS_ = [], SPINNERS = [], SPRAYS = [];
 /* ---------- buildings ---------- */
+const KIND_ROOF = { church: '#6a6e88', guild: '#2f5fc0', tavern: '#8a4a2a', smithy: '#4e4e5c', shop: '#c8382e', armor: '#2f8f9e', apothecary: '#3a9a4a', inn: '#d88a2c', mill: '#a05a30' };
+const HOUSE_ROOF = ['#8a5a3a', '#a0704a', '#7a6a48', '#6a5a5a'];
+const PLAQUE = { guild: 'battle', shop: 'weaponer', armor: 'armorer', smithy: 'smith', tavern: 'mug', inn: 'bed', apothecary: 'potion' };
 function drawBuilding(c, b, sea) {
   const px = b.x * TS, py = b.y * TS, w = b.w * TS, h = b.h * TS; const k = b.kind;
-  const roofHex = PAL.roof[b.roof % PAL.roof.length]; const RR = mkRamp(sea === 3 ? roofHex : roofHex);
+  const roofHex = KIND_ROOF[k] || HOUSE_ROOF[b.roof % 4]; const RR = mkRamp(roofHex);
   const stone = k === 'church' || k === 'smithy' || k === 'castle' || k === 'guild' && false;
-  const wallHex = { church: '#e6e6f0', guild: '#c29a62', tavern: '#cfa878', castle: '#4e465e', smithy: '#a2a2b0', mill: '#eadfc6', inn: '#e0cfa2', shop: '#e8d6aa', apothecary: '#dcd2b0', house: '#e6d4a8', hut: '#cdb88a' }[k] || '#e6d4a8';
+  const wallHex = { church: '#e6e6f0', guild: '#c29a62', tavern: '#cfa878', castle: '#4e465e', smithy: '#a2a2b0', mill: '#eadfc6', inn: '#e0cfa2', shop: '#e8d6aa', armor: '#d6dceb', apothecary: '#dcd2b0', house: '#e6d4a8', hut: '#cdb88a' }[k] || '#e6d4a8';
   const WR = mkRamp(wallHex); const door = mkRamp(k === 'church' ? '#5a4030' : k === 'castle' ? '#2a1a34' : '#7a4a24');
   const wallH = k === 'castle' ? 26 : Math.min(h - 8, Math.round(h * 0.45)); const roofH = h - wallH; const wy0 = py + roofH;
   shadowPx(c, px + w / 2 + 3, py + h, w / 2 + 3, 3, 0.32);
@@ -3288,6 +3370,7 @@ function drawBuilding(c, b, sea) {
   else if (k === 'inn') { fr(c, '#3a2a1a', sx - 8, sy - 6, 16, 12); fr(c, '#f0e0a0', sx - 7, sy - 5, 14, 10); fr(c, '#c04040', sx - 5, sy - 1, 10, 4); fr(c, '#fff', sx - 5, sy - 3, 4, 3); fr(c, '#4a5ac0', sx + 2, sy - 4, 3, 3); }
   else if (k === 'mill') { fr(c, '#5a3a22', px + w / 2 - 1, py + 6, 2, 2); SPINNERS.push({ x: px + w / 2, y: py + 8, r: 18 }); }
   else if (k === 'house' || k === 'hut') { fr(c, '#2a1c14', dx - 1, dy + 6, 2, 8); if (hsh(b.x, b.y, 9) < 0.5) PROPS.flowerpot(c, dx + 11, dy + 1); }
+  if (PLAQUE[k]) { const ic = iconCanvas(PLAQUE[k]); const bx = Math.round(px + w / 2 - 13), by = py + 8; fr(c, '#1c1626', bx - 1, by - 1, 28, 26); fr(c, '#f4e8c0', bx, by, 26, 24); fr(c, '#c8b078', bx, by + 21, 26, 3); fr(c, KIND_ROOF[k] || '#888', bx + 1, by + 1, 24, 2); if (ic) c.drawImage(ic, bx + 5, by + 4, 16, 16); fr(c, '#5a3a22', bx + 3, by - 4, 2, 3); fr(c, '#5a3a22', bx + 21, by - 4, 2, 3); }
   // winter snow cap on roof
   if (sea === 3 && k !== 'mill') { const t = rt; fr(c, '#f4f8fc', px - ov + inset, t - 1, w + ov * 2 - inset * 2, 3); for (let r = 0; r < rh; r += 4) { const tt = r / rh; const ins = Math.round(inset * (1 - Math.min(1, tt * 1.4))); fr(c, '#f4f8fc', px - ov + ins, t + r, 5 + ((r * 3) % 7), 2); fr(c, '#cfe0ee', px - ov + ins, t + r + 2, 4, 1); fr(c, '#f4f8fc', px + w + ov - ins - 6 - ((r * 5) % 5), t + r, 6 + ((r * 5) % 5), 2); } fr(c, '#f4f8fc', px - ov + 1, rb - 1, w + ov * 2 - 2, 2); for (let xx = 0; xx < w + ov * 2; xx += 7) { fr(c, '#cfe8ff', px - ov + xx, rb + 1, 1, 2 + (xx % 3)); } }
 }
@@ -3308,13 +3391,18 @@ function drawCastle(c, b, sea, px, py, w, h) {
   if (sea === 3) { fr(c, '#f4f8fc', px, py + 8, w, 2); for (let i = 0; i < 5; i++) fr(c, '#f4f8fc', px + i * 16 + 2, py + 1, 8, 2); }
 }
 /* ---------- fountain / well ---------- */
-function drawFountain(c, tx, ty, sea) { const x = tx * TS, y = ty * TS; shadowPx(c, x + 9, y + 15, 8, 3, 0.3); const S = mkRamp('#9a9aa8'); fr(c, S.o, x, y + 4, 16, 12); fr(c, S.b, x + 1, y + 5, 14, 10); fr(c, S.l, x + 1, y + 5, 14, 1); fr(c, S.d, x + 1, y + 14, 14, 1); fr(c, '#2f78dc', x + 2, y + 7, 12, 6); fr(c, '#7ab4ff', x + 3, y + 8, 4, 1); fr(c, '#7ab4ff', x + 9, y + 10, 3, 1); fr(c, S.b, x + 6, y + 3, 4, 8); fr(c, S.l, x + 6, y + 3, 1, 8); fr(c, '#cfe6ff', x + 7, y - 1, 2, 5); fr(c, '#fff', x + 6, y - 2, 4, 2); fr(c, S.o, x + 5, y + 1, 6, 1); }
+function drawFountain(c, tx, ty, sea) {
+  const x = tx * TS, y = ty * TS; shadowPx(c, x + 9, y + 18, 17, 5, 0.32); const S = mkRamp('#9a9aa8'), Wt = mkRamp('#3a86e8');
+  ell(c, S.o, x + 8, y + 9, 17, 11); ell(c, S.b, x + 8, y + 9, 16, 10); ell(c, S.l, x + 8, y + 7, 15, 8); ell(c, S.d, x + 8, y + 11, 13, 7); ell(c, Wt.b, x + 8, y + 9, 13, 7); ell(c, Wt.l, x + 6, y + 8, 8, 4); fr(c, '#cfe6ff', x + 1, y + 10, 4, 1); fr(c, '#cfe6ff', x + 12, y + 12, 5, 1);
+  fr(c, S.o, x + 5, y - 2, 6, 14); fr(c, S.b, x + 6, y - 1, 4, 12); fr(c, S.l, x + 6, y - 1, 1, 12); fr(c, S.d, x + 9, y, 1, 11); ell(c, S.o, x + 8, y - 4, 6, 3); ell(c, S.l, x + 8, y - 4, 5, 2);
+  SPRAYS.push({ x: x + 8, y: y - 6 });
+}
 function drawWell(c, tx, ty) { const x = tx * TS, y = ty * TS; PROPS.well2(c, x, y); }
 /* ---------- world canvas ---------- */
 const worldCache = {};
 function getWorldCanvas(sea) {
   if (worldCache[sea]) return worldCache[sea];
-  LAMPS = []; FLAGS = []; CHIMS = []; WIN_RECTS.length = 0; SPINNERS = [];
+  LAMPS = []; FLAGS = []; CHIMS = []; SPRAYS = []; WIN_RECTS.length = 0; SPINNERS = [];
   const cv = mkCanvas(MW * TS, MH * TS), c = cv.getContext('2d');
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) paintTile(c, x, y, W.tiles[y * MW + x], sea);
   // props (decorative; placed on grass next to paths and buildings)
@@ -3354,6 +3442,7 @@ Render.drawWaterAnim = function (c, cx, cy, sea) {
 Render.drawAnimProps = function (c, cx, cy, sea, dark) {
   const t = this.time;
   for (const ch of CHIMS) { const sx = ch.x - cx, sy = ch.y - cy; if (sx < -20 || sx > 660 || sy < -30 || sy > 380) continue; const n = ch.big ? 5 : 3; for (let i = 0; i < n; i++) { const p = ((t + i * 18 + ch.x * 3) % 72) / 72; const px = sx + Math.sin(p * 5 + i) * 1.5 + p * 5, py = sy - p * (ch.big ? 22 : 16); const s = Math.round(2 + p * 3); c.globalAlpha = (1 - p) * (ch.big ? 0.75 : 0.55); fr(c, sea === 3 ? '#fff' : (dark > 0.3 ? '#c8c8e0' : '#ececf4'), Math.round(px - s / 2), Math.round(py - s / 2), s, s); fr(c, '#b8b8d0', Math.round(px - s / 2), Math.round(py + s / 2 - 1), s, 1); } c.globalAlpha = 1; if (ch.big) { const fl = (t >> 2) & 1; fr(c, fl ? '#ffb040' : '#ff8a30', sx - 1, sy + 2, 3, 1); } }
+  for (const sp of SPRAYS) { const sx = sp.x - cx, sy = sp.y - cy; if (sx < -30 || sx > 670 || sy < -30 || sy > 380) continue; for (let i = 0; i < 12; i++) { const p = ((t + i * 5) % 40) / 40, an = (i % 6 - 2.5) * 0.28; const dx = Math.sin(an) * p * 15, dy = -Math.cos(an) * (1 - (p * 2 - 1) * (p * 2 - 1)) * 13 + p * 4; c.globalAlpha = 0.9 - p * 0.5; fr(c, i % 3 ? '#cfe8ff' : '#ffffff', Math.round(sx + dx), Math.round(sy + dy), 1, 1); } c.globalAlpha = 1; }
   for (const f of FLAGS) { const sx = f.x - cx, sy = f.y - cy; if (sx < -20 || sx > 660 || sy < -20 || sy > 380) continue; const ph = (t >> 3) % 4; for (let i = 0; i < 7; i++) { const w = Math.round(Math.sin((i + ph * 1.6) * 0.9) * 1.2); fr(c, f.col, sx + i, sy + w, 1, 5 - (i > 4 ? 1 : 0)); fr(c, '#ffffff40', sx + i, sy + w, 1, 1); } fr(c, '#1c1626', sx, sy - 1, 7, 1); }
   for (const m of SPINNERS) { const sx = m.x - cx, sy = m.y - cy; if (sx < -30 || sx > 670 || sy < -30 || sy > 390) continue; const a = ((t >> 2) % 16) * (Math.PI / 8); for (let k = 0; k < 4; k++) { const an = a + k * Math.PI / 2; const ex = sx + Math.cos(an) * m.r, ey = sy + Math.sin(an) * m.r; pxLine(c, '#2a2438', sx, sy, ex, ey, 3); pxLine(c, '#f2eee4', sx, sy, ex, ey, 1); const ex2 = sx + Math.cos(an + 0.35) * m.r * 0.9, ey2 = sy + Math.sin(an + 0.35) * m.r * 0.9; pxLine(c, '#c8c0a8', ex, ey, ex2, ey2, 1); } fr(c, '#5a3a22', sx - 2, sy - 2, 4, 4); fr(c, '#8a5a30', sx - 1, sy - 1, 2, 2); }
 };
@@ -3520,9 +3609,10 @@ function monsterSprite(m, frame) {
 function __fakeHuman(job, hair, style, skin, cloth, age, sex) { return { job, look: { hair, style, skin, cloth, acc: 0 }, age: age === undefined ? 28 : age, sex: sex || 'M' }; }
 if (typeof window !== 'undefined') {
   window.__sheetChars = function () {
-    const jobs = ['swordsman', 'mage', 'priest', 'thief', 'farmer', 'merchant', 'smith', 'herbalist', 'historian']; const SC = 4, cw = 18 * SC, ch = 26 * SC;
-    const cv = document.createElement('canvas'); cv.width = 16 * cw + 10; cv.height = jobs.length * ch * 1 + 10; const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.fillStyle = '#58a840'; c.fillRect(0, 0, cv.width, cv.height);
-    jobs.forEach((j, r) => { let col = 0; [0, 1, 2, 3].forEach(d => { [0, 1, 2, 3].forEach(f => { const h = __fakeHuman(j, r % 8, r % 4, r % 3, r % 8, 28, r % 2 ? 'F' : 'M'); const s = humanSprite(h, d, f); c.drawImage(s, 5 + col * cw + 8, 5 + r * ch, 16 * SC, 24 * SC); col++; }); }); });
+    const R = (job, sex, age, lvl, hair, style, skin, cloth) => Object.assign(__fakeHuman(job, hair, style, skin, cloth, age, sex), { lvl });
+    const list = [['warrior M', R('swordsman', 'M', 28, 3, 1, 0, 0, 0)], ['hero M', R('swordsman', 'M', 22, 9, 3, 2, 0, 0)], ['hero F', R('swordsman', 'F', 22, 9, 4, 1, 0, 0)], ['priest M', R('priest', 'M', 35, 3, 0, 0, 1, 0)], ['priest F', R('priest', 'F', 30, 3, 1, 1, 0, 0)], ['sage M', R('mage', 'M', 40, 3, 0, 0, 0, 0)], ['mage F', R('mage', 'F', 24, 3, 2, 1, 0, 0)], ['smith M', R('smith', 'M', 36, 2, 0, 1, 1, 0)], ['farmer M', R('farmer', 'M', 30, 1, 2, 0, 0, 1)], ['farmer F', R('farmer', 'F', 28, 1, 3, 1, 0, 2)], ['merchant M', R('merchant', 'M', 33, 1, 1, 0, 1, 3)], ['herbalist F', R('herbalist', 'F', 27, 1, 5, 2, 0, 4)], ['thief', R('thief', 'M', 24, 2, 0, 0, 0, 0)], ['historian', R('historian', 'M', 41, 1, 1, 0, 0, 0)], ['elder M', R('farmer', 'M', 64, 1, 5, 0, 0, 1)], ['elder F', R('herbalist', 'F', 62, 1, 5, 1, 0, 2)], ['child M', R('farmer', 'M', 8, 1, 3, 0, 0, 5)], ['child F', R('merchant', 'F', 8, 1, 4, 1, 0, 6)]];
+    const SC = 4, cw = 17 * SC, ch = 25 * SC; const cols = 7; const cv = document.createElement('canvas'); cv.width = cols * cw + 150; cv.height = list.length * ch + 10; const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.fillStyle = '#58a840'; c.fillRect(0, 0, cv.width, cv.height);
+    list.forEach((e, r) => { c.fillStyle = '#fff'; c.font = '13px monospace'; c.fillText(e[0], 4, 5 + r * ch + 40); [[0, 0], [2, 0], [1, 0], [0, 1], [0, 3], [2, 1], [0, 5]].forEach((p, i) => c.drawImage(humanSprite(e[1], p[0], p[1]), 140 + i * cw, 5 + r * ch, 16 * SC, 24 * SC)); });
     return cv.toDataURL('image/png');
   };
   window.__sheetStates = function () {
@@ -4005,7 +4095,7 @@ const UI = {
       prs.forEach(p => {
         const hh = hById(p.hid); if (!hh) return;
         const rc = recommendFor(p); const fresh = !(this.seenP || (this.seenP = {}))[p.id]; this.seenP[p.id] = 1; const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : '') + (fresh && G.tick > START_TICK + 30 ? ' fresh' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
-          h('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, h('b', { style: 'display:flex;align-items:center;gap:3px' }, Ico(hh.job, 14), hh.name[li()] + ' ', h('span', { class: 'sm' }, JOBS[hh.job].n[li()])), h('span', { class: 'gold sm', style: 'display:flex;align-items:center;gap:3px' }, Ico(p.kind, 14), t('pk_' + p.kind))),
+          h('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, h('b', null, hh.name[li()] + ' ', h('span', { class: 'sm' }, JOBS[hh.job].n[li()])), h('span', { class: 'gold sm', style: 'display:flex;align-items:center;gap:3px' }, Ico(p.kind, 14), t('pk_' + p.kind))),
           h('div', { class: 'sm', style: 'line-height:1.22;height:32px;overflow:hidden;font-size:13px' }, pr(S['pray_' + p.kind][p.v % S['pray_' + p.kind].length])),
           h('div', { style: 'font-size:12px;color:#9affb0;margin-top:1px' }, t('rec_label') + '：' + POWER_BY_ID[rc.pid].n[li()] + ' ' + rc.mark + ' ' + Math.round(rc.p * 100) + '%'),
           h('div', { class: 'gauge', style: 'height:5px;border-width:1px;margin-top:2px' }, p._bar = h('i', { style: 'background:' + (p.urg > 0.75 ? '#ff7050' : p.urg > 0.5 ? '#ffd060' : '#fff3a0') })));
@@ -4126,10 +4216,9 @@ function mkFrame(theme, glass) {
 }
 /* ---------- hand cursor (FF style, pointing right) ---------- */
 function mkHand(frame) {
-  const rows = ["................", "...oo...........", "..owwo..........", "..owwo..........", "..owwooooooooo..", "..owwwwwwwwwwwo.", "..owwwwwwwwwwwwo", "..owwwwoooooooo.", "..owwwwwwwwwwo..", "...owwwwwwwwo...", "...owwwwwwwo....", "....owwwwwwo....", "....ooooooo....."];
-  const cv = mkCanvas(16, 16), c = cv.getContext('2d'); const dx = frame ? 1 : 0; const col = { o: '#1c1a40', w: '#f6f6ff' };
-  rows.forEach((r, y) => { for (let x = 0; x < 16; x++) { const ch = r[x]; if (ch && ch !== '.') { c.fillStyle = col[ch]; c.fillRect(x - dx, y, 1, 1); } } });
-  c.fillStyle = '#aab0e0'; [[3, 5], [3, 8], [5, 9], [8, 10]].forEach(p => c.fillRect(p[0] - dx, p[1], 1, 1)); c.fillRect(10 - dx, 6, 4, 1);
+  const rows = ["o...............", "oo..............", "owo.............", "owwo............", "owwwo...........", "owwwwo..........", "owwwwwo.........", "owwwwwwo........", "owwwwwwwo.......", "owwwwwooooo.....", "owwowwo.........", "owo.owwo........", "oo..owwo........", "o....owwo.......", ".....owwo.......", "......oo........"];
+  const cv = mkCanvas(16, 16), c = cv.getContext('2d'); const col = frame ? { o: '#3a2a08', w: '#ffd860' } : { o: '#14123a', w: '#ffffff' };
+  rows.forEach((r, y) => { for (let x = 0; x < 16; x++) { const ch = r[x]; if (ch && ch !== '.') { c.fillStyle = col[ch]; c.fillRect(x, y, 1, 1); } } });
   return cvUrl(cv);
 }
 /* ---------- pixel digits 5x7 ---------- */
@@ -4163,6 +4252,11 @@ const ICON_DEF = {
   smith: [{ m: '#9aa2b8', u: '#5a6078', w: '#8a5a30' }, g => { rbox(g, 'w', 7, 6, 2, 9, true); rbox(g, 'm', 3, 2, 10, 5); rbox(g, 'u', 3, 6, 10, 1, true); gpx(g, 'm', 2, 3); gpx(g, 'm', 13, 3); }],
   herbalist: [{ c: '#4ac06a', u: '#2a8a44', t: '#c8f0c0', w: '#8a5a30' }, g => { rbox(g, 'c', 4, 2, 8, 8); gpx(g, 'c', 8, 1); rbox(g, 'u', 7, 3, 1, 8, true); rbox(g, 't', 5, 4, 2, 2, true); rbox(g, 'w', 7, 10, 2, 5, true); }],
   historian: [{ c: '#3a4c88', u: '#243060', t: '#f4ecd0', g: '#e8c860' }, g => { rbox(g, 'c', 2, 3, 12, 10); rbox(g, 't', 3, 4, 5, 8); rbox(g, 't', 9, 4, 4, 8); rbox(g, 'u', 8, 3, 1, 10, true); gline(g, 'g', 14, 1, 10, 6, 1); }],
+  weaponer: [{ m: '#cfd4e4', g: '#e0b838', c: '#d03a30' }, g => { gline(g, 'm', 12, 1, 4, 10, 2); rbox(g, 'g', 2, 9, 5, 2, true); rbox(g, 'c', 9, 9, 5, 5); gpx(g, 'g', 11, 11); }],
+  armorer: [{ m: '#aab8d8', g: '#e0b838', c: '#4a6ca4' }, g => { rbox(g, 'm', 3, 2, 10, 9); rbox(g, 'm', 4, 10, 8, 3); rbox(g, 'm', 6, 12, 4, 3); rbox(g, 'c', 5, 4, 6, 6); rbox(g, 'g', 7, 5, 2, 4, true); }],
+  mug: [{ g: '#e8a830', c: '#fff8e0', u: '#a06a10' }, g => { rbox(g, 'g', 3, 4, 8, 10); rbox(g, 'c', 3, 3, 8, 3); rbox(g, 'g', 11, 6, 3, 6); rbox(g, 'u', 5, 8, 1, 4, true); rbox(g, 'u', 8, 8, 1, 4, true); }],
+  bed: [{ c: '#c04040', u: '#8a2a2a', t: '#f4f0e8', w: '#8a5a30' }, g => { rbox(g, 'w', 1, 6, 2, 8, true); rbox(g, 'w', 13, 8, 2, 6, true); rbox(g, 'c', 3, 9, 10, 4); rbox(g, 't', 3, 7, 4, 3); rbox(g, 'u', 3, 12, 10, 1, true); }],
+  potion: [{ c: '#4ad07a', u: '#2a8a4a', t: '#fff', w: '#8a5a30' }, g => { rbox(g, 'w', 6, 1, 4, 3, true); rbox(g, 'c', 5, 4, 6, 3); rbox(g, 'c', 3, 7, 10, 7); rbox(g, 'u', 3, 12, 10, 2, true); gpx(g, 't', 5, 9); gpx(g, 't', 5, 10); }],
   /* needs / prayer kinds */
   hunger: [{ c: '#d8a860', u: '#9a6a28', t: '#f4d890' }, g => { rbox(g, 'c', 2, 5, 12, 7); rbox(g, 't', 4, 4, 8, 2, true); rbox(g, 'u', 2, 11, 12, 1, true); [[5, 6], [8, 6], [11, 6]].forEach(p => gpx(g, 'u', p[0], p[1])); }],
   safety: [{ c: '#6a8ae0', u: '#3a50a0', g: '#e8c860' }, g => { rbox(g, 'c', 3, 2, 10, 8); rbox(g, 'c', 4, 9, 8, 3); rbox(g, 'c', 6, 11, 4, 3); rbox(g, 'g', 7, 3, 2, 8, true); rbox(g, 'g', 5, 5, 6, 2, true); }],
@@ -4235,16 +4329,16 @@ body.theme-blue .win{border-radius:0}
 @keyframes cardflash{0%{filter:brightness(3)}50%{filter:brightness(1.8)}100%{filter:none}}
 .winopen{animation:winopen .15s steps(6) 1}
 @keyframes winopen{from{transform:scale(.7,.08);opacity:.2}to{transform:scale(1,1);opacity:1}}
-body{cursor:url(${this.hand[0]}) 15 6,auto}
-.btn,.card,.win .btn{cursor:var(--hand,url(${this.hand[0]}) 15 6),pointer}
+body{cursor:url(${this.hand[0]}) 0 0,auto}
+.btn,.card,.win .btn{cursor:var(--hand,url(${this.hand[1]}) 0 0),pointer}
 #game{cursor:grab}
 .gauge{border-radius:0;image-rendering:pixelated}
 .title-logo{text-shadow:0 0 18px #6a8aff,3px 3px 0 #000,-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000,0 7px 0 #000}
 .pxn{image-rendering:pixelated;vertical-align:middle}
 `;
-    document.body.style.setProperty('--hand', `url(${this.hand[0]}) 15 6`);
+    document.body.style.setProperty('--hand', `url(${this.hand[1]}) 0 0`);
   },
-  anim(dt) { this.tick += dt; const k = (this.tick * 3) % 2 < 1 ? 0 : 1; if (this._k !== k && this.hand[0]) { this._k = k; document.body.style.setProperty('--hand', `url(${this.hand[k]}) 15 6`); } },
+  anim() {},
 };
 /* pixel digits in HUD numbers */
 UI.pxSet = function (el, str, color, sc) { if (!el) return; const k = str + '|' + color; if (el._pk === k) return; el._pk = k; el.textContent = ''; const im = document.createElement('img'); im.className = 'pxn'; im.src = pxText(str, color, sc || 2); im.style.height = (9 * (sc || 2) / 2) + 'px'; im.style.width = 'auto'; el.appendChild(im); };
@@ -4287,6 +4381,8 @@ Object.assign(S, {
   h_spot_none: ['まだ主役はいません。史官が見守っています。', '還沒有人成為主角。史官正在觀察。'],
   weather_label: ['天気の演出（雨・雪・落ち葉）', '天氣演出（雨、雪、落葉）'],
   fullui_label: ['最初から全部のUIを出す', '從一開始就顯示全部 UI'], locked_tip: ['まだ使いません。チュートリアルの後で使えるようになります。', '現在還用不到，教學結束後就會開放。'],
+  tip_boss: ['魔王の目覚め', '魔王覺醒'], tip_boss_d: ['この線が満ちると魔王が目覚め、戦いの時代が始まります。天秤が闇に傾くと早まり、光に傾くと遅くなります。', '這條滿了，魔王就會醒來，進入戰鬥的時代。天秤偏向暗側會變快，偏向光側會變慢。'], tip_boss_st: ['いまの進み具合：{p}%（目覚めまで約{y}年）', '目前進度：{p}%（約 {y} 年後覺醒）'], tip_boss_on: ['魔王はすでに目覚めています。討伐隊を支えましょう。', '魔王已經覺醒。請支援討伐隊。'],
+  tip_hero: ['勇者の成長', '勇者成長'], tip_hero_d: ['冒険者の強さの目安（上位3人の平均レベル）です。魔王を倒せる強さに近づくほど満ちます。依頼をこなす、装備を買う、「恩寵」や「試煉」で助けると上がります。', '冒險者強度的指標（前 3 名的平均等級）。越接近能打倒魔王的強度就越滿。完成委託、購買裝備、用「恩寵」「試煉」幫忙都會提升。'], tip_hero_st: ['上位3人の平均Lv {l}（目標Lv12／{p}%）', '前 3 名平均 Lv {l}（目標 Lv12／{p}%）'],
   feed_none: ['（まだ何もありません）', '（還沒有事件）'], goal: ['もくひょう', '目標'],
   goal_text: ['魔王が目覚める前に、勇者を育てて魔王を倒そう。', '在魔王覺醒之前，培育勇者並打倒魔王。'],
   goal_text2: ['魔王が目覚めた！討伐隊を守り、魔王を倒そう。', '魔王覺醒了！守護討伐隊，打倒魔王。'],
@@ -4418,6 +4514,8 @@ UI.buildGoal = function () {
   R.body = h('div', null, R.text, R.b1.row, R.b2.row, R.b3.row);
   w.append(R.head, R.body); this.goalR = R; Tip.attach(R.head.firstChild, () => [t('tip_goal'), t('tip_goal_d')]);
   Tip.attach(R.b1.row, () => [t('tip_bal'), t('tip_bal_d')]);
+  Tip.attach(R.b2.row, () => { const y = Math.max(0, (G.awakenTick - G.tick) / TICK_YEAR); return [t('tip_boss'), t('tip_boss_d'), G.awakened ? t('tip_boss_on') : fmt(t('tip_boss_st'), { p: Math.round(clamp((G.tick - START_TICK) / (G.awakenTick - START_TICK), 0, 1) * 100), y: y.toFixed(1) })]; });
+  Tip.attach(R.b3.row, () => { const advs = G.humans.filter(x => x.alive && isAdv(x)).sort((a, b) => b.lvl - a.lvl).slice(0, 3); const avg = advs.length ? advs.reduce((a, x) => a + x.lvl, 0) / advs.length : 0; return [t('tip_hero'), t('tip_hero_d'), fmt(t('tip_hero_st'), { l: avg.toFixed(1), p: Math.round(clamp(avg / 12, 0, 1) * 100) })]; });
   return w;
 };
 UI.goalSig = '';

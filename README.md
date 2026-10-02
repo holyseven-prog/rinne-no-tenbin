@@ -19,3 +19,8 @@ Single-file HTML god-sim prototype (ja / zh-TW). Open `index.html` in a browser.
 - Drag the map with the left mouse button (click vs drag split at 4px), wheel / two-finger pans. `test/drag.js`.
 - Pixel-art overhaul: `src/11a_spritedata.js` (character parts), `11b_palette.js` (ramps/auto shade/outline), `11c_char.js` (compositor), `11d_world.js` (terrain/buildings/props), `11e_fx.js` (light/weather/divine fx), `11f_monsters.js`, `13a_skin.js` (UI skin/icons/portraits), `14d_title_art.js` (parallax title, emblems).
 - Visual acceptance pack: `node test/visual_pack.js` -> `test/out/visual/` (see SELF_REVIEW.md there).
+
+## Latest changes (roles / buildings)
+- Recognisable roles: warrior (helm+shield), hero (cape+circlet, swordsman Lv6+), priest (halo), sage (white beard), smith (bare arms), farmer (straw hat), elder, child, women (hair/dress/bow). Jobs added: weaponer (武器商人), armorer (防具商人); armor shop built at (37,27).
+- Buildings: per-kind roof colours + plaque icons + name labels (houses on hover), big animated fountain. Job badge next to names is text again.
+- Spec sheet: docs/輪廻の天秤_仕様書_規格書_v0.5.xlsx

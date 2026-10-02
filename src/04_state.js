@@ -94,7 +94,7 @@ function initWorldState() {
     ['priest', 45, 3, { adv: false }], ['priest', 33, 2, { adv: false }],
   ];
   for (let i = 0; i < 9; i++) R0.push(['farmer', rint(20, 46), 1 + rint(0, 2)]);
-  for (let i = 0; i < 3; i++) R0.push(['merchant', rint(24, 48), 1 + rint(0, 2)]);
+  for (let i = 0; i < 3; i++) R0.push([['merchant', 'weaponer', 'armorer'][i], rint(24, 48), 1 + rint(0, 2)]);
   for (let i = 0; i < 2; i++) R0.push(['smith', rint(26, 48), 2]);
   for (let i = 0; i < 2; i++) R0.push(['herbalist', rint(24, 44), 2]);
   for (let i = 0; i < 4; i++) R0.push([rpick(['farmer', 'merchant']), rint(4, 11), 1, { child: true }]);
@@ -133,7 +133,7 @@ function initWorldState() {
   // opening prologue chapter (written at tick 0)
   G.pendingProlog = true;
 }
-const JOB_CLOTH = { swordsman: 0, mage: 1, priest: 2, thief: 3, farmer: 4, merchant: 5, smith: 6, herbalist: 7, historian: 2 };
+const JOB_CLOTH = { swordsman: 0, mage: 1, priest: 2, thief: 3, farmer: 4, merchant: 5, weaponer: 5, armorer: 1, smith: 6, herbalist: 7, historian: 2 };
 function hById0(key) { return G.humans.find(h => h.id === G.flags[key]); }
 
 /* ---- monsters ---- */

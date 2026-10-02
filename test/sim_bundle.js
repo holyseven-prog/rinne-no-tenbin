@@ -4,7 +4,7 @@
 const TICK_DAY = 144, DAYS_YEAR = 12, TICK_YEAR = 1728, MW = 64, MH = 40, TS = 16, START_TICK = 36;
 const BOSS_BASE_TICK = 6 * TICK_YEAR;
 let G = null, LANG = 'ja';
-const TUNE = Object.assign({ bossHp: 2000, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
+const TUNE = Object.assign({ bossHp: 1650, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lerp = (a, b, t) => a + (b - a) * t;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -82,6 +82,8 @@ const JOBS = {
   thief: { n: ['盗賊', '盜賊'], hp: 32, atk: 8, def: 3, spd: 1.3, range: 1.5, adv: true },
   farmer: { n: ['農夫', '農夫'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   merchant: { n: ['商人', '商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
+  weaponer: { n: ['武器商人', '武器商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
+  armorer: { n: ['防具商人', '防具商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   smith: { n: ['鍛冶', '鐵匠'], hp: 40, atk: 5, def: 5, spd: 0.9, range: 1.5 },
   herbalist: { n: ['薬師', '藥師'], hp: 28, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   historian: { n: ['史官', '史官'], hp: 26, atk: 1, def: 1, spd: 1.0, range: 1.5 },
@@ -144,7 +146,7 @@ S.pk = {}; // prayer kind names
 
 const PLACES = { // key -> names
   farm: ['西の農地', '西邊農地'], town: ['町リュミエ', '琉米耶鎮'], field: ['魔物の野', '魔物原野'], plateau: ['魔王の台地', '魔王高地'],
-  guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], shop: ['道具屋', '雜貨鋪'],
+  guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], fountain: ['噴水', '噴泉'], well: ['井戸', '水井'], shop: ['武器屋', '武器店'], armor: ['防具屋', '防具店'],
   apothecary: ['薬屋', '藥鋪'], inn: ['宿屋', '旅店'], house: ['民家', '民宅'], mill: ['風車小屋', '風車小屋'], hut: ['農家', '農舍'], castle: ['魔王城', '魔王城'],
   plaza: ['広場', '廣場'], lake: ['湖のほとり', '湖畔'], wood: ['森の道', '森林小徑'],
 };
@@ -194,7 +196,7 @@ function buildWorld() {
   [[18, 11], [22, 11], [33, 11], [37, 11], [40, 11]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, i % 4));
   mk('guild', 18, 19, 6, 4, 2); mk('tavern', 33, 19, 5, 4, 3); mk('shop', 39, 19, 4, 4, 1);
   mk('smithy', 17, 27, 5, 4, 4); mk('apothecary', 23, 27, 4, 4, 5); mk('inn', 30, 27, 6, 4, 0);
-  [[37, 28], [41, 28]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 2) % 4));
+  [[41, 28]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 2) % 4)); mk('armor', 37, 27, 4, 4, 5);
   [[18, 32], [22, 32], [32, 32], [36, 32], [40, 32]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 1) % 4));
   mk('hut', 3, 20, 3, 3, 1); mk('hut', 11, 20, 3, 3, 2); mk('mill', 6, 19, 3, 4, 7);
   mk('castle', 58, 11, 5, 6, 8);
@@ -350,7 +352,7 @@ function initWorldState() {
     ['priest', 45, 3, { adv: false }], ['priest', 33, 2, { adv: false }],
   ];
   for (let i = 0; i < 9; i++) R0.push(['farmer', rint(20, 46), 1 + rint(0, 2)]);
-  for (let i = 0; i < 3; i++) R0.push(['merchant', rint(24, 48), 1 + rint(0, 2)]);
+  for (let i = 0; i < 3; i++) R0.push([['merchant', 'weaponer', 'armorer'][i], rint(24, 48), 1 + rint(0, 2)]);
   for (let i = 0; i < 2; i++) R0.push(['smith', rint(26, 48), 2]);
   for (let i = 0; i < 2; i++) R0.push(['herbalist', rint(24, 44), 2]);
   for (let i = 0; i < 4; i++) R0.push([rpick(['farmer', 'merchant']), rint(4, 11), 1, { child: true }]);
@@ -389,7 +391,7 @@ function initWorldState() {
   // opening prologue chapter (written at tick 0)
   G.pendingProlog = true;
 }
-const JOB_CLOTH = { swordsman: 0, mage: 1, priest: 2, thief: 3, farmer: 4, merchant: 5, smith: 6, herbalist: 7, historian: 2 };
+const JOB_CLOTH = { swordsman: 0, mage: 1, priest: 2, thief: 3, farmer: 4, merchant: 5, weaponer: 5, armorer: 1, smith: 6, herbalist: 7, historian: 2 };
 function hById0(key) { return G.humans.find(h => h.id === G.flags[key]); }
 
 /* ---- monsters ---- */
@@ -480,7 +482,7 @@ function pickJobForSoul(s) {
   const k = s ? s.k : emptyKarma(); const advN = G.humans.filter(x => x.alive && isAdv(x)).length;
   const w = {
     swordsman: 1 + k.deed * 0.12 + (advN < 12 ? 2.4 : 0), mage: 0.7 + k.deed * 0.08 + (advN < 12 ? 1.4 : 0), priest: 0.7 + k.good * 0.14, thief: 0.4 + k.evil * 0.16,
-    farmer: 2.2, merchant: 1.1, smith: 0.9, herbalist: 0.9,
+    farmer: 2.2, merchant: 0.5, weaponer: 0.3, armorer: 0.3, smith: 0.9, herbalist: 0.9,
   };
   if (s && s.lastJob && s.lastJob !== 'historian' && k.attach >= 3) w[s.lastJob] = (w[s.lastJob] || 1) * (1 + k.attach * 0.25);
   const tot = Object.values(w).reduce((a, b) => a + b, 0); let r = rnd() * tot;
@@ -544,7 +546,7 @@ function actTarget(h, k) {
     case 'rest': { if (h.gold >= 8 && h.hp < h.maxHp * 0.5 && !isHidden(h)) return bldDoor(pickBld('inn')); return bldDoor(W.blds[h.home] || pickBld('house')); }
     case 'pray': return bldDoor(pickBld('church'));
     case 'shopP': return bldDoor(pickBld('apothecary'));
-    case 'shopG': return bldDoor(pickBld('smithy'));
+    case 'shopG': return bldDoor(pickBld(h.gear % 2 ? 'armor' : 'shop'));
     case 'social': { if (hr >= 17 && hr < 24 && h.gold >= 3) return bldDoor(pickBld('tavern')); const p = randWalkableIn(25, 17, 31, 22); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'muster': { const p = randWalkableIn(34, 21, 38, 25); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'train': { const p = randWalkableIn(18, 24, 26, 25); return { tx: p.x, ty: p.y, range: 0 }; }
@@ -558,7 +560,8 @@ function isHidden(h) { return !!h.inside; }
 function workTarget(h) {
   switch (h.job) {
     case 'farmer': { const f = rpick(W.fields); return { tx: f.x, ty: f.y, range: 0 }; }
-    case 'merchant': return bldDoor(pickBld('shop'));
+    case 'weaponer': return bldDoor(pickBld('shop'));
+    case 'armorer': return bldDoor(pickBld('armor'));
     case 'smith': return bldDoor(pickBld('smithy'));
     case 'herbalist': return bldDoor(pickBld('apothecary'));
     case 'priest': return bldDoor(pickBld('church'));
@@ -618,7 +621,7 @@ function onActTick(h, a) {
     case 'work': {
       h.gold += 0.06; if (h.age >= 60) h.gold -= 0.02;
       if (J === 'farmer') G.town.food += 0.42 * SEASON_YIELD[seasonOf(G.tick)] * (G.famine > G.tick ? 0.2 : 1) * (G.balance < -40 ? 0.85 : 1);
-      else if (J === 'merchant') { h.gold += 0.1; G.town.gold += 0.02; }
+      else if (J === 'merchant' || J === 'weaponer' || J === 'armorer') { h.gold += 0.1; G.town.gold += 0.02; }
       else if (J === 'smith') G.town.gearStock += 0.032;
       else if (J === 'herbalist') G.town.potions += 0.045;
       else if (J === 'priest') { G.faith = Math.min(G.faithMax, G.faith + 0.02); h.needs.faith = Math.max(0, h.needs.faith - 1); }

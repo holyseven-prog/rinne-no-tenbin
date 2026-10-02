@@ -17,6 +17,8 @@ const JOBS = {
   thief: { n: ['盗賊', '盜賊'], hp: 32, atk: 8, def: 3, spd: 1.3, range: 1.5, adv: true },
   farmer: { n: ['農夫', '農夫'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   merchant: { n: ['商人', '商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
+  weaponer: { n: ['武器商人', '武器商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
+  armorer: { n: ['防具商人', '防具商人'], hp: 30, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   smith: { n: ['鍛冶', '鐵匠'], hp: 40, atk: 5, def: 5, spd: 0.9, range: 1.5 },
   herbalist: { n: ['薬師', '藥師'], hp: 28, atk: 3, def: 2, spd: 1.0, range: 1.5 },
   historian: { n: ['史官', '史官'], hp: 26, atk: 1, def: 1, spd: 1.0, range: 1.5 },
@@ -79,7 +81,7 @@ S.pk = {}; // prayer kind names
 
 const PLACES = { // key -> names
   farm: ['西の農地', '西邊農地'], town: ['町リュミエ', '琉米耶鎮'], field: ['魔物の野', '魔物原野'], plateau: ['魔王の台地', '魔王高地'],
-  guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], shop: ['道具屋', '雜貨鋪'],
+  guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], fountain: ['噴水', '噴泉'], well: ['井戸', '水井'], shop: ['武器屋', '武器店'], armor: ['防具屋', '防具店'],
   apothecary: ['薬屋', '藥鋪'], inn: ['宿屋', '旅店'], house: ['民家', '民宅'], mill: ['風車小屋', '風車小屋'], hut: ['農家', '農舍'], castle: ['魔王城', '魔王城'],
   plaza: ['広場', '廣場'], lake: ['湖のほとり', '湖畔'], wood: ['森の道', '森林小徑'],
 };
