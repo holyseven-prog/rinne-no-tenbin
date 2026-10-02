@@ -28,6 +28,7 @@ function attachHooks() {
   };
   G.onPrayer = p => { Snd.se('pray'); UI.lastPray = ''; if (p.urg > 0.8 && G.tick > START_TICK + 3 * TICK_DAY) Game.autoSlow(); };
   G.onPrayerEnd = p => { UI.lastPray = ''; };
+  G.onOverflow = () => { if (G.tick - (UI.lastOver || -9999) > 3 * TICK_DAY) { UI.lastOver = G.tick; UI.pushFeed(t('faith_over'), '#ffe9a0', null, false); } };
   G.onReincarnate = (hh, s) => { Snd.se('reincarnate'); UI.lastFav = ''; };
   G.onDeath = hh => { UI.lastFav = ''; };
   G.onChapter = ch => { if (ch.no > 1) { UI.pushFeed(t('new_chapter') + '：' + renderChapter(ch).title, '#ffe9a0', null, false); Snd.se('page'); } };

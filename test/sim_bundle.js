@@ -4,7 +4,7 @@
 const TICK_DAY = 144, DAYS_YEAR = 12, TICK_YEAR = 1728, MW = 64, MH = 40, TS = 16, START_TICK = 36;
 const BOSS_BASE_TICK = 6 * TICK_YEAR;
 let G = null, LANG = 'ja';
-const TUNE = Object.assign({ bossHp: 2300, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
+const TUNE = Object.assign({ bossHp: 2000, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lerp = (a, b, t) => a + (b - a) * t;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -1172,6 +1172,7 @@ function dayUpdate() {
   // faith
   let dis = 0; for (const h of aliveHumans()) { dis += h.disappoint || 0; if (h.disappoint > 0) h.disappoint = Math.max(0, h.disappoint - 0.012); } dis /= Math.max(1, pop);
   G.faith = Math.min(G.faithMax, G.faith + pop * 0.16 * clamp(1 - dis * TUNE.disMul, 0.1, 1));
+  if (G.faith > 100) { const ex = (G.faith - 100) * 0.3; G.faith -= ex; G.town.food += ex * 0.8; G.town.hp = Math.min(100, G.town.hp + ex * 0.15); G.stats.overflow = (G.stats.overflow || 0) + ex; if (G.onOverflow && ex > 1.2) G.onOverflow(ex); }
   G.eye = Math.min(3, G.eye + 1);
   // town economy
   G.town.food = Math.max(0, Math.min(400, G.town.food)); G.town.potions = Math.min(30, G.town.potions); G.town.gearStock = Math.min(10, G.town.gearStock);
@@ -1970,7 +1971,7 @@ function renderChapter(ch) {
 function renderRecap(ch) {
   const L = li(); const paras = []; const nm = a => a.nm[L];
   paras.push({ text: t('rc_intro'), tag: 'infer' });
-  (ch.arcsSnap || []).forEach(a => { const kindTxt = t('rc_kind_' + a.kind); const first = a.first ? a.first[L] : ''; const last = a.last ? a.last[L] : ''; paras.push({ text: fmt(t('rc_arc'), { A: nm(a), J: JOBS[a.job] ? JOBS[a.job].n[L] : '', K: kindTxt, n: a.parts, f: first, l: last, s: a.alive ? t('st_ok') : t('st_dead') }), tag: 'infer' }); });
+  (ch.arcsSnap || []).forEach(a => { const kindTxt = t('rc_kind_' + a.kind); const trim = z => z.replace(/[。.]$/, ''); const first = a.first ? trim(a.first[L]) : ''; const last = a.last ? trim(a.last[L]) : ''; paras.push({ text: fmt(t('rc_arc'), { A: nm(a), J: JOBS[a.job] ? JOBS[a.job].n[L] : '', K: kindTxt, n: a.parts, f: first, l: last, s: a.alive ? t('st_ok') : t('st_dead') }), tag: 'infer' }); });
   paras.push({ text: fmt(t('rc_god'), { c: ch.casts || 0, a: ch.answered || 0 }), tag: 'infer' });
   (ch.bigs || []).forEach(b => paras.push({ text: fmt(t('rc_big_' + b.out), { A: (b.name || ['？', '？'])[L], P: POWER_BY_ID[b.pid] ? POWER_BY_ID[b.pid].n[L] : '' }), tag: 'infer' }));
   return { title: t('rc_title'), bare: t('rc_title'), head: t('h_prot') + '：—', recap: null, paras, hist: t('rc_hist'), mood: 'calm' };
@@ -1979,6 +1980,14 @@ function inkOf(ch) { const age = G.tick - ch.now; return age < TICK_DAY ? 'wet' 
 function chronText(ch) { const r = renderChapter(ch); return `【${ch.no}】${r.title}\n${r.head}\n` + (r.recap ? t('h_recap') + '：' + r.recap + '\n' : '') + r.paras.map(p => p.text).join('\n') + `\n${t('hist')}：${r.hist}`; }
 function chronAll() { return G.chapters.map(chronText).join('\n\n'); }
 S.anon = ['誰か', '某人']; S.hist = ['史官曰', '史官曰'];
+
+/* ---- 09g_glossary.js ---- */
+/* ================= style glossary (R4-2): banned archaic / hard words and their plain replacements ================= */
+const STYLE_GLOSSARY = {
+  zh: { '彌留': '快不行了', '戕害': '傷害', '遂': '於是', '乃': '是', '亦': '也', '豈': '難道', '汝': '你', '吾': '我', '爾等': '你們', '茲': '現在', '業已': '已經', '俟': '等到', '倏忽': '一下子', '怔忡': '發愣', '喟嘆': '嘆氣', '殞': '死', '薨': '死', '甚夥': '很多', '諸君': '各位', '須臾': '一下子', '斯人': '這個人', '詰問': '追問', '膝下': '身邊', '蹉跎': '浪費', '怫然': '生氣', '悵然': '失落', '遽然': '突然', '悄然無聲': '安安靜靜' },
+  ja: { '然れども': 'しかし', '而して': 'そして', '斯く': 'こう', '宜しく': 'どうか', '汝': 'あなた', '吾': '私', '〜べし': '〜するべきだ', '〜なり': '〜だ', '〜ごとし': '〜のようだ', '逝去': '亡くなる', '落命': '死ぬ', '邂逅': '出会い', '憂悶': '悩み', '蹂躙': '踏みあらす', '睥睨': '見おろす', '慟哭': '泣きさけぶ', '瞑目': '目を閉じる', '蒼穹': '青空', '暁闇': '夜明け前', '彷徨': 'さまよう', '俄に': 'とつぜん' },
+};
+const BANNED_RX = { zh: /彌留|戕害|遂|乃|亦|豈|汝|吾|爾等|茲|業已|俟|倏忽|怔忡|喟嘆|殞|薨|甚夥|諸君|須臾|斯人|詰問|膝下|蹉跎|怫然|悵然|遽然/, ja: /然れども|而して|斯く|宜しく|汝|吾|べし|なり。|ごとし|逝去|落命|邂逅|憂悶|蹂躙|睥睨|慟哭|瞑目|蒼穹|暁闇|彷徨|俄に/ };
 
 /* ---- 09s_more.js ---- */
 /* ================= more setting beats and speech tags (de-duplication, R3-12) ================= */

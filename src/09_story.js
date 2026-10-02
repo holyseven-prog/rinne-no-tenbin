@@ -361,7 +361,7 @@ function renderChapter(ch) {
 function renderRecap(ch) {
   const L = li(); const paras = []; const nm = a => a.nm[L];
   paras.push({ text: t('rc_intro'), tag: 'infer' });
-  (ch.arcsSnap || []).forEach(a => { const kindTxt = t('rc_kind_' + a.kind); const first = a.first ? a.first[L] : ''; const last = a.last ? a.last[L] : ''; paras.push({ text: fmt(t('rc_arc'), { A: nm(a), J: JOBS[a.job] ? JOBS[a.job].n[L] : '', K: kindTxt, n: a.parts, f: first, l: last, s: a.alive ? t('st_ok') : t('st_dead') }), tag: 'infer' }); });
+  (ch.arcsSnap || []).forEach(a => { const kindTxt = t('rc_kind_' + a.kind); const trim = z => z.replace(/[。.]$/, ''); const first = a.first ? trim(a.first[L]) : ''; const last = a.last ? trim(a.last[L]) : ''; paras.push({ text: fmt(t('rc_arc'), { A: nm(a), J: JOBS[a.job] ? JOBS[a.job].n[L] : '', K: kindTxt, n: a.parts, f: first, l: last, s: a.alive ? t('st_ok') : t('st_dead') }), tag: 'infer' }); });
   paras.push({ text: fmt(t('rc_god'), { c: ch.casts || 0, a: ch.answered || 0 }), tag: 'infer' });
   (ch.bigs || []).forEach(b => paras.push({ text: fmt(t('rc_big_' + b.out), { A: (b.name || ['？', '？'])[L], P: POWER_BY_ID[b.pid] ? POWER_BY_ID[b.pid].n[L] : '' }), tag: 'infer' }));
   return { title: t('rc_title'), bare: t('rc_title'), head: t('h_prot') + '：—', recap: null, paras, hist: t('rc_hist'), mood: 'calm' };

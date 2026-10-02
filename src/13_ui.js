@@ -106,7 +106,7 @@ const UI = {
       h('div', { style: 'display:flex;align-items:center;gap:8px' }, h('span', { class: 'gold', style: 'font-weight:bold;width:60px' }, t('faith')), h('div', { class: 'gauge', style: 'flex:1' }, E.faithBar = h('i')), E.faithNum = h('span', { style: 'width:70px;text-align:right' })),
       h('div', { style: 'display:flex;justify-content:space-between;margin-top:1px', class: 'sm' }, E.eyeTxt = h('span'), E.fatTxt = h('span')));
     E.balWin = h('div', { class: 'win', style: 'left:440px;top:6px;width:400px;height:52px;padding:2px 10px;display:flex;align-items:center;gap:8px;justify-content:center' },
-      h('span', { class: 'gold' }, t('light')), E.balCv = h('canvas', { width: 220, height: 40 }), h('span', { style: 'color:#d0a0ff' }, t('dark')), E.balNum = h('span', { style: 'width:46px;text-align:right' }));
+      h('span', { class: 'gold' }, t('light')), E.balCv = h('canvas', { width: 220, height: 54 }), h('span', { style: 'color:#d0a0ff' }, t('dark')), E.balNum = h('span', { style: 'width:46px;text-align:right' }));
     E.timeWin = h('div', { class: 'win', style: 'left:850px;top:6px;width:422px;height:52px;padding:2px 10px' },
       E.dateTxt = h('div', { style: 'font-size:15px;line-height:20px;white-space:nowrap' }),
       h('div', { style: 'display:flex;gap:4px;align-items:center' },
@@ -196,9 +196,9 @@ const UI = {
     this.refreshPrayers(); this.refreshFav(); this.refreshGoal(); this.refreshRes();
   },
   drawBalance() {
-    const cv = this.el.balCv, c = cv.getContext('2d'); c.clearRect(0, 0, 220, 40);
-    const ang = -G.balance / 100 * 0.32; const cx = 110, cy = 14, L = 80;
-    c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.moveTo(cx, 38); c.lineTo(cx, cy); c.stroke(); c.fillStyle = '#fff'; c.fillRect(cx - 14, 36, 28, 4);
+    const cv = this.el.balCv, c = cv.getContext('2d'); c.clearRect(0, 0, 220, 54);
+    const ang = -G.balance / 100 * 0.25; const cx = 110, cy = 18, L = 72;
+    c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.moveTo(cx, 52); c.lineTo(cx, cy); c.stroke(); c.fillStyle = '#fff'; c.fillRect(cx - 14, 50, 28, 4);
     const lx = cx - Math.cos(ang) * L, ly = cy - Math.sin(ang) * L; const rx = cx + Math.cos(ang) * L, ry = cy + Math.sin(ang) * L;
     c.lineWidth = 3; c.beginPath(); c.moveTo(lx, ly); c.lineTo(rx, ry); c.stroke();
     const pan = (x, y, col) => { c.lineWidth = 1; c.strokeStyle = '#ddd'; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 14, y + 14); c.moveTo(x, y); c.lineTo(x + 14, y + 14); c.stroke(); c.fillStyle = col; c.beginPath(); c.ellipse(x, y + 16, 16, 4, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.fillRect(x - 14, y + 13, 28, 1); };

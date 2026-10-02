@@ -81,6 +81,7 @@ function dayUpdate() {
   // faith
   let dis = 0; for (const h of aliveHumans()) { dis += h.disappoint || 0; if (h.disappoint > 0) h.disappoint = Math.max(0, h.disappoint - 0.012); } dis /= Math.max(1, pop);
   G.faith = Math.min(G.faithMax, G.faith + pop * 0.16 * clamp(1 - dis * TUNE.disMul, 0.1, 1));
+  if (G.faith > 100) { const ex = (G.faith - 100) * 0.3; G.faith -= ex; G.town.food += ex * 0.8; G.town.hp = Math.min(100, G.town.hp + ex * 0.15); G.stats.overflow = (G.stats.overflow || 0) + ex; if (G.onOverflow && ex > 1.2) G.onOverflow(ex); }
   G.eye = Math.min(3, G.eye + 1);
   // town economy
   G.town.food = Math.max(0, Math.min(400, G.town.food)); G.town.potions = Math.min(30, G.town.potions); G.town.gearStock = Math.min(10, G.town.gearStock);
