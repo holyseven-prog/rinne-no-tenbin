@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>輪廻の天秤 / 輪迴之天秤</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+body{font-family:"MS Gothic","Meiryo","Yu Gothic","Noto Sans Mono CJK JP","Noto Sans CJK JP","Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",monospace}
+html[lang="zh-TW"] body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans CJK TC","MS Gothic","Meiryo",monospace}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;background:#000;overflow:hidden;user-select:none;-webkit-user-select:none;color:#fff;font-size:16px;line-height:1.45}
+#game{position:absolute;left:0;top:0;width:1280px;height:720px;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+#ui{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none}
+#ui *{pointer-events:auto}
+.win{position:absolute;background:#0a1a6e;border:3px solid #fff;border-radius:7px;padding:6px 10px;box-shadow:inset 0 0 0 2px #0a1a6e,inset 0 0 0 3px #8fa0f0,3px 3px 0 rgba(0,0,0,.55)}
+.win.glass{background:rgba(10,26,110,.88)}
+.win h3{margin:0 0 4px;font-size:15px;font-weight:bold;color:#ffe9a0;border-bottom:1px solid #5a6ad0;padding-bottom:2px;letter-spacing:1px}
+.btn{display:inline-block;padding:2px 10px;border:2px solid #fff;border-radius:5px;background:#10299a;color:#fff;cursor:pointer;font:inherit;font-size:14px;line-height:1.5;white-space:nowrap}
+.btn:hover,.btn.sel{background:#2a4ae0;box-shadow:0 0 0 1px #ffe9a0}
+.btn.dis{opacity:.42;cursor:default;box-shadow:none;background:#10299a}
+.btn.on{background:#c8960c;border-color:#ffe9a0}
+.btn.big{font-size:20px;padding:6px 18px}
+.gauge{height:13px;border:2px solid #fff;background:#05083a;border-radius:3px;position:relative;overflow:hidden}
+.gauge>i{display:block;height:100%;background:linear-gradient(#fff3a0,#e8a820)}
+.gauge.hp>i{background:linear-gradient(#80ff90,#20b040)}
+.gauge.need>i{background:linear-gradient(#a0c0ff,#4068d8)}
+.sm{font-size:12px;color:#c8d0ff}
+.dim{color:#9aa8e8}
+.gold{color:#ffe9a0}
+.red{color:#ff8a8a}
+.grn{color:#8affa0}
+.card{border:2px solid #8fa0f0;border-radius:5px;background:#101f80;padding:3px 6px;margin-bottom:4px;cursor:pointer;position:relative}
+.card:hover{border-color:#fff;background:#1a2ca0}
+.card.u1{border-color:#ffd060}.card.u2{border-color:#ff7050}
+.card.sel{outline:2px solid #fff}
+.toast{position:absolute;left:0;right:0;text-align:center;font-size:15px;text-shadow:1px 1px 0 #000,-1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000,0 2px 3px #000;pointer-events:none;transition:opacity .6s}
+#modal{position:absolute;left:0;top:0;width:1280px;height:720px;background:rgba(0,0,0,.55);display:none}
+.par{background:linear-gradient(#efe0b4,#e0cd96);color:#2a1a08;border:3px solid #6a4a1c;border-radius:4px;box-shadow:inset 0 0 22px rgba(120,80,20,.45)}
+.par p{margin:0 0 8px;text-indent:1em}
+.tag{display:inline-block;font-size:11px;padding:0 4px;border-radius:3px;margin-right:4px;color:#fff;vertical-align:middle;text-indent:0}
+.tag.witness{background:#2a7a3a}.tag.hearsay{background:#a07020}.tag.infer{background:#7a3a8a}
+.ink{font-size:12px;padding:0 6px;border-radius:3px;color:#fff}
+.ink.wet{background:#1a3a8a}.ink.draft{background:#8a6a1a}.ink.final{background:#4a4a4a}
+.scroll{overflow-y:auto;overflow-x:hidden}
+.scroll::-webkit-scrollbar{width:8px}.scroll::-webkit-scrollbar-thumb{background:#8fa0f0;border-radius:4px}.scroll::-webkit-scrollbar-track{background:#05083a}
+table.tb{border-collapse:collapse;width:100%;font-size:13px}
+table.tb th{position:sticky;top:0;background:#0a1a6e;color:#ffe9a0;text-align:left;padding:2px 6px;border-bottom:2px solid #8fa0f0;cursor:pointer}
+table.tb td{padding:1px 6px;border-bottom:1px solid #1a2a90;white-space:nowrap}
+table.tb tr:hover td{background:#1a2ca0;cursor:pointer}
+input[type=range]{width:200px;vertical-align:middle;accent-color:#ffe9a0}
+.menu .btn{display:block;margin:6px 0;text-align:center;font-size:18px;padding:4px 10px}
+.title-logo{font-size:84px;font-weight:bold;letter-spacing:12px;color:#fff;text-shadow:0 0 18px #6a8aff,3px 3px 0 #0a1a6e,-2px -2px 0 #0a1a6e,0 6px 0 #0a1a6e}
+.cur::before{content:"▶ ";color:#ffe9a0}
+.kbd{display:inline-block;border:1px solid #fff;border-radius:3px;padding:0 4px;font-size:11px;margin-right:3px;background:#000a}
+.fade{animation:fd .5s}@keyframes fd{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="game" width="640" height="360"></canvas><div id="ui"></div><div id="modal"></div></div>
+<script>
+/*__SCRIPT__*/
+</script>
+</body>
+</html>

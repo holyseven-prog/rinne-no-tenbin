@@ -1,0 +1,10 @@
+const fs=require('fs'),vm=require('vm');
+vm.runInThisContext(fs.readFileSync(__dirname+'/sim_bundle.js','utf8'),{filename:'sim'});
+const RT=globalThis.__RT; const G0=()=>RT.G();
+RT.newGame({seed:+process.argv[2]||1,god:'mercy',lang:'ja'}); RT.policy(process.argv[3]||'none');
+const G=RT.G();
+G.onDeath=h=>{ const last=G.log[G.log.length-1]; console.log('DEATH t',G.tick,'yr',yearOf(G.tick),h.name[0],h.job,'lv',h.lvl,'age',Math.round(h.age),h.cause,'at',Math.round(h.x),Math.round(h.y),'act',h.act&&h.act.k,'party',h.party,'hp0 gear',h.gear, 'pots',h.pots)};
+RT.step(+process.argv[4]||3500);
+console.log(JSON.stringify(RT.state()));
+console.log(G.humans.filter(h=>h.alive&&isAdv(h)).map(h=>h.name[0]+h.job[0]+h.lvl+'/'+Math.round(h.hp)+'/'+Math.round(h.maxHp)).join(' '));
+console.log('mons',G.monsters.filter(m=>m.alive&&!m.dormant).map(m=>m.type+'@'+Math.round(m.x)+','+Math.round(m.y)+' '+Math.round(m.hp)).join(' '));
