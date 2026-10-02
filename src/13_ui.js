@@ -54,6 +54,7 @@ Object.assign(S, {
   g_title: ['顧問ミルラ', '顧問米菈'], g_greet: ['成功確率とリスクをお伝えします。決めるのは、あなたです。', '我只會告訴你成功機率與風險。決定的是你。'],
   g_goal: ['目標', '目標'], goal_boss: ['魔王を討たせたい', '想討伐魔王'], goal_nurture: ['誰かを育てたい', '想培育某人'], goal_avoid: ['悲劇を避けたい', '想避免悲劇'], goal_drama: ['物語を劇的にしたい', '想讓故事更戲劇化'],
   g_status: ['現状', '現狀'], g_risk: ['リスク', '風險'], g_actions: ['できること', '可做的事'], g_exec: ['実行', '執行'],
+  bal_even: ['つりあい', '平衡'], bal_lead: ['が優勢', '佔優勢'],
   st_balance: ['天秤：{n}', '天秤：{n}'], st_faith: ['信仰力：{n}', '信仰力：{n}'], st_pop: ['人口 {n}／冒険者 {a}（平均Lv{l}）', '人口 {n}／冒險者 {a}（平均Lv{l}）'], st_boss_pre: ['魔王の覚醒まで：およそ{n}年', '距離魔王覺醒：約{n}年'], st_boss_post: ['魔王は覚醒済み。幹部は残り{n}体。', '魔王已覺醒。幹部尚存{n}名。'], st_town: ['町の無事度：{n}％', '小鎮安全度：{n}%'], st_ratio: ['討伐隊の勝算指数：{n}', '討伐隊勝算指數：{n}'],
   rk_dark: ['闇に傾いています。魔物が増え、魔王の覚醒が早まります。', '天秤傾向暗側。魔物增加，魔王覺醒將提早。'], rk_light: ['光に傾きすぎです。停滞して物語が動かなくなる恐れがあります。', '天秤過於偏光。恐怕陷入停滯，故事不再前進。'], rk_faith: ['信仰力が心許ありません。祈りを放置すると、さらに減ります。', '信仰力所剩不多。放著祈禱不管只會更少。'],
   rk_town: ['町が危機です。防衛に失敗すれば、世界は滅びます。', '小鎮岌岌可危。防衛失敗的話，世界將毀滅。'], rk_adv: ['冒険者が少なすぎます。', '冒險者太少了。'], rk_ok: ['いまのところ、大きな危険はありません。', '目前沒有重大危險。'], rk_food: ['食料が尽きかけています。', '糧食快要耗盡了。'],
@@ -106,7 +107,7 @@ const UI = {
       h('div', { style: 'display:flex;align-items:center;gap:8px' }, h('span', { class: 'gold', style: 'font-weight:bold;width:60px' }, t('faith')), h('div', { class: 'gauge', style: 'flex:1' }, E.faithBar = h('i')), E.faithNum = h('span', { style: 'width:70px;text-align:right' })),
       h('div', { style: 'display:flex;justify-content:space-between;margin-top:1px', class: 'sm' }, E.eyeTxt = h('span'), E.fatTxt = h('span')));
     E.balWin = h('div', { class: 'win', style: 'left:440px;top:6px;width:400px;height:52px;padding:2px 10px;display:flex;align-items:center;gap:8px;justify-content:center' },
-      h('span', { class: 'gold' }, t('light')), E.balCv = h('canvas', { width: 220, height: 54 }), h('span', { style: 'color:#d0a0ff' }, t('dark')), E.balNum = h('span', { style: 'width:46px;text-align:right' }));
+      h('span', { class: 'gold' }, t('light')), E.balCv = h('canvas', { width: 220, height: 54 }), h('span', { style: 'color:#d0a0ff' }, t('dark')), E.balNum = h('span', { style: 'width:96px;text-align:right;font-size:13px' }));
     E.timeWin = h('div', { class: 'win', style: 'left:850px;top:6px;width:422px;height:52px;padding:2px 10px' },
       E.dateTxt = h('div', { style: 'font-size:15px;line-height:20px;white-space:nowrap' }),
       h('div', { style: 'display:flex;gap:4px;align-items:center' },
@@ -181,7 +182,7 @@ const UI = {
     E.spBtns.forEach((b, i) => { b.classList.toggle('on', i === 0 ? Game.paused : (!Game.paused && Game.speedIdx === i - 1)); });
     { const b = G.boss, show = G.awakened && b.alive && (G.bossFight || G.sortie); E.bossWin.style.display = show ? 'block' : 'none'; if (show) { E.bossName.textContent = BOSS.n[li()]; E.bossBar.style.width = (b.hp / b.maxHp * 100).toFixed(1) + '%'; E.bossNum.textContent = Math.ceil(b.hp / b.maxHp * 100) + '%'; } }
     this.drawBalance();
-    E.balNum.textContent = (G.balance >= 0 ? '+' : '') + Math.round(G.balance);
+    { const b = Math.round(G.balance); E.balNum.textContent = b === 0 ? t('bal_even') : (b > 0 ? t('light') : t('dark')) + t('bal_lead') + ' ' + Math.abs(b); E.balNum.style.color = b >= 0 ? '#ffd860' : '#d0a0ff'; }
     // power buttons
     POWERS.forEach((p, i) => { const b = E.powBtns[i]; const c = powerCost(p.id); const ok = G.faith >= c; b._cost.textContent = t('cost') + ' ' + c + (fs[i] ? ' ▼' + fs[i] : ''); b.classList.toggle('dis', !ok); b.classList.toggle('on', Game.power === p.id); b.firstChild.lastChild.textContent = p.n[li()]; });
     E.eyeBtn.classList.toggle('on', Game.power === 'eye'); E.eyeBtn.classList.toggle('dis', G.eye < 1);
