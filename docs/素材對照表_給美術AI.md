@@ -120,7 +120,7 @@
 
 | 對象 | 識別鍵 | 定位 | 現況畫法與規格 | 程度 | 改造指引 |
 |---|---|---|---|---|---|
-| BGM（12 首） | SONGS：title／opening／town_day／town_night／battle／divine／boss_awake／decisive／victory／revelation／doom | `12_audio.js` 第 64 行 SONGS；composeSong(sp) 第 12 行 | 完全由程式作曲（調式 maj/min/dor/lyd/harm、BPM、和弦進行 prog、固定 seed）＋ WebAudio 合成樂器（strings/brass/flute/harp/pizz/cello/timp/snare/cym/bell/choir）。 | — | 若要換成真實音檔：需改 `Snd`；保留程式生成作為退路。 |
+| BGM（11 首） | SONGS：title／opening／town_day／town_night／battle／divine／boss_awake／decisive／victory／revelation／doom | `12_audio.js` 第 64 行 SONGS；composeSong(sp) 第 12 行 | 完全由程式作曲（調式 maj/min/dor/lyd/harm、BPM、和弦進行 prog、固定 seed）＋ WebAudio 合成樂器（strings/brass/flute/harp/pizz/cello/timp/snare/cym/bell/choir）。 | — | 若要換成真實音檔：需改 `Snd`；保留程式生成作為退路。 |
 
 ## 音效
 
