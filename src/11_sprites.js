@@ -9,187 +9,7 @@ const PAL = {
   cloth: ['#b84040', '#3c5ac0', '#e0e0e8', '#2a5a3a', '#8a6a3a', '#7a4a9a', '#c07a2a', '#2a8a8a'],
   roof: ['#b84a3a', '#3a6ab0', '#5a8a3a', '#8a5a3a', '#7a4a9a', '#c09a30', '#5a5a68', '#a05a30', '#40304f'],
 };
-const SEASON_COL = {
-  grass: ['#58a840', '#3f9a38', '#a69b3c', '#d6e2e6'], grassD: ['#488a34', '#2f8030', '#8a8030', '#b8c8d0'],
-  leaf: ['#2f8a3a', '#1f7030', '#c8742a', '#8aa090'], leafD: ['#1f6a2a', '#145a24', '#a8541a', '#6a8070'],
-  crop: ['#7ad050', '#e0c040', '#b87830', '#eef4f8'],
-};
-
-/* ---------- terrain ---------- */
-function paintTile(c, tx, ty, type, sea) {
-  const x = tx * TS, y = ty * TS, v = (tx * 7 + ty * 13 + tx * ty) % 8;
-  const grass = () => { fr(c, SEASON_COL.grass[sea], x, y, TS, TS); fr(c, SEASON_COL.grassD[sea], x + (v * 3) % 12 + 1, y + (v * 5) % 11 + 2, 1, 2); fr(c, SEASON_COL.grassD[sea], x + (v * 7) % 13 + 1, y + (v * 3) % 9 + 4, 2, 1); };
-  switch (type) {
-    case T.GRASS: grass(); break;
-    case T.FLOWER: grass(); { const cols = ['#f0e050', '#f08aa0', '#fff', '#a0b8ff']; fr(c, cols[v % 4], x + 4 + v % 5, y + 5 + v % 4, 2, 2); fr(c, cols[(v + 1) % 4], x + 10, y + 11, 2, 2); } break;
-    case T.PATH: case T.DOOR: fr(c, '#c8aa78', x, y, TS, TS); fr(c, '#b08c5c', x + (v * 3) % 12, y + (v * 5) % 12, 2, 1); fr(c, '#dcc090', x + (v * 5) % 12, y + (v * 7) % 12 + 1, 1, 1); fr(c, '#b8985c', x + 8, y + (v * 2) % 14, 3, 1); break;
-    case T.PLAZA: fr(c, '#a8a8b0', x, y, TS, TS); fr(c, '#8a8a96', x, y + 7, TS, 1); fr(c, '#8a8a96', x + 7 + (ty % 2) * 4, y, 1, 8); fr(c, '#8a8a96', x + 3 + (ty % 2) * 4, y + 8, 1, 8); fr(c, '#c4c4cc', x + 2, y + 2, 2, 1); break;
-    case T.WATER: fr(c, '#2f6ec8', x, y, TS, TS); fr(c, '#5a96e0', x + (v * 3) % 10 + 1, y + (v * 5) % 12 + 2, 5, 1); fr(c, '#2058a8', x + (v * 7) % 9, y + 12, 6, 1); break;
-    case T.SAND: fr(c, '#e0cc90', x, y, TS, TS); fr(c, '#c8b078', x + (v * 3) % 12, y + (v * 5) % 12, 2, 1); break;
-    case T.FIELD: fr(c, '#8a6038', x, y, TS, TS); for (let r = 0; r < 4; r++) { fr(c, '#6a4628', x, y + 2 + r * 4, TS, 1); for (let k = 0; k < 4; k++) fr(c, SEASON_COL.crop[sea], x + 1 + k * 4 + (r % 2) * 2, y + 0 + r * 4, 2, sea === 3 ? 1 : 2); } break;
-    case T.DARK: fr(c, '#3a3446', x, y, TS, TS); fr(c, '#2a2436', x + (v * 3) % 12, y + (v * 5) % 12, 3, 1); fr(c, '#4a4258', x + (v * 5) % 12, y + (v * 7) % 12, 1, 3); if (v === 3) fr(c, '#6a3a8a', x + 6, y + 6, 2, 1); break;
-    case T.TREE: grass(); fr(c, '#5a3a22', x + 7, y + 10, 3, 6); fr(c, '#000a', x + 3, y + 14, 10, 2);
-      { const L = SEASON_COL.leaf[sea], D = SEASON_COL.leafD[sea]; fr(c, D, x + 3, y + 2, 10, 9); fr(c, L, x + 4, y + 1, 8, 9); fr(c, L, x + 2, y + 4, 12, 5); fr(c, D, x + 3, y + 8, 10, 2); fr(c, '#ffffff30', x + 5, y + 3, 3, 2); if (sea === 3) { fr(c, '#f4f8fa', x + 4, y + 1, 8, 2); fr(c, '#f4f8fa', x + 2, y + 4, 3, 1); } }
-      break;
-    case T.ROCK: grass(); fr(c, '#7a7a86', x + 2, y + 5, 12, 9); fr(c, '#9a9aa6', x + 3, y + 4, 8, 4); fr(c, '#5a5a66', x + 3, y + 11, 11, 3); fr(c, '#b4b4c0', x + 4, y + 5, 3, 1); break;
-    case T.FENCE: grass(); fr(c, '#8a6a3a', x, y + 6, TS, 2); fr(c, '#8a6a3a', x + 2, y + 3, 2, 9); fr(c, '#8a6a3a', x + 11, y + 3, 2, 9); break;
-    default: grass();
-  }
-}
-const worldCache = {};
-function getWorldCanvas(sea) {
-  if (worldCache[sea]) return worldCache[sea];
-  const cv = mkCanvas(MW * TS, MH * TS), c = cv.getContext('2d');
-  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { let tp = W.tiles[y * MW + x]; if (tp === T.BLD) tp = T.GRASS; paintTile(c, x, y, tp, sea); }
-  // fountain & well
-  drawFountain(c, 28, 19); drawWell(c, 25, 21); drawWell(c, 31, 21);
-  W.blds.forEach(b => drawBuilding(c, b, sea));
-  worldCache[sea] = cv; return cv;
-}
-function drawFountain(c, tx, ty) { const x = tx * TS, y = ty * TS; fr(c, '#8a8a96', x + 1, y + 3, 14, 12); fr(c, '#3a7ae0', x + 3, y + 5, 10, 8); fr(c, '#a8d0ff', x + 7, y + 2, 2, 6); fr(c, '#fff', x + 6, y + 1, 4, 2); fr(c, '#c8c8d4', x + 1, y + 3, 14, 1); }
-function drawWell(c, tx, ty) { const x = tx * TS, y = ty * TS; fr(c, '#7a5a3a', x + 2, y + 2, 12, 3); fr(c, '#9a9aa6', x + 3, y + 6, 10, 9); fr(c, '#1a2a4a', x + 5, y + 8, 6, 5); fr(c, '#5a3a22', x + 3, y + 3, 1, 5); fr(c, '#5a3a22', x + 12, y + 3, 1, 5); }
-const WIN_RECTS = [];
-function drawBuilding(c, b, sea) {
-  const px = b.x * TS, py = b.y * TS, w = b.w * TS, h = b.h * TS;
-  const roof = PAL.roof[b.roof % PAL.roof.length];
-  let wall = '#e4d2a4', wallD = '#c4b080', door = '#6a4220';
-  if (b.kind === 'church') { wall = '#ececf4'; wallD = '#c0c0d0'; door = '#4a3a2a'; }
-  else if (b.kind === 'guild') { wall = '#b8905a'; wallD = '#8a6a3a'; }
-  else if (b.kind === 'tavern') { wall = '#c8a070'; wallD = '#9a7848'; }
-  else if (b.kind === 'castle') { wall = '#4a4258'; wallD = '#2e2a3c'; door = '#1a1020'; }
-  else if (b.kind === 'smithy') { wall = '#9a9aa6'; wallD = '#70707c'; }
-  else if (b.kind === 'mill') { wall = '#e8e0cc'; wallD = '#c0b498'; }
-  const wallH = b.kind === 'castle' ? 26 : Math.min(h - 8, Math.round(h * 0.45));
-  const roofH = h - wallH;
-  fr(c, '#0000002a', px + 1, py + h - 2, w, 4); // shadow
-  fr(c, wall, px + 2, py + roofH, w - 4, wallH);
-  fr(c, wallD, px + 2, py + roofH + wallH - 3, w - 4, 3);
-  fr(c, '#00000030', px + 2, py + roofH, w - 4, 2);
-  // roof
-  if (b.kind === 'castle') {
-    fr(c, wall, px, py + 8, w, h - 8); fr(c, wallD, px, py + 8, w, 3);
-    for (let i = 0; i < 5; i++) fr(c, wall, px + i * 16 + 2, py + 2, 8, 8); // crenellations
-    fr(c, '#6a3a8a', px + 4, py - 6 + 8, 8, 12); fr(c, '#8a4aaa', px + 5, py - 8 + 8, 6, 4); fr(c, '#6a3a8a', px + w - 12, py + 2, 8, 14);
-    fr(c, '#2a1a3a', px + 2, py + 14, w - 4, 4);
-    for (let i = 0; i < 4; i++) { fr(c, '#c040e0', px + 8 + i * 18, py + 26, 4, 6); }
-    fr(c, '#d060ff', px + w / 2 - 3, py + 10, 6, 6); fr(c, '#fff', px + w / 2 - 1, py + 12, 2, 2);
-  } else if (b.kind === 'mill') {
-    fr(c, roof, px + 3, py + 2, w - 6, 10); fr(c, '#00000030', px + 3, py + 10, w - 6, 2);
-    fr(c, '#5a3a22', px + w / 2 - 1, py + 6, 2, 2); fr(c, '#f4f4f4', px + w / 2 - 16, py + 5, 32, 2); fr(c, '#f4f4f4', px + w / 2 - 1, py - 10, 2, 32);
-  } else {
-    const ov = 3;
-    fr(c, roof, px - ov + 2, py + 4, w + ov * 2 - 4, roofH - 4);
-    fr(c, '#ffffff22', px - ov + 2, py + 4, w + ov * 2 - 4, 3);
-    fr(c, '#00000030', px - ov + 2, py + roofH - 3, w + ov * 2 - 4, 3);
-    for (let i = 0; i < roofH - 6; i += 4) fr(c, '#00000018', px - ov + 2, py + 8 + i, w + ov * 2 - 4, 1);
-    fr(c, roof, px + 6, py + 1, w - 12, 4);
-    if (b.kind === 'house' || b.kind === 'hut') { fr(c, '#8a8a96', px + w - 12, py - 3, 4, 8); fr(c, '#5a5a66', px + w - 12, py - 3, 4, 2); }
-  }
-  // door
-  const dx = b.door.x * TS, dy = b.door.y * TS;
-  fr(c, door, dx + 3, dy + 3, 10, 13); fr(c, '#00000040', dx + 3, dy + 3, 10, 1); fr(c, '#e8c860', dx + 10, dy + 10, 2, 2);
-  if (b.kind === 'church' || b.kind === 'castle') { fr(c, '#0000004a', dx + 3, dy + 3, 10, 3); }
-  // windows
-  const wy = py + roofH + 3;
-  const wins = []; const nW = Math.max(1, Math.floor((w - 8) / 24));
-  for (let i = 0; i < b.w - 1; i++) { const wx = px + 6 + i * TS * (b.w >= 5 ? 1 : 1) + (b.w >= 5 ? 6 : 0); if (Math.abs(wx + 4 - (dx + 8)) < 10 || wx + 9 > px + w - 4) continue; wins.push([wx, wy, 8, 7]); }
-  if (b.w === 3 && !wins.length) wins.push([px + 4, wy, 7, 7]);
-  if (b.kind === 'castle') wins.length = 0;
-  wins.forEach(r => { fr(c, '#3a2a1a', r[0] - 1, r[1] - 1, r[2] + 2, r[3] + 2); fr(c, '#7ab0e8', r[0], r[1], r[2], r[3]); fr(c, '#ffffff60', r[0], r[1], 3, 2); fr(c, '#3a2a1a', r[0] + (r[2] >> 1), r[1], 1, r[3]); WIN_RECTS.push({ x: r[0], y: r[1], w: r[2], h: r[3] }); });
-  if (b.kind === 'castle') for (let i = 0; i < 4; i++) WIN_RECTS.push({ x: px + 8 + i * 18, y: py + 26, w: 4, h: 6, purple: true });
-  // sign
-  const sx = dx + 8, sy = dy - 6;
-  if (b.kind === 'guild') { fr(c, '#3a2a1a', sx - 8, sy - 5, 16, 10); fr(c, '#f0e0a0', sx - 7, sy - 4, 14, 8); fr(c, '#2a2a3a', sx - 1, sy - 3, 2, 6); fr(c, '#2a2a3a', sx - 5, sy - 3, 10, 1); fr(c, '#d8b030', sx - 5, sy - 2, 3, 2); fr(c, '#d8b030', sx + 2, sy - 2, 3, 2); }
-  else if (b.kind === 'tavern') { fr(c, '#3a2a1a', sx - 7, sy - 5, 14, 10); fr(c, '#f0e0a0', sx - 6, sy - 4, 12, 8); fr(c, '#d89020', sx - 3, sy - 3, 5, 6); fr(c, '#fff', sx - 3, sy - 3, 5, 1); fr(c, '#d89020', sx + 2, sy - 2, 2, 3); }
-  else if (b.kind === 'church') { fr(c, '#d8d8e4', px + w / 2 - 6, py - 12, 12, 14); fr(c, '#8a4a30', px + w / 2 - 6, py - 14, 12, 3); fr(c, '#e8c030', px + w / 2 - 1, py - 22, 2, 8); fr(c, '#e8c030', px + w / 2 - 3, py - 19, 6, 2); fr(c, '#3a3a50', px + w / 2 - 2, py - 8, 4, 6); }
-  else if (b.kind === 'smithy') { fr(c, '#3a2a1a', sx - 7, sy - 5, 14, 10); fr(c, '#f0e0a0', sx - 6, sy - 4, 12, 8); fr(c, '#2a2a3a', sx - 4, sy - 2, 8, 3); fr(c, '#2a2a3a', sx - 2, sy, 4, 3); }
-  else if (b.kind === 'shop') { fr(c, '#3a2a1a', sx - 7, sy - 5, 14, 10); fr(c, '#f0e0a0', sx - 6, sy - 4, 12, 8); fr(c, '#8a5a30', sx - 3, sy - 2, 6, 5); fr(c, '#e8c030', sx - 1, sy - 3, 2, 2); }
-  else if (b.kind === 'apothecary') { fr(c, '#3a2a1a', sx - 7, sy - 5, 14, 10); fr(c, '#f0e0a0', sx - 6, sy - 4, 12, 8); fr(c, '#40c060', sx - 2, sy - 1, 4, 4); fr(c, '#40c060', sx - 1, sy - 3, 2, 3); }
-  else if (b.kind === 'inn') { fr(c, '#3a2a1a', sx - 7, sy - 5, 14, 10); fr(c, '#f0e0a0', sx - 6, sy - 4, 12, 8); fr(c, '#c04040', sx - 4, sy - 1, 8, 3); fr(c, '#fff', sx - 4, sy - 2, 3, 2); }
-  if (sea === 3 && b.kind !== 'castle' && b.kind !== 'mill') { fr(c, '#f4f8fa', px - 2, py + 3, w + 4, 3); }
-}
-
-/* ---------- humans ---------- */
 const spriteCache = {};
-function humanSprite(h, dir, frame) {
-  const L = h.look, child = h.age < ADULT_AGE, elder = h.age >= 56;
-  const key = [h.job, L.hair, L.style, L.skin, L.cloth, L.acc, child ? 1 : 0, elder ? 1 : 0, dir, frame].join('.');
-  if (spriteCache[key]) return spriteCache[key];
-  const cv = mkCanvas(16, 24), c = cv.getContext('2d');
-  const side = dir >= 2;
-  const hairC = elder ? PAL.hair[5] : PAL.hair[L.hair], skin = PAL.skin[L.skin];
-  let cloth = PAL.cloth[L.cloth], cloth2 = '#00000040';
-  const jobCol = { swordsman: '#b84040', mage: '#6a4ac0', priest: '#ececf4', thief: '#2e3a30', farmer: '#a88850', merchant: '#c88a30', smith: '#7a7a86', herbalist: '#3a8a4a', historian: '#2a3a6a' };
-  if (jobCol[h.job] && !child) cloth = jobCol[h.job]; if (child) cloth = PAL.cloth[L.cloth];
-  const pants = '#3a3248', boots = '#4a3020';
-  const scale = child ? 0.78 : 1;
-  const c2 = child ? mkCanvas(16, 24).getContext('2d') : c;
-  const g = c2;
-  const sw = frame === 1 ? 1 : frame === 2 ? -1 : 0;
-  // legs
-  if (!side) {
-    fr(g, pants, 5, 17, 3, 5 - (sw > 0 ? 1 : 0)); fr(g, pants, 8, 17, 3, 5 - (sw < 0 ? 1 : 0));
-    fr(g, boots, 5, 21 - (sw > 0 ? 1 : 0), 3, 2); fr(g, boots, 8, 21 - (sw < 0 ? 1 : 0), 3, 2);
-  } else {
-    fr(g, pants, 6 + sw, 17, 3, 5); fr(g, pants, 7 - sw, 17, 3, 5); fr(g, boots, 5 + sw, 21, 4, 2); fr(g, boots, 7 - sw, 21, 4, 2);
-  }
-  // torso
-  const tx = side ? 5 : 4, tw = side ? 6 : 8;
-  fr(g, cloth, tx, 10, tw, 8); fr(g, cloth2, tx, 15, tw, 1); fr(g, '#ffffff22', tx + 1, 10, 2, 2);
-  if (h.job === 'priest' && !child) { fr(g, '#ececf4', tx, 10, tw, 11); fr(g, '#d0d0e0', tx, 19, tw, 2); if (!side && dir === 0) { fr(g, '#e8c030', 7, 11, 2, 5); fr(g, '#e8c030', 6, 12, 4, 1); } }
-  if (h.job === 'smith' && !child && dir === 0) fr(g, '#5a3a22', 5, 12, 6, 6);
-  if (h.job === 'mage' && !child) { fr(g, cloth, tx - 1, 17, tw + 2, 4); fr(g, '#e8c030', tx, 15, tw, 1); }
-  if (h.job === 'historian') { fr(g, '#e8e0c0', tx + 1, 10, 1, 7); }
-  // arms
-  if (!side) { fr(g, cloth, 3, 11, 1, 5); fr(g, cloth, 12, 11, 1, 5); fr(g, skin, 3, 16, 1, 2); fr(g, skin, 12, 16, 1, 2); if (sw) { fr(g, cloth, 3, 11 + sw, 1, 1); } }
-  else { fr(g, cloth, 7 - sw, 11, 2, 5); fr(g, skin, 7 - sw, 16, 2, 2); }
-  // head
-  if (!side) {
-    fr(g, skin, 4, 3, 8, 7); fr(g, skin, 5, 2, 6, 1); fr(g, skin, 5, 10, 6, 1);
-    if (dir === 0) { fr(g, '#1a1a24', 6, 6, 1, 2); fr(g, '#1a1a24', 9, 6, 1, 2); fr(g, '#00000030', 7, 8, 2, 1); if (L.acc === 1) fr(g, '#e8908070', 4, 8, 2, 1); }
-  } else {
-    fr(g, skin, 5, 3, 7, 7); fr(g, skin, 6, 2, 5, 1); fr(g, skin, 6, 10, 4, 1); fr(g, '#1a1a24', 6, 6, 1, 2); fr(g, skin, 4, 7, 1, 2);
-  }
-  // hair
-  const hs = L.style;
-  if (!side) {
-    fr(g, hairC, 4, 2, 8, 3); fr(g, hairC, 5, 1, 6, 1);
-    if (dir === 1) { fr(g, hairC, 4, 2, 8, 8); fr(g, hairC, 5, 10, 6, 1); }
-    else { fr(g, hairC, 4, 4, 1, 3); fr(g, hairC, 11, 4, 1, 3); }
-    if (hs === 1) { fr(g, hairC, 3, 3, 1, 8); fr(g, hairC, 12, 3, 1, 8); if (dir === 1) fr(g, hairC, 4, 9, 8, 3); }
-    else if (hs === 2) { fr(g, hairC, 4, 0, 2, 2); fr(g, hairC, 7, 0, 2, 1); fr(g, hairC, 10, 0, 2, 2); }
-    else if (hs === 3) { fr(g, hairC, 7, -1 + 1, 2, 1); fr(g, hairC, 6, 0, 4, 2); }
-  } else {
-    fr(g, hairC, 5, 2, 7, 3); fr(g, hairC, 6, 1, 5, 1); fr(g, hairC, 9, 3, 3, 6);
-    if (hs === 1) fr(g, hairC, 9, 3, 3, 9); else if (hs === 2) { fr(g, hairC, 6, 0, 2, 2); fr(g, hairC, 9, 0, 2, 2); }
-  }
-  // job headgear / items
-  const J = h.job;
-  if (J === 'mage' && !child) { fr(g, '#5a3aa0', 3, 3, 10, 2); fr(g, '#5a3aa0', 5, 0, 6, 3); fr(g, '#5a3aa0', 7, -2 + 1, 2, 2); fr(g, '#e8c030', 5, 3, 6, 1); }
-  else if (J === 'farmer') { fr(g, '#d8b860', 2, 2, 12, 2); fr(g, '#d8b860', 4, 0, 8, 3); fr(g, '#a88840', 4, 3, 8, 1); }
-  else if (J === 'merchant') { fr(g, '#b86a2a', 3, 2, 10, 2); fr(g, '#b86a2a', 5, 0, 6, 3); fr(g, '#e8c030', 5, 3, 6, 1); }
-  else if (J === 'thief' && !child) { fr(g, '#2e3a30', 4, 2, 8, 4); fr(g, '#1a2a20', 4, 6, 8, 2); if (dir === 0) { fr(g, '#e8e8e8', 6, 6, 1, 1); fr(g, '#e8e8e8', 9, 6, 1, 1); } }
-  else if (J === 'historian') { fr(g, '#2a3a6a', 3, 2, 10, 2); fr(g, '#2a3a6a', 5, 0, 6, 3); }
-  else if (J === 'priest' && !child) { fr(g, '#ececf4', 3, 1, 10, 3); fr(g, '#d0d0e0', 3, 3, 10, 1); }
-  else if (J === 'herbalist') { fr(g, '#3a8a4a', 4, 9, 8, 2); }
-  else if (J === 'smith') { fr(g, '#c04030', 4, 2, 8, 1); }
-  // weapon / tool
-  const hx = side ? 3 : 13;
-  if (J === 'swordsman' && !child) { fr(g, '#d8d8e4', hx, 6 - sw, 1, 8); fr(g, '#8a6a3a', hx - 1, 14 - sw, 3, 1); fr(g, '#5a3a22', hx, 15 - sw, 1, 2); }
-  else if (J === 'mage' && !child) { fr(g, '#8a5a30', hx, 5, 1, 14); fr(g, '#60c0ff', hx - 1, 3, 3, 3); fr(g, '#c0f0ff', hx, 4, 1, 1); }
-  else if (J === 'thief' && !child) { fr(g, '#c8c8d8', hx, 12, 1, 4); fr(g, '#5a3a22', hx, 16, 1, 2); }
-  else if (J === 'farmer') { fr(g, '#8a5a30', hx, 7, 1, 11); fr(g, '#aaa', hx - 1, 6, 3, 1); }
-  else if (J === 'smith') { fr(g, '#8a5a30', hx, 10, 1, 7); fr(g, '#6a6a76', hx - 1, 8, 3, 3); }
-  else if (J === 'historian') { fr(g, '#e8e0c0', hx - 1, 13, 3, 4); fr(g, '#8a3a2a', hx - 1, 13, 1, 4); }
-  else if (J === 'merchant') { fr(g, '#8a5a30', hx - 1, 13, 4, 4); fr(g, '#e8c030', hx, 12, 2, 1); }
-  else if (J === 'priest' && !child) { fr(g, '#e8c030', hx, 5, 1, 12); fr(g, '#e8c030', hx - 1, 6, 3, 1); }
-  else if (J === 'herbalist') { fr(g, '#5a8a3a', hx - 1, 13, 4, 4); fr(g, '#e8708a', hx, 12, 1, 1); }
-  if (side && dir === 3) { /* flip */ }
-  if (child) { c.drawImage(c2.canvas, 0, 0, 16, 24, 2, 24 - 24 * scale, 16 * scale, 24 * scale); }
-  let out = cv;
-  if (dir === 3) { const f = mkCanvas(16, 24), fc = f.getContext('2d'); fc.translate(16, 0); fc.scale(-1, 1); fc.drawImage(cv, 0, 0); out = f; }
-  spriteCache[key] = out; return out;
-}
 function monsterSprite(m, frame) {
   const key = 'm.' + m.type + '.' + frame; if (spriteCache[key]) return spriteCache[key];
   const big = m.boss ? [40, 48] : m.cad >= 0 ? [28, 36] : [16, 16];
@@ -251,9 +71,7 @@ const Render = {
     const cam = this.cam; const cx = Math.round(cam.x + (this.shake ? (Math.random() - .5) * this.shake : 0)), cy = Math.round(cam.y);
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.drawImage(getWorldCanvas(sea), cx, cy, 640, 360, 0, 0, 640, 360);
-    // animated water sparkle
-    const tx0 = Math.floor(cx / TS), ty0 = Math.floor(cy / TS);
-    for (let ty = ty0; ty <= ty0 + 23 && ty < MH; ty++) for (let tx = tx0; tx <= tx0 + 40 && tx < MW; tx++) if (W.tiles[ty * MW + tx] === T.WATER && ((tx * 3 + ty * 5 + (this.time >> 4)) & 3) === 0) fr(c, '#ffffff70', tx * TS - cx + ((tx * 7) & 7) + 2, ty * TS - cy + ((ty * 5) & 7) + 3, 3, 1);
+    const hf = (G.tick % TICK_DAY) / 6; this.drawWaterAnim(c, cx, cy, sea); this.drawAnimProps(c, cx, cy, sea, opts.noNight ? 0 : darkness(hf));
     // plateau fog
     if (cx + 640 > PLATEAU_X0 * TS) { c.globalAlpha = 0.18 + (G.awakened ? 0.12 : 0) + Math.sin(this.time / 40) * 0.04; fr(c, '#9a50d0', PLATEAU_X0 * TS - cx, 0, 640, 360); c.globalAlpha = 1; }
     // entities
@@ -266,12 +84,12 @@ const Render = {
     for (const it of list) { if (it.k === 0 && prayers[it.e.id]) { const p = prayers[it.e.id]; const sx = it.x * TS + 8 - cx, sy = it.y * TS + 12 - cy; const pul = 0.55 + 0.25 * Math.sin(this.time / 8 + it.e.id); const col = p.urg > 0.75 ? '255,120,80' : p.urg > 0.5 ? '255,200,80' : '255,240,160'; const gr = c.createLinearGradient(0, sy - 52, 0, sy); gr.addColorStop(0, `rgba(${col},0)`); gr.addColorStop(1, `rgba(${col},${pul})`); c.fillStyle = gr; c.fillRect(sx - 3, sy - 52, 6, 52); c.fillStyle = `rgba(255,255,255,${pul * .6})`; c.fillRect(sx - 1, sy - 48, 2, 48); } }
     for (const it of list) {
       const e = it.e; const sx = Math.round(it.x * TS + 8 - cx), sy = Math.round(it.y * TS + 14 - cy);
-      c.fillStyle = 'rgba(0,0,0,0.28)'; c.beginPath(); c.ellipse(sx, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.5, 0, 0, 7); c.fill();
+      c.fillStyle = 'rgba(24,28,70,0.36)'; c.beginPath(); c.ellipse(sx + 1, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.4, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(24,28,70,0.2)'; c.beginPath(); c.ellipse(sx + 1, sy, it.k && (e.boss || e.cad >= 0) ? 8 : 4, 1.5, 0, 0, 7); c.fill();
       if (it.k === 0) { const sl = soulOf(e); if (sl && sl.fav) { c.strokeStyle = '#ffd860'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } else if (G.track.indexOf(e.id) >= 0) { c.strokeStyle = '#60d8ff'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } if (e.id === Game.flashId) { const k = 8 + Math.sin(this.time / 4) * 3; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.ellipse(sx, sy - 6, k, k * 1.2, 0, 0, 7); c.stroke(); } }
       let spr, ox = 0, oy = 0;
       if (it.k === 0) {
         const moving = e.path && e.path.length > 0 || Math.abs(e.x - e.px) > 0.01 || Math.abs(e.y - e.py) > 0.01;
-        const fm = moving ? 1 + ((this.time >> 3) & 1) : 0; spr = humanSprite(e, e.dir === undefined ? 0 : e.dir, fm);
+        let fm = moving ? [1, 0, 3, 0][(this.time >> 3) & 3] : (((this.time + e.id * 13) >> 5) & 1) ? 4 : 0; const lunge = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.2 && Math.sin(this.time / 2.5 + e.id) > 0.3; if (lunge && !moving) fm = 5; if (prayers[e.id] && !moving) fm = 6; spr = humanSprite(e, e.dir === undefined ? 0 : e.dir, fm);
         const sleeping = e.act && e.act.k === 'sleep';
         if (e.tgt && e.hurt === undefined) { }
         if (e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.2) { const t = G.idx[e.tgt]; const d = Math.hypot(t.x - e.x, t.y - e.y) || 1; const k = Math.max(0, Math.sin(this.time / 2.5 + e.id)) * 2.5; ox = (t.x - e.x) / d * k; oy = (t.y - e.y) / d * k; }
@@ -299,20 +117,11 @@ const Render = {
     for (let i = this.parts.length - 1; i >= 0; i--) { const p = this.parts[i]; p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) { this.parts.splice(i, 1); continue; } c.globalAlpha = Math.min(1, p.life / 14); c.fillStyle = p.col; const sx = p.x - cx, sy = p.y - cy; if (p.glow) { c.globalAlpha *= 0.4; c.fillRect(Math.round(sx) - 2, Math.round(sy) - 2, 5, 5); c.globalAlpha = Math.min(1, p.life / 14); } c.fillRect(Math.round(sx), Math.round(sy), p.s, p.s); }
     c.globalAlpha = 1;
     for (let i = this.rings.length - 1; i >= 0; i--) { const r = this.rings[i]; r.r += 1; r.life--; if (r.life <= 0) { this.rings.splice(i, 1); continue; } c.globalAlpha = r.life / 14; c.strokeStyle = r.col; c.beginPath(); c.arc(r.x - cx, r.y - cy, r.r, 0, 7); c.stroke(); } c.globalAlpha = 1;
-    // overlays: day/night
-    const hf = (G.tick % TICK_DAY) / 6; const na = opts.noNight ? 0 : this.nightAlpha(hf);
-    if (na > 0) { c.fillStyle = `rgba(8,16,64,${na})`; c.fillRect(0, 0, 640, 360); }
-    if (!opts.noNight && hf >= 17 && hf < 19.5) { c.fillStyle = `rgba(255,140,40,${0.1 * (1 - Math.abs(hf - 18.2) / 1.5)})`; c.fillRect(0, 0, 640, 360); }
-    if (!opts.noNight && hf >= 5 && hf < 7.5) { c.fillStyle = `rgba(255,170,120,${0.08})`; c.fillRect(0, 0, 640, 360); }
-    // window lights
-    if (na > 0.15) { c.globalAlpha = Math.min(1, na * 1.6); for (const r of WIN_RECTS) { const sx = r.x - cx, sy = r.y - cy; if (sx < -10 || sx > 650 || sy < -10 || sy > 370) continue; fr(c, r.purple ? '#e060ff' : '#ffd860', sx, sy, r.w, r.h); } c.globalAlpha = 1; }
-    // season tint
-    if (sea === 3) { c.fillStyle = 'rgba(200,220,255,0.06)'; c.fillRect(0, 0, 640, 360); }
+    this.applyLight(c, hf, opts, cx, cy, sea); this.drawWeather(c, sea, hf);
     // numbers
     c.font = 'bold 8px monospace'; c.textAlign = 'center';
     for (let i = this.nums.length - 1; i >= 0; i--) { const n = this.nums[i]; n.y -= 0.4; n.life--; if (n.life <= 0) { this.nums.splice(i, 1); continue; } const sx = Math.round(n.x - cx), sy = Math.round(n.y - cy); c.globalAlpha = Math.min(1, n.life / 10); c.fillStyle = '#000'; c.fillText(n.v, sx + 1, sy + 1); c.fillStyle = n.col; c.fillText(n.v, sx, sy); } c.globalAlpha = 1;
-    // divine beam & dim
-    if (this.beam) { const b = this.beam; b.life--; const k = b.life / 46; const sx = b.x - cx, sy = b.y - cy; const gr = c.createLinearGradient(0, 0, 0, sy + 10); const col = b.out === 'fail' ? '160,160,200' : b.out === 'twist' ? '200,140,255' : '255,244,170'; gr.addColorStop(0, `rgba(${col},0)`); gr.addColorStop(1, `rgba(${col},${0.8 * k})`); c.fillStyle = gr; const w = 3 + 9 * Math.sin(Math.min(1, (1 - k) * 3) * 1.57); c.fillRect(sx - w, 0, w * 2, sy + 10); c.fillStyle = `rgba(255,255,255,${k * 0.7})`; c.fillRect(sx - 2, 0, 4, sy + 10); if (b.life <= 0) this.beam = null; }
+    this.drawDivine(c, cx, cy);
     if (this.dim > 0) { c.fillStyle = `rgba(0,0,20,${this.dim})`; c.fillRect(0, 0, 640, 360); this.dim = Math.max(0, this.dim - 0.012); }
     if (this.flash > 0) { c.fillStyle = `rgba(255,255,255,${this.flash})`; c.fillRect(0, 0, 640, 360); this.flash = Math.max(0, this.flash - 0.03); }
     if (G.awakened && !G.ending) { const gr = c.createRadialGradient(320, 180, 120, 320, 180, 380); gr.addColorStop(0, 'rgba(60,0,80,0)'); gr.addColorStop(1, 'rgba(60,0,80,0.28)'); c.fillStyle = gr; c.fillRect(0, 0, 640, 360); }

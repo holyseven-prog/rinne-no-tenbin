@@ -1,0 +1,5 @@
+const fs=require('fs');let s=fs.readFileSync('src/11_sprites.js','utf8');
+function rep(a,b){const k=s.indexOf(a);if(k<0){console.log('MISSING '+a.slice(0,70));return;}s=s.slice(0,k)+b+s.slice(k+a.length);}
+rep("const fm = moving ? 1 + ((this.time >> 3) & 1) : 0; spr = humanSprite(e, e.dir === undefined ? 0 : e.dir, fm);","let fm = moving ? [1, 0, 3, 0][(this.time >> 3) & 3] : (((this.time + e.id * 13) >> 5) & 1) ? 4 : 0; const lunge = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.2 && Math.sin(this.time / 2.5 + e.id) > 0.3; if (lunge && !moving) fm = 5; if (prayers[e.id] && !moving) fm = 6; spr = humanSprite(e, e.dir === undefined ? 0 : e.dir, fm);");
+rep("c.fillStyle = 'rgba(0,0,0,0.28)'; c.beginPath(); c.ellipse(sx, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.5, 0, 0, 7); c.fill();","c.fillStyle = 'rgba(24,28,70,0.36)'; c.beginPath(); c.ellipse(sx + 1, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.4, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(24,28,70,0.2)'; c.beginPath(); c.ellipse(sx + 1, sy, it.k && (e.boss || e.cad >= 0) ? 8 : 4, 1.5, 0, 0, 7); c.fill();");
+fs.writeFileSync('src/11_sprites.js',s);
