@@ -10,5 +10,6 @@ const only = process.argv[2] || 'all'; const OUT = path.join(__dirname, 'out', '
   const save = async (name, fnName, ...args) => { const url = await pg.evaluate((f, a) => window[f](...a), fnName, args); fs.writeFileSync(path.join(OUT, name + '.png'), Buffer.from(url.split(',')[1], 'base64')); console.log('wrote', name); };
   if (only === 'all' || only === 'chars') await save('characters', '__sheetChars');
   if (only === 'all' || only === 'kids') await save('characters_states', '__sheetStates');
+  if (only === 'all' || only === 'mon') await save('monsters', '__sheetMonsters');
   console.log('errors', JSON.stringify(logs)); await br.close();
 })();

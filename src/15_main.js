@@ -62,7 +62,7 @@ Object.assign(Game, {
     Screens.closeAll(); Screens.clearScr();
     newGame({ god: godId, seed: (Date.now() ^ (Math.random() * 1e9)) & 0xffffff, lang: LANG, gen: gen || 1 }); Game.afterNew(!gen || gen === 1);
   },
-  applyTheme() { document.body.classList.toggle('theme-blue', this.settings.theme === 'blue'); document.body.classList.toggle('theme-black', this.settings.theme !== 'blue'); },
+  applyTheme() { document.body.classList.toggle('theme-blue', this.settings.theme === 'blue'); document.body.classList.toggle('theme-black', this.settings.theme !== 'blue'); if (typeof UISkin !== 'undefined' && this._skinTheme !== this.settings.theme) { this._skinTheme = this.settings.theme; UISkin.apply(this.settings.theme); } },
   afterNew(isNew) {
     attachHooks(); this.applyTheme(); Game.demoMode = false; Game.scene = 'play'; Game.paused = false; Game.selId = 0; Render.sel = 0; Game.power = null; Game.follow = 0; Game.speedIdx = clamp(Game.settings.speed, 0, 3); Game.acc = 0; Game.lastDay = dayIdx(G.tick);
     Screens.closeAll(); Screens.clearScr(); UI.show(true); UI.build(); UI.resId = 0; Render.centerOn(PLAZA.x, PLAZA.y - 2);
@@ -82,11 +82,13 @@ Object.assign(Game, {
     setTimeout(() => { if (Screens.stack.some(s => s.name === 'cutscene')) { Screens.stack = Screens.stack.filter(s => s.name !== 'cutscene'); Screens.render(); } Game.bgmName = ''; }, 4200);
   },
   frame(dt) {
+    if (typeof UISkin !== 'undefined') UISkin.anim(dt);
     const sc = this.scene; const c = Render.c;
     this.fitT = (this.fitT || 0) + dt; if (this.fitT > 0.5) { this.fitT = 0; if (window.innerWidth !== Scale.w || window.innerHeight !== Scale.h) Scale.fit(); }
     if (sc !== 'play' && sc !== 'ending' && !this.labelsCleared) { this.labelsCleared = true; const lc = $('labels'); if (lc) lc.getContext('2d').clearRect(0, 0, 1280, 720); } else if (sc === 'play') this.labelsCleared = false;
     if (sc === 'boot') { c.fillStyle = '#000'; c.fillRect(0, 0, 640, 360); return; }
     if (sc === 'opening') { drawOpening(c, this.op, dt); return; }
+    if (sc === 'title' || sc === 'godsel') { drawParallax(c, performance.now()); return; }
     if (!G) return;
     if (sc === 'title' || sc === 'godsel') {
       this.acc += dt * TPS1 * 4; let n = 0; while (this.acc >= 1 && n < 20) { if (!G.ending) tick(); this.acc -= 1; n++; } if (this.acc > 1) this.acc = 0;

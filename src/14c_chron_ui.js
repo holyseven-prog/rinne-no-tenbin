@@ -10,6 +10,19 @@ function chapStatus(ch, id) {
   if (s && s.state === 'alive' && s.hid && G.idx[s.hid] && G.idx[s.hid].alive) { const n = G.idx[s.hid]; return fmt(t('st_reborn'), { n: n.name[li()] + '（' + JOBS[n.job].n[li()] + '）' }); }
   return t('st_dead');
 }
+function portrait(info, size) { return portraitEl({ job: info.job, look: info.look, age: info.age, sex: info.sex || 'M' }, size); }
+/* ================= chronicle UI v2: titles with protagonist, per-person view, portrait (R2) ================= */
+Object.assign(S, {
+  h_view_time: ['時間順', '依時間'], h_view_person: ['人物ごと', '依人物'], h_prot: ['主角', '主角'], h_part: ['第{k}話', '第{k}話'], h_place: ['場所', '地點'],
+  st_ok: ['健在', '健在'], st_dead: ['すでに亡くなった', '已逝'], st_reborn: ['{n}として転生', '轉生為{n}'], st_none: ['—', '—'],
+  h_groups: ['人物', '人物'], h_chapters_n: ['{n}話', '{n}話'], h_other: ['その他', '其他'],
+});
+function chapStatus(ch, id) {
+  const e = G.idx[id]; if (e && e.alive) return t('st_ok');
+  const info = (ch.info || {})[id]; const s = info ? G.sidx[info.sid] : null;
+  if (s && s.state === 'alive' && s.hid && G.idx[s.hid] && G.idx[s.hid].alive) { const n = G.idx[s.hid]; return fmt(t('st_reborn'), { n: n.name[li()] + '（' + JOBS[n.job].n[li()] + '）' }); }
+  return t('st_dead');
+}
 function portrait(info, size) {
   const cv = h('canvas', { width: 16, height: 24, style: `width:${size * 2 / 3}px;height:${size}px;image-rendering:pixelated;background:#d8c490;border:2px solid #6a4a1c` });
   const stub = { job: info.job, look: info.look, age: info.age };

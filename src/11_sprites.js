@@ -10,36 +10,6 @@ const PAL = {
   roof: ['#b84a3a', '#3a6ab0', '#5a8a3a', '#8a5a3a', '#7a4a9a', '#c09a30', '#5a5a68', '#a05a30', '#40304f'],
 };
 const spriteCache = {};
-function monsterSprite(m, frame) {
-  const key = 'm.' + m.type + '.' + frame; if (spriteCache[key]) return spriteCache[key];
-  const big = m.boss ? [40, 48] : m.cad >= 0 ? [28, 36] : [16, 16];
-  const cv = mkCanvas(big[0], big[1]), g = cv.getContext('2d'); const f = frame;
-  if (m.boss) {
-    fr(g, '#14101e', 6, 12, 28, 32); fr(g, '#24203a', 8, 14, 24, 28); fr(g, '#3a3252', 4, 10, 6, 14); fr(g, '#3a3252', 30, 10, 6, 14);
-    fr(g, '#14101e', 10, 6, 20, 12); fr(g, '#d8c8f0', 14, 11, 12, 6); fr(g, '#c040ff', 15, 12, 3, 3); fr(g, '#c040ff', 22, 12, 3, 3);
-    fr(g, '#e8c030', 10, 2, 20, 4); fr(g, '#e8c030', 10, 0, 3, 4); fr(g, '#e8c030', 18, -1 + 1, 4, 4); fr(g, '#e8c030', 27, 0, 3, 4); fr(g, '#000', 10, 5, 20, 1);
-    fr(g, '#14101e', 8 + f, 40, 10, 8); fr(g, '#14101e', 22 - f, 40, 10, 8); fr(g, '#9a40c0', 18, 22, 4, 10); fr(g, '#5a2a8a', 6, 20, 2, 18); fr(g, '#d8d8ec', 34, 4, 2, 26);
-  } else if (m.cad >= 0) {
-    const cols = [['#5a3a90', '#9a70e0', '#d8c0ff'], ['#d8d4c4', '#9a9684', '#e84030'], ['#14101e', '#5a2a6a', '#ff60c0']][m.cad];
-    fr(g, cols[0], 6, 12, 16, 20); fr(g, cols[1], 8, 14, 12, 14); fr(g, cols[0], 8, 4, 12, 10); fr(g, '#d8c8e8', 10, 7, 8, 5);
-    fr(g, cols[2], 11, 8, 2, 2); fr(g, cols[2], 15, 8, 2, 2); fr(g, cols[2], 9, 1, 10, 3);
-    if (m.cad === 0) { fr(g, '#c8b0f0aa', 2, 22 + f, 24, 8); fr(g, '#c8b0f088', 0, 28, 28, 6); }
-    if (m.cad === 1) { fr(g, '#d8d4c4', 3, 10, 5, 8); fr(g, '#d8d4c4', 20, 10, 5, 8); fr(g, '#8a8674', 24, 2, 3, 24); fr(g, '#d8d4c4', 8 + f, 32, 5, 4); fr(g, '#d8d4c4', 15 - f, 32, 5, 4); }
-    if (m.cad === 2) { fr(g, '#14101e', 4, 14, 20, 20); fr(g, '#ff60c0', 12, 20, 4, 2); fr(g, '#2a1a3a', 6 + f, 32, 6, 4); fr(g, '#2a1a3a', 16 - f, 32, 6, 4); }
-  } else {
-    switch (m.type) {
-      case 'mush': fr(g, '#f4ecd8', 6, 8, 4, 6); fr(g, '#d83a3a', 2, 3, 12, 6); fr(g, '#ffffff', 4, 4, 2, 2); fr(g, '#ffffff', 9, 5, 3, 2); fr(g, '#1a1a24', 6, 10, 1, 2); fr(g, '#1a1a24', 9, 10, 1, 2); fr(g, '#f4ecd8', 5 + f, 14, 2, 2); fr(g, '#f4ecd8', 9 - f, 14, 2, 2); break;
-      case 'bat': fr(g, '#3a2a5a', 6, 6, 4, 5); fr(g, '#5a3a8a', f ? 0 : 1, f ? 3 : 6, 6, f ? 3 : 5); fr(g, '#5a3a8a', f ? 10 : 9, f ? 3 : 6, 6, f ? 3 : 5); fr(g, '#ff4060', 6, 7, 1, 1); fr(g, '#ff4060', 9, 7, 1, 1); fr(g, '#3a2a5a', 6, 5, 1, 2); fr(g, '#3a2a5a', 9, 5, 1, 2); break;
-      case 'turtle': fr(g, '#5a7a4a', 2, 5, 12, 8); fr(g, '#7a9a5a', 4, 4, 8, 3); fr(g, '#3a5a3a', 5, 7, 2, 2); fr(g, '#3a5a3a', 9, 7, 2, 2); fr(g, '#a8b080', 12, 8, 3, 3); fr(g, '#1a1a24', 14, 8, 1, 1); fr(g, '#a8b080', 3 + f, 13, 3, 2); fr(g, '#a8b080', 10 - f, 13, 3, 2); break;
-      case 'goblin': fr(g, '#5a9a3a', 4, 3, 8, 7); fr(g, '#5a9a3a', 1, 4, 3, 2); fr(g, '#5a9a3a', 12, 4, 3, 2); fr(g, '#ffe040', 5, 5, 2, 2); fr(g, '#ffe040', 9, 5, 2, 2); fr(g, '#1a1a24', 6, 6, 1, 1); fr(g, '#1a1a24', 10, 6, 1, 1); fr(g, '#7a4a2a', 4, 10, 8, 4); fr(g, '#5a9a3a', 5 + f, 14, 2, 2); fr(g, '#5a9a3a', 9 - f, 14, 2, 2); fr(g, '#8a5a30', 13, 6, 2, 8); break;
-      case 'skel': fr(g, '#e8e4d4', 5, 2, 6, 6); fr(g, '#1a1a24', 6, 4, 2, 2); fr(g, '#1a1a24', 9, 4, 2, 2); fr(g, '#e8e4d4', 7, 9, 2, 5); fr(g, '#e8e4d4', 4, 9, 8, 1); fr(g, '#e8e4d4', 4, 11, 8, 1); fr(g, '#e8e4d4', 5 + f, 14, 2, 2); fr(g, '#e8e4d4', 9 - f, 14, 2, 2); fr(g, '#b8b8c8', 13, 4, 1, 9); fr(g, '#6a4a2a', 12, 12, 3, 1); break;
-      case 'wolf': fr(g, '#7a7a8a', 2, 6, 11, 6); fr(g, '#9a9aaa', 10, 3, 5, 5); fr(g, '#ff3030', 13, 4, 1, 1); fr(g, '#7a7a8a', 10, 2, 2, 2); fr(g, '#5a5a6a', 0, 5, 3, 2); fr(g, '#5a5a6a', 3 + f, 12, 2, 3); fr(g, '#5a5a6a', 6 - f, 12, 2, 3); fr(g, '#5a5a6a', 9 + f, 12, 2, 3); fr(g, '#fff', 14, 7, 1, 1); break;
-      default: fr(g, '#a04040', 3, 3, 10, 10);
-    }
-  }
-  spriteCache[key] = cv; return cv;
-}
-
 /* ---------- renderer ---------- */
 const Render = {
   cam: { x: 0, y: 0 }, cv: null, c: null, parts: [], nums: [], time: 0, flash: 0, dim: 0, sel: 0, shake: 0, rings: [],
@@ -106,7 +76,7 @@ const Render = {
         if (e.id === this.sel || e.hp < e.maxHp * 0.99 && (e.tgt || e.hurt > 0 || e.id === this.sel)) { const w = 14; fr(c, '#000a', sx - 7, sy - 29, w + 2, 4); fr(c, '#3a3a3a', sx - 6, sy - 28, w, 2); fr(c, e.hp / e.maxHp > 0.5 ? '#40e060' : e.hp / e.maxHp > 0.25 ? '#e0c040' : '#e04040', sx - 6, sy - 28, Math.max(1, Math.round(w * e.hp / e.maxHp)), 2); }
         if (e.id === this.sel) { const bob = Math.round(Math.sin(this.time / 6) * 1.5); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(sx - 4, sy - 36 + bob); c.lineTo(sx + 4, sy - 36 + bob); c.lineTo(sx, sy - 31 + bob); c.fill(); }
       } else {
-        spr = monsterSprite(e, (this.time >> 4) & 1); const bw = spr.width, bh = spr.height;
+        const atk = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.4 && Math.sin(this.time / 2.5 + e.id) > 0.2; spr = monsterSprite(e, atk ? 2 : (this.time >> 4) & 1); const bw = spr.width, bh = spr.height;
         const bob = e.type === 'bat' ? Math.round(Math.sin(this.time / 5 + e.id) * 2) - 6 : 0;
         if (e.hurt > 0) c.filter = 'brightness(2.6)';
         c.drawImage(spr, Math.round(sx - bw / 2), Math.round(sy - bh + 2 + bob)); c.filter = 'none';
@@ -200,7 +170,7 @@ Render.drawLabels = function () {
         const s = soulOf(h); const k = s ? s.k : null; let col = '#ffffff';
         if (k) { if (k.good - k.evil > 2.5) col = '#cfe6ff'; else if (k.evil - k.good > 2.5) col = '#ffcfcf'; }
         if (it.fav) col = '#ffd860'; if (it.pray) col = '#fff0a0';
-        c.fillStyle = bd[2]; c.fillRect(x0, y0 - 7, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], x0 + 7, y0 + 0.5);
+        c.imageSmoothingEnabled = false; { const ic = iconCanvas(h.job) || iconCanvas('farmer'); c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(x0, y0 - 7, 14, 14); c.drawImage(ic, x0, y0 - 7, 14, 14); }
         c.textAlign = 'left'; c.font = 'bold 13px ' + fam; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(nm, x0 + 17, y0 + 0.5); c.fillStyle = col; c.fillText(nm, x0 + 17, y0 + 0.5);
         continue;
       }
@@ -208,7 +178,7 @@ Render.drawLabels = function () {
     if (mode !== 'none' || it.pri > 0) {
       const r = { x: Math.round(it.sx) - 20, y: Math.round(it.top) - 15, w: 14, h: 14 };
       if (hit(r) && it.pri < 2) continue; placed.push(r);
-      c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(r.x - 1, r.y - 1, 16, 16); c.fillStyle = bd[2]; c.fillRect(r.x, r.y, 14, 14); c.fillStyle = '#fff'; c.font = 'bold 11px ' + fam; c.textAlign = 'center'; c.fillText(bd[L], r.x + 7, r.y + 7.5); c.textAlign = 'left';
+      c.imageSmoothingEnabled = false; c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(r.x - 1, r.y - 1, 16, 16); c.drawImage(iconCanvas(h.job) || iconCanvas('farmer'), r.x, r.y, 14, 14);
     }
   }
 };

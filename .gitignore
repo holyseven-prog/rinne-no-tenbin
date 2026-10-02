@@ -5,3 +5,5 @@ test/b3_*.out
 test/sw_*.out
 prof_out/
 *.cpuprofile
+
+test/out/

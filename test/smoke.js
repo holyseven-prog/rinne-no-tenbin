@@ -10,7 +10,7 @@ const out = [];
   pg.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') logs.push(m.type() + ': ' + m.text()); });
   pg.on('pageerror', e => logs.push('pageerror: ' + e.message));
   pg.on('request', r => { if (!r.url().startsWith('file:') && !r.url().startsWith('data:')) reqs.push(r.url()); });
-  await pg.evaluateOnNewDocument(l => { try { localStorage.setItem('rinne_tenbin_v1_settings', JSON.stringify({ bgm: 0.6, se: 0.7, speed: 1, text: 3, lang: l })); } catch (e) { } }, lang);
+  await pg.evaluateOnNewDocument(l => { try { localStorage.setItem('rinne_tenbin_v1_settings', JSON.stringify({ bgm: 0.6, se: 0.7, speed: 1, text: 3, lang: l, tutDone: true, autoSlow: false, advisor: false })); } catch (e) { } }, lang);
   await pg.goto(URL); await new Promise(r => setTimeout(r, 700));
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const shot = async n => { await pg.screenshot({ path: path.join(__dirname, 'shots', lang + '_' + n + '.png') }); };

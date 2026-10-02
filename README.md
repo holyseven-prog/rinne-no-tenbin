@@ -14,3 +14,8 @@ Single-file HTML god-sim prototype (ja / zh-TW). Open `index.html` in a browser.
 - Story facts are bound to the simulation: monsters come from the event, promises exist only after a chapter showed one (`promised`), companions must be related (spouse/lover/master/party/high relation/guild), job-specific nouns are filtered per POV job, a "main character" line with transition sentences, <=8 chapters in the first 3 years.
 - Tests: `test/story_check.js` (55/60 per-game pass, averages all green), `test/reader_check.js` (reader knowledge check, PASS), `test/readability_check.js`, `test/tut.js` (3 branches, `CHROME_PATH` env supported).
 - Not done: F6 (place consistency inside text) is only handled by header-first rule; locked HUD has native title tooltip, not a custom hover.
+
+## V3.3
+- Drag the map with the left mouse button (click vs drag split at 4px), wheel / two-finger pans. `test/drag.js`.
+- Pixel-art overhaul: `src/11a_spritedata.js` (character parts), `11b_palette.js` (ramps/auto shade/outline), `11c_char.js` (compositor), `11d_world.js` (terrain/buildings/props), `11e_fx.js` (light/weather/divine fx), `11f_monsters.js`, `13a_skin.js` (UI skin/icons/portraits), `14d_title_art.js` (parallax title, emblems).
+- Visual acceptance pack: `node test/visual_pack.js` -> `test/out/visual/` (see SELF_REVIEW.md there).

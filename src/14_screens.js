@@ -19,7 +19,7 @@ const Screens = {
   clearScr() { this.scr.innerHTML = ''; this.scr.style.display = 'none'; },
   /* ---- modal stack ---- */
   push(name, build, onKey, opts) {
-    this.stack.push({ name, build, onKey, opts: opts || {} }); this.render();
+    this.stack.push({ name, build, onKey, opts: opts || {} }); this._anim = true; this.render();
   },
   pop() { if (!this.stack.length) return; const top = this.stack.pop(); if (top.opts.onClose) top.opts.onClose(); this.render(); },
   closeAll() { while (this.stack.length) { const top = this.stack.pop(); if (top.opts.onClose) top.opts.onClose(); } this.render(); },
@@ -28,7 +28,7 @@ const Screens = {
     const m = $('modal'); Game.modals = this.stack.map(s => s.name);
     if (!this.stack.length) { m.style.display = 'none'; m.innerHTML = ''; Snd.setPaused(false); return; }
     const top = this.stack[this.stack.length - 1]; m.style.display = 'block'; m.innerHTML = ''; m.style.background = top.opts.clear ? 'transparent' : 'rgba(0,0,0,.55)';
-    m.appendChild(top.build()); Snd.setPaused(this.stack.some(s => s.name === 'pause'));
+    m.appendChild(top.build()); if (this._anim) { const el = m.lastChild; if (el && el.classList && !top.opts.clear) el.classList.add('winopen'); this._anim = false; } Snd.setPaused(this.stack.some(s => s.name === 'pause'));
   },
   rerender() { if (this.stack.length) this.render(); },
   key(e) { if (!this.stack.length) return false; const top = this.stack[this.stack.length - 1]; if (top.onKey && top.onKey(e) === true) return true; if (e.key === 'Escape' && !top.opts.noEsc) { Snd.se('cancel'); this.pop(); return true; } return true; },
@@ -60,7 +60,7 @@ const Screens = {
   },
   godSelect() {
     Game.scene = 'godsel'; const s = this.scr; s.innerHTML = ''; s.style.display = 'block';
-    s.appendChild(h('div', { style: 'position:absolute;inset:0;background:rgba(0,0,40,.72)' }));
+    s.appendChild(h('div', { style: 'position:absolute;inset:0;background:rgba(0,0,40,.4)' }));
     s.appendChild(h('div', { class: 'gold', style: 'position:absolute;left:0;width:1280px;top:46px;text-align:center;font-size:30px;text-shadow:2px 2px 0 #0a1a6e' }, t('god_select')));
     GODS.forEach((g, i) => {
       const cv = h('canvas', { width: 66, height: 66, style: 'width:132px;height:132px;image-rendering:pixelated;display:block;margin:0 auto 8px' }); drawEmblem(cv, g.id);

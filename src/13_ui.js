@@ -132,7 +132,7 @@ const UI = {
     E.powWin = h('div', { class: 'win', style: 'left:232px;top:636px;width:776px;height:78px;padding:4px 6px;display:flex;gap:6px' });
     E.powBtns = POWERS.map((p, i) => {
       const b = h('div', { class: 'btn', style: 'width:146px;height:64px;padding:2px 6px;line-height:1.3;white-space:normal;text-align:left', onclick: () => selectPower(i), onmouseenter: () => { Game.hover = i; UI.refresh(true); }, onmouseleave: () => { Game.hover = null; UI.refresh(true); } },
-        h('div', null, h('span', { class: 'kbd' }, String(i + 1)), h('b', null, p.n[li()])), h('div', { class: 'sm' }, '', ...[]));
+        h('div', { style: 'display:flex;align-items:center;gap:4px' }, Ico(['oracle', 'grace', 'trial', 'soul', 'force'][i], 16), h('span', { class: 'kbd' }, String(i + 1)), h('b', null, p.n[li()])), h('div', { class: 'sm' }, '', ...[]));
       b._cost = h('div', { class: 'sm' }); b.appendChild(b._cost); return b;
     });
     E.powBtns.forEach(b => E.powWin.appendChild(b));
@@ -174,7 +174,7 @@ const UI = {
   refresh(force) {
     if (!G || !this.el.faithWin) return;
     const E = this.el, now = performance.now();
-    if (E.faithBar) { E.faithBar.style.width = (G.faith / G.faithMax * 100).toFixed(1) + '%'; E.faithNum.textContent = Math.floor(G.faith) + '/' + G.faithMax; }
+    if (E.faithBar) { E.faithBar.style.width = (G.faith / G.faithMax * 100).toFixed(1) + '%'; UI.pxSet(E.faithNum, Math.floor(G.faith) + '/' + G.faithMax, '#ffe9a0', 3); }
     E.eyeTxt.textContent = t('eye') + ' ' + '◉'.repeat(G.eye) + '○'.repeat(3 - G.eye);
     const fs = POWERS.map(p => fatigueStage(p.id)); const fm = Math.max(...fs); E.fatTxt.textContent = fm > 0 ? t('fatigue') + ' ' + '▼'.repeat(fm) : '';
     E.dateTxt.textContent = dateStr(G.tick, G.gen);
@@ -214,8 +214,8 @@ const UI = {
       if (!prs.length) E.prayList.appendChild(h('div', { class: 'sm dim', style: 'padding:6px 0' }, t('no_prayers')));
       prs.forEach(p => {
         const hh = hById(p.hid); if (!hh) return;
-        const rc = recommendFor(p); const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
-          h('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, h('b', null, hh.name[li()] + ' ', h('span', { class: 'sm' }, JOBS[hh.job].n[li()])), h('span', { class: 'gold sm' }, t('pk_' + p.kind))),
+        const rc = recommendFor(p); const fresh = !(this.seenP || (this.seenP = {}))[p.id]; this.seenP[p.id] = 1; const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : '') + (fresh && G.tick > START_TICK + 30 ? ' fresh' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
+          h('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, h('b', { style: 'display:flex;align-items:center;gap:3px' }, Ico(hh.job, 14), hh.name[li()] + ' ', h('span', { class: 'sm' }, JOBS[hh.job].n[li()])), h('span', { class: 'gold sm', style: 'display:flex;align-items:center;gap:3px' }, Ico(p.kind, 14), t('pk_' + p.kind))),
           h('div', { class: 'sm', style: 'line-height:1.22;height:32px;overflow:hidden;font-size:13px' }, pr(S['pray_' + p.kind][p.v % S['pray_' + p.kind].length])),
           h('div', { style: 'font-size:12px;color:#9affb0;margin-top:1px' }, t('rec_label') + '：' + POWER_BY_ID[rc.pid].n[li()] + ' ' + rc.mark + ' ' + Math.round(rc.p * 100) + '%'),
           h('div', { class: 'gauge', style: 'height:5px;border-width:1px;margin-top:2px' }, p._bar = h('i', { style: 'background:' + (p.urg > 0.75 ? '#ff7050' : p.urg > 0.5 ? '#ffd060' : '#fff3a0') })));
@@ -264,11 +264,11 @@ const UI = {
   },
   buildRes(hh) {
     const E = this.el; E.selWin.innerHTML = ''; const R = {};
-    E.selWin.appendChild(h('div', { style: 'display:flex;justify-content:space-between;align-items:center' }, R.name = h('b', { style: 'font-size:17px', class: 'gold' }, hh.name[li()]), h('span', { class: 'btn', style: 'padding:0 6px;font-size:12px', onclick: () => { Game.selId = 0; Render.sel = 0; UI.refresh(true); } }, '✕')));
+    E.selWin.appendChild(h('div', { style: 'display:flex;justify-content:space-between;align-items:center' }, h('span', { style: 'display:flex;align-items:center;gap:6px' }, portraitEl(hh, 36), R.name = h('b', { style: 'font-size:17px', class: 'gold' }, hh.name[li()])), h('span', { class: 'btn', style: 'padding:0 6px;font-size:12px', onclick: () => { Game.selId = 0; Render.sel = 0; UI.refresh(true); } }, '✕')));
     E.selWin.appendChild(R.sub = h('div', { class: 'sm' }));
     E.selWin.appendChild(h('div', { style: 'display:flex;align-items:center;gap:6px;margin-top:2px' }, h('span', { class: 'sm', style: 'width:22px' }, t('res_hp')), h('div', { class: 'gauge hp', style: 'flex:1;height:10px;border-width:1px' }, R.hpBar = h('i')), R.hpNum = h('span', { class: 'sm', style: 'width:60px;text-align:right' })));
     R.needs = {}; const grid = h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:1px 10px;margin-top:3px' });
-    ['hunger', 'safety', 'wealth', 'belong', 'honor', 'faith'].forEach(k => { const b = h('i'); R.needs[k] = b; const row = h('div', { style: 'display:flex;align-items:center;gap:4px' }, h('span', { class: 'sm', style: 'width:34px;font-size:11px' }, t('n_' + k)), h('div', { class: 'gauge need', style: 'flex:1;height:7px;border-width:1px' }, b)); Tip.attach(row, () => [t('n_' + k), t('tip_need_' + k)]); grid.appendChild(row); });
+    ['hunger', 'safety', 'wealth', 'belong', 'honor', 'faith'].forEach(k => { const b = h('i'); R.needs[k] = b; const row = h('div', { style: 'display:flex;align-items:center;gap:4px' }, h('span', { style: 'display:flex;align-items:center;gap:2px;width:50px' }, Ico(k, 12), h('span', { class: 'sm', style: 'font-size:11px' }, t('n_' + k))), h('div', { class: 'gauge need', style: 'flex:1;height:7px;border-width:1px' }, b)); Tip.attach(row, () => [t('n_' + k), t('tip_need_' + k)]); grid.appendChild(row); });
     E.selWin.appendChild(grid);
     E.selWin.appendChild(R.state = h('div', { class: 'sm', style: 'margin-top:3px' })); E.selWin.appendChild(R.gold = h('div', { class: 'sm' }));
     E.selWin.appendChild(R.motive = h('div', { class: 'sm', style: 'line-height:1.25;color:#a8e0ff' })); E.selWin.appendChild(R.karma = h('div', { class: 'sm' })); Tip.attach(R.motive, () => [t('motive'), t('tip_motive')]); Tip.attach(R.karma, () => [t('karma'), t('tip_karma')]);
