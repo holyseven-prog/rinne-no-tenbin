@@ -309,7 +309,27 @@ function drawOpening(c, o, dt) {
     case 0: sky('#05082a', '#1a1a60'); stars(90); scale(320, 110 + Math.sin(T0 / 50) * 3, Math.sin(T0 / 80) * 0.1, 1.5); break;
     case 1: { G.tick = 6 * 144 + 36 + 12 * 6; Render.cam.x = 22 * TS; Render.cam.y = 8 * TS; Render.draw(0, { noNight: false }); c.fillStyle = 'rgba(255,230,160,0.14)'; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(120 + i * 150, 0); c.lineTo(160 + i * 150, 0); c.lineTo(80 + i * 150 + Math.sin(T0 / 90) * 10, 360); c.lineTo(20 + i * 150, 360); c.fill(); } break; }
     case 2: { sky('#02051a', '#0a2a5a'); stars(40); c.strokeStyle = '#2a6ac8'; c.lineWidth = 26; c.beginPath(); c.moveTo(-20, 230); c.bezierCurveTo(180, 170, 300, 300, 680, 220); c.stroke(); c.strokeStyle = '#4a8ae8'; c.lineWidth = 12; c.stroke(); for (let i = 0; i < 18; i++) { const u = ((T0 / 260 + i / 18) % 1); const x = -20 + u * 700; const y = 230 + Math.sin(u * 5 + 0.4) * 30 - 18; c.fillStyle = `rgba(180,230,255,${0.4 + 0.4 * Math.sin(T0 / 10 + i)})`; c.beginPath(); c.arc(x, y - 6 * Math.sin(T0 / 20 + i), 4, 0, 7); c.fill(); c.fillStyle = '#fff'; c.fillRect(x - 1, y - 6 * Math.sin(T0 / 20 + i) - 1, 2, 2); } break; }
-    case 3: { sky('#12001e', '#3a1050'); c.fillStyle = '#e8d0ff'; c.beginPath(); c.arc(480, 80, 36, 0, 7); c.fill(); c.fillStyle = '#12001e'; c.beginPath(); c.arc(492, 74, 32, 0, 7); c.fill(); stars(40); c.fillStyle = '#0a0014'; c.beginPath(); c.moveTo(0, 360); c.lineTo(0, 260); c.lineTo(160, 230); c.lineTo(300, 270); c.lineTo(420, 210); c.lineTo(640, 250); c.lineTo(640, 360); c.fill(); c.fillStyle = '#1a0a28'; c.fillRect(380, 130, 120, 100); c.fillRect(370, 100, 20, 130); c.fillRect(490, 90, 20, 140); c.fillRect(420, 80, 40, 60); c.beginPath(); c.moveTo(420, 80); c.lineTo(440, 50); c.lineTo(460, 80); c.fill(); for (let i = 0; i < 5; i++) { c.fillStyle = `rgba(220,80,255,${0.6 + 0.3 * Math.sin(T0 / 12 + i)})`; c.fillRect(395 + i * 20, 160, 6, 10); } c.fillStyle = `rgba(255,40,80,${0.7 + 0.3 * Math.sin(T0 / 9)})`; c.fillRect(434, 100, 4, 3); c.fillRect(442, 100, 4, 3); c.fillStyle = '#e8c030'; c.fillRect(428, 88, 24, 4); c.fillRect(428, 84, 4, 4); c.fillRect(438, 82, 4, 6); c.fillRect(448, 84, 4, 4); const fg = c.createLinearGradient(0, 250, 0, 360); fg.addColorStop(0, 'rgba(120,40,160,0)'); fg.addColorStop(1, 'rgba(120,40,160,0.6)'); c.fillStyle = fg; c.fillRect(0, 250, 640, 110); break; }
+    case 3: { sky('#1c0836', '#7a2a58'); stars(60);
+      // full moon on the left, clear of the castle, with halo
+      for (let r = 62; r > 36; r -= 5) { c.fillStyle = 'rgba(255,230,255,0.05)'; c.beginPath(); c.arc(150, 84, r, 0, 7); c.fill(); }
+      c.fillStyle = '#d8c8f0'; c.beginPath(); c.arc(150, 84, 36, 0, 7); c.fill(); c.fillStyle = '#f8f0ff'; c.beginPath(); c.arc(147, 81, 33, 0, 7); c.fill(); c.fillStyle = '#d4c4ec'; [[160, 92, 6], [140, 98, 4], [152, 70, 3]].forEach(p => { c.beginPath(); c.arc(p[0], p[1], p[2], 0, 7); c.fill(); });
+      // far hills
+      c.fillStyle = '#3a1450'; c.beginPath(); c.moveTo(0, 360); c.lineTo(0, 250); c.lineTo(120, 225); c.lineTo(260, 262); c.lineTo(640, 222); c.lineTo(640, 360); c.fill();
+      // glow behind castle
+      const gl = c.createRadialGradient(500, 150, 10, 500, 150, 170); gl.addColorStop(0, 'rgba(255,90,140,0.55)'); gl.addColorStop(1, 'rgba(255,90,140,0)'); c.fillStyle = gl; c.fillRect(300, 0, 340, 330);
+      // castle: lighter stone with rim light so it separates from the sky
+      c.fillStyle = '#5a4a80'; c.fillRect(378, 128, 124, 104); c.fillRect(368, 96, 22, 136); c.fillRect(490, 84, 22, 148); c.fillRect(418, 78, 44, 60); c.beginPath(); c.moveTo(418, 78); c.lineTo(440, 44); c.lineTo(462, 78); c.fill();
+      c.fillStyle = '#8a78b8'; c.fillRect(378, 128, 3, 104); c.fillRect(368, 96, 3, 136); c.fillRect(418, 78, 3, 60); c.fillRect(490, 84, 3, 148); c.beginPath(); c.moveTo(418, 78); c.lineTo(440, 44); c.lineTo(441, 46); c.lineTo(421, 78); c.fill();
+      c.fillStyle = '#3a2c5c'; c.fillRect(499, 128, 3, 104); c.fillRect(509, 84, 3, 148); c.fillRect(378, 226, 124, 6); for (let k = 0; k < 6; k++) { c.fillStyle = '#5a4a80'; c.fillRect(368 + k * 4 * 6, 92, 6, 5); }
+      for (let k = 0; k < 4; k++) { c.fillStyle = '#2a1c40'; c.fillRect(384 + k * 28, 150, 12, 18); c.fillStyle = `rgba(255,120,255,${0.75 + 0.25 * Math.sin(T0 / 12 + k)})`; c.fillRect(386 + k * 28, 152, 8, 14); }
+      c.fillStyle = '#1a0e2c'; c.fillRect(428, 188, 24, 44); c.fillStyle = '#c040ff'; c.fillRect(438, 188, 4, 44);
+      c.fillStyle = `rgba(255,60,100,${0.8 + 0.2 * Math.sin(T0 / 9)})`; c.fillRect(430, 98, 5, 4); c.fillRect(445, 98, 5, 4); c.fillStyle = '#ffd040'; c.fillRect(428, 88, 24, 5); [428, 438, 448].forEach(x => c.fillRect(x, 82, 4, 7));
+      // front ground + mist
+      c.fillStyle = '#240a38'; c.beginPath(); c.moveTo(0, 360); c.lineTo(0, 292); c.lineTo(200, 270); c.lineTo(420, 240); c.lineTo(640, 262); c.lineTo(640, 360); c.fill();
+      const fg = c.createLinearGradient(0, 250, 0, 360); fg.addColorStop(0, 'rgba(180,70,200,0)'); fg.addColorStop(1, 'rgba(180,70,200,0.45)'); c.fillStyle = fg; c.fillRect(0, 250, 640, 110);
+      if (T0 % 160 < 5) { c.fillStyle = 'rgba(255,230,255,0.25)'; c.fillRect(0, 0, 640, 360); }
+      c.fillStyle = '#12061e'; for (let k = 0; k < 4; k++) { const bx = (T0 * 0.7 + k * 170) % 700 - 30, by = 60 + k * 22 + Math.sin(T0 / 14 + k) * 6; c.fillRect(bx, by, 8, 2); c.fillRect(bx - 3, by - 2 + ((T0 >> 3) & 1) * 3, 4, 2); c.fillRect(bx + 7, by - 2 + ((T0 >> 3) & 1) * 3, 4, 2); }
+      break; }
     default: sky('#04061c', '#10104a'); stars(110); scale(320, 120, Math.sin(T0 / 60) * 0.06, 1.6); c.fillStyle = 'rgba(255,240,170,0.12)'; c.beginPath(); c.arc(320, 40, 120 + Math.sin(T0 / 30) * 6, 0, 7); c.fill();
   }
   // typewriter text
