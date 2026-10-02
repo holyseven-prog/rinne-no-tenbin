@@ -162,11 +162,17 @@ UI.drawBalance = function () {
     c.strokeStyle = M.d; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 15, y + 15); c.moveTo(x, y); c.lineTo(x + 15, y + 15); c.stroke();
     fr(c, M.o, x - 17, y + 14, 35, 5); fr(c, M.b, x - 16, y + 15, 33, 3); fr(c, M.h, x - 15, y + 15, 12, 1); fr(c, M.d, x - 14, y + 17, 30, 1);
     c.fillStyle = M.o; c.beginPath(); c.arc(x, y, 2.5, 0, 7); c.fill(); c.fillStyle = M.h; c.fillRect(x - 1, y - 1, 1, 1);
-    // orb on the pan: light = golden sun, dark = violet moon
-    const col = kind === 'L' ? ['#fff4b0', '#ffd860', '#c8941a', '#7a5a10'] : ['#e0b8ff', '#9a58d8', '#5a2a98', '#2a104a'];
-    const ox = x, oy = y + 7; c.fillStyle = col[3]; c.beginPath(); c.arc(ox, oy, 6.2, 0, 7); c.fill(); c.fillStyle = col[2]; c.beginPath(); c.arc(ox, oy, 5.2, 0, 7); c.fill(); c.fillStyle = col[1]; c.beginPath(); c.arc(ox - 0.6, oy - 0.6, 4, 0, 7); c.fill(); c.fillStyle = col[0]; c.fillRect(ox - 3, oy - 3, 2, 2);
-    if (kind === 'D') { c.fillStyle = col[3]; c.beginPath(); c.arc(ox + 2.5, oy - 1, 3.4, 0, 7); c.fill(); c.fillStyle = col[1]; c.beginPath(); c.arc(ox + 2, oy - 1, 2.6, 0, 7); c.fill(); }
-    else { for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + performance.now() / 1400; c.fillStyle = col[1]; c.fillRect(Math.round(ox + Math.cos(a) * 8), Math.round(oy + Math.sin(a) * 8), 1, 1); } }
+    // symbol sitting on the pan: sun (light) or crescent moon (dark)
+    const ox = x, oy = y + 5; const t = performance.now() / 1000;
+    if (kind === 'L') {
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + t * 0.5, r0 = 7, r1 = i % 2 ? 9 : 11; c.strokeStyle = '#ffb830'; c.lineWidth = 2; c.beginPath(); c.moveTo(ox + Math.cos(a) * r0, oy + Math.sin(a) * r0); c.lineTo(ox + Math.cos(a) * r1, oy + Math.sin(a) * r1); c.stroke(); }
+      c.fillStyle = '#9a5a10'; c.beginPath(); c.arc(ox, oy, 6.5, 0, 7); c.fill(); c.fillStyle = '#ffc83a'; c.beginPath(); c.arc(ox, oy, 5.5, 0, 7); c.fill(); c.fillStyle = '#fff2a0'; c.beginPath(); c.arc(ox - 1, oy - 1, 3.6, 0, 7); c.fill(); c.fillStyle = '#fff'; c.fillRect(ox - 3, oy - 3, 2, 2);
+    } else {
+      c.fillStyle = '#2a104a'; c.beginPath(); c.arc(ox, oy, 7.5, 0, 7); c.fill(); c.fillStyle = '#c8a0ff'; c.beginPath(); c.arc(ox, oy, 6.5, 0, 7); c.fill(); c.fillStyle = '#e8d4ff'; c.beginPath(); c.arc(ox - 1, oy - 1, 5, 0, 7); c.fill();
+      c.globalCompositeOperation = 'destination-out'; c.beginPath(); c.arc(ox + 3.5, oy - 1.5, 5.6, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over';
+      c.fillStyle = '#e8d4ff'; c.fillRect(ox + 6, oy - 7 + Math.round(Math.sin(t * 3) * 1), 2, 2); c.fillRect(ox + 9, oy - 2, 1, 1);
+    }
+
   };
   pan(lx, ly, 'L'); pan(rx, ry, 'D');
 };
