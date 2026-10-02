@@ -67,10 +67,15 @@ function drawEmblem(cv, id) {
     [[9, 40], [55, 40]].forEach(p => { gell(g, 'g', p[0], p[1], 8, 4); gell(g, '.', p[0], p[1] - 3, 8, 3); rbox(g, 'g', p[0] - 8, p[1] - 1, 17, 2, true); });
     gell(g, 'c', 9, 34, 4, 4); gell(g, 't', 55, 34, 4, 4); gell(g, '.', 57, 33, 3, 3); gell(g, 't', 57, 34, 3, 3);
   } else {
-    ramps = { t: mkRamp('#a050ff'), g: mkRamp('#e0b0ff'), c: mkRamp('#fff'), u: mkRamp('#5a20a0'), m: mkRamp('#ffe060') };
-    for (let a = 0; a < 6.28 * 2.2; a += 0.05) { const r = a * 2.3; gell(g, 't', Math.round(32 + Math.cos(a) * r * 0.9), Math.round(32 + Math.sin(a) * r * 0.9), 2, 2); }
-    gell(g, 'g', 32, 32, 7, 7); gell(g, 'c', 32, 32, 5, 5); gell(g, 'u', 32, 32, 2, 3);
-    [[44, 8], [47, 14], [41, 18], [45, 24], [38, 30]].forEach((p, i, a) => { if (i) gline(g, 'm', a[i - 1][0], a[i - 1][1], p[0], p[1], 2); });
+    ramps = { t: mkRamp('#a050ff'), g: mkRamp('#e0b0ff'), c: mkRamp('#ffffff'), u: mkRamp('#3a1068'), m: mkRamp('#ffe060'), a: mkRamp('#6a28c8') };
+    // chaos star: 8 arrows, broken ring, slit-pupil eye, lightning
+    for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4 - Math.PI / 2, len = i % 2 ? 19 : 27, ex = 32 + Math.cos(an) * len, ey = 32 + Math.sin(an) * len;
+      gline(g, i % 2 ? 'a' : 't', 32 + Math.cos(an) * 8, 32 + Math.sin(an) * 8, ex, ey, 3); gline(g, i % 2 ? 'a' : 't', 32 + Math.cos(an) * 8 + 1, 32 + Math.sin(an) * 8, ex + 1, ey, 2);
+      const px = -Math.sin(an), py = Math.cos(an), bx = 32 + Math.cos(an) * (len - 7), by = 32 + Math.sin(an) * (len - 7);
+      for (let k = -5; k <= 5; k++) { const f = (5 - Math.abs(k)) / 5; for (let d = 0; d <= 7 * f; d++) gpx(g, i % 2 ? 'a' : 't', Math.round(bx + px * k + Math.cos(an) * d), Math.round(by + py * k + Math.sin(an) * d)); } }
+    for (let a2 = 0; a2 < 6.28; a2 += 0.04) { if (Math.sin(a2 * 3 + 0.5) > 0.35) continue; gell(g, 'g', Math.round(32 + Math.cos(a2) * 15), Math.round(32 + Math.sin(a2) * 15), 1, 1); }
+    gell(g, 'u', 32, 32, 10, 10); gell(g, 'g', 32, 32, 9, 9); gell(g, 'c', 32, 32, 7, 7); gell(g, 'u', 32, 32, 3, 5); gell(g, 'c', 31, 29, 1, 1);
+    gline(g, 'm', 52, 6, 47, 14, 2); gline(g, 'm', 47, 14, 51, 15, 2); gline(g, 'm', 51, 15, 45, 24, 2); gline(g, 'm', 12, 40, 16, 48, 2); gline(g, 'm', 16, 48, 12, 49, 2); gline(g, 'm', 12, 49, 17, 58, 2);
   }
   const bk = bakeGrid(g, 64, 64, ramps); c.drawImage(bk, 1, 1);
 }
