@@ -101,10 +101,11 @@ Object.assign(Game, {
     const sp = 260 * dt; let moved = false; const K = this.keys;
     if (sc === 'play' && !Game.modals.length) {
       if (K.a || K.ArrowLeft) { Render.cam.x -= sp; moved = true; } if (K.d || K.ArrowRight) { Render.cam.x += sp; moved = true; } if (K.w || K.ArrowUp) { Render.cam.y -= sp; moved = true; } if (K.s || K.ArrowDown) { Render.cam.y += sp; moved = true; }
-      if (this.mouseCanvas && !moved) { const m = this.mouse; if (m.x < 6) { Render.cam.x -= sp; moved = true; } if (m.x > 1274) { Render.cam.x += sp; moved = true; } if (m.y < 4) { Render.cam.y -= sp; moved = true; } if (m.y > 716) { Render.cam.y += sp; moved = true; } }
+      if (this.mouseCanvas && !moved && !this.drag) { const m = this.mouse; if (m.x < 6) { Render.cam.x -= sp; moved = true; } if (m.x > 1274) { Render.cam.x += sp; moved = true; } if (m.y < 4) { Render.cam.y -= sp; moved = true; } if (m.y > 716) { Render.cam.y += sp; moved = true; } }
     }
     if (moved) this.follow = 0;
     if (this.follow) { const e = G.idx[this.follow]; if (e && e.alive) { Render.cam.x += (e.x * TS + 8 - 320 - Render.cam.x) * Math.min(1, dt * 5); Render.cam.y += (e.y * TS - 180 - Render.cam.y) * Math.min(1, dt * 5); if (Math.abs(e.x * TS + 8 - 320 - Render.cam.x) < 2) { } } else this.follow = 0; }
+    if (this.drag && (this.modals.length || sc !== 'play')) endDrag();
     Render.clampCam(); Render.draw(stopped ? 0 : this.acc, {});
     if (sc === 'play' || sc === 'ending') { if (this.mouseCanvas && !Game.modals.length) { const wx = Render.cam.x + this.mouse.x / 2, wy = Render.cam.y + this.mouse.y / 2; const hv = pickEntityAt(wx, wy); this.hoverId = hv ? hv.id : 0; } else this.hoverId = 0; Render.drawLabels(); }
     const now = performance.now();
@@ -156,6 +157,11 @@ function onCanvasDown(e) {
   Snd.unlock(); if (Game.scene !== 'play' || Game.modals.length) return;
   const p = Scale.toStage(e);
   if (e.button === 2) { e.preventDefault(); if (Game.power) { Game.power = null; UI.refresh(true); } return; }
+  if (e.button !== 0) return;
+  Game.drag = { sx: p.x, sy: p.y, cx: Render.cam.x, cy: Render.cam.y, moved: false };
+}
+function canvasClick(p) {
+  if (Game.scene !== 'play' || Game.modals.length) return;
   const wx = Render.cam.x + p.x / 2, wy = Render.cam.y + p.y / 2; const hh = pickEntityAt(wx, wy);
   Game.mouse = p;
   if (hh) {
@@ -164,11 +170,25 @@ function onCanvasDown(e) {
     Game.selId = hh.id; Render.sel = hh.id; Game.follow = 0; UI.lastPray = ''; UI.refresh(true); Snd.se('cursor');
   } else if (!Game.power) { Game.selId = 0; Render.sel = 0; UI.refresh(true); }
 }
+function dragMove(e) {
+  const d = Game.drag; if (!d) return; if (Game.modals.length || Game.scene !== 'play') { endDrag(); return; }
+  const p = Scale.toStage(e); const dx = p.x - d.sx, dy = p.y - d.sy;
+  if (!d.moved && Math.hypot(dx, dy) <= 4) return;
+  if (!d.moved) { d.moved = true; Game.follow = 0; $('game').style.cursor = 'grabbing'; }
+  Render.cam.x = d.cx - dx / 2; Render.cam.y = d.cy - dy / 2; Render.clampCam();
+}
+function endDrag() { Game.drag = null; const c = $('game'); if (c) c.style.cursor = ''; }
+function dragUp(e) {
+  const d = Game.drag; if (!d || e.button !== 0) return; const was = d.moved; endDrag();
+  if (!was) canvasClick({ x: d.sx, y: d.sy });
+}
 function boot() {
   Scale.fit(); window.addEventListener('resize', () => Scale.fit());
   const cv = $('game'); Render.init(cv); Screens.init(); Game.loadSettings(); document.title = t('title');
   document.addEventListener('keydown', onKeyDown); document.addEventListener('keyup', onKeyUp);
   window.addEventListener('blur', () => { Game.keys = {}; });
+  window.addEventListener('mousemove', dragMove); window.addEventListener('mouseup', dragUp); window.addEventListener('blur', endDrag);
+  cv.addEventListener('wheel', e => { if (Game.scene !== 'play' || Game.modals.length || e.ctrlKey) return; e.preventDefault(); Render.cam.x += e.deltaX / 2; Render.cam.y += e.deltaY / 2; Game.follow = 0; Render.clampCam(); }, { passive: false });
   cv.addEventListener('mousedown', onCanvasDown); cv.addEventListener('contextmenu', e => e.preventDefault());
   $('stage').addEventListener('mousemove', e => { Game.mouse = Scale.toStage(e); Game.mouseCanvas = e.target === cv; });
   $('stage').addEventListener('mouseleave', () => { Game.mouseCanvas = false; });
