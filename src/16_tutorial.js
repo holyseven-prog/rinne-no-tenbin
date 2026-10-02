@@ -12,6 +12,12 @@ Object.assign(S, {
   tut_s8: ['上の「天秤」は、世界の光と闇のバランスです。闇に傾くと魔物が増え、魔王が早く目覚めます。左の「もくひょう」で進み具合が見られます。', '上方的「天秤」代表世界的光暗平衡。偏向暗側會讓魔物增加、魔王提早覺醒。左邊的「目標」可以看進度。'],
   tut_s9: ['ここで時間の速さを変えます。⏸ は一時停止、×1〜×64 は速さです。最初は ×1 がおすすめ。大事なことが起きると、自動で ×1 に戻ります。', '在這裡調整時間速度。⏸ 是暫停，×1～×64 是速度。剛開始建議用 ×1。發生重要事件時會自動降回 ×1。'],
   tut_s10: ['これで基本はおしまいです。マウスを乗せると説明が出ます。「?」で遊び方、「☰」でメニューが開きます。さあ、世界を見守りましょう！', '基本操作就是這些。滑鼠停在任何東西上都會顯示說明。「?」可開啟玩法說明，「☰」是選單。那麼，開始守望這個世界吧！'],
+  tut_pick: ['右の「祈り」カードが、その人の願いです。「おすすめ」は、いちばん合う神力。下の5つが神力なので、まずは「{rec}」を選びましょう。（数字キー {key} でもOK）', '右邊的「祈禱」卡片是他的願望，「建議」是最適合的神力。下面 5 個是神力，先選「{rec}」吧。（按數字鍵 {key} 也可以）'],
+  tut_wrong: ['まずは、おすすめの「{rec}」を試してみましょう。', '先試試建議的「{rec}」吧。'],
+  tut_dir: ['向きを1つ選べば大丈夫です。（どれでも物語は進みます）', '選一個方向就好。（選哪個都可以）'],
+  tut_res: ['結果が出ました。上の画面に、理由と信仰力の変化があります。あなたのしたことは、史官が物語に書きます。「史官の書庫」を開いてみましょう。（Hキー）', '結果出來了。上方畫面有原因與信仰力的變化。你做的事，史官會寫成故事。打開「史官書庫」看看吧。（按 H 鍵）'],
+  tut_echo: ['あなたの行いは、あとの章にも出てきます。神の「恩寵」や「神託」は、その人の記憶に残り、あとで思い出されます。結果は4段階（大成功・成功・曲解・失敗）です。', '你的作為，之後的章節也會提到。神的「恩寵」「神諭」會留在那個人的記憶裡，之後被想起。結果分 4 級（大成功、成功、曲解、失敗）。'],
+  tut_end2: ['上の「天秤」は光と闇のバランス。闇が強いと魔物が増えます。右上で時間の速さを変えられます（⏸ 停止、×1〜×64）。これで基本はおしまい。さあ、世界を見守りましょう！', '上方「天秤」是光暗平衡，暗太強魔物會增加。右上角可以調整時間速度（⏸ 暫停、×1～×64）。基本就是這些，開始守望這個世界吧！'],
   tut_replay: ['チュートリアルをもう一度', '重看教學'], tut_step: ['{i} / {n}', '{i} / {n}'],
 });
 const Tut = {
@@ -28,17 +34,14 @@ const Tut = {
     const rec = () => { const p = G.prayers.find(q => q.id === T.pid); const pid = p ? PRAYER_ANS[p.kind][0] : 'grace'; return { pid, idx: POWERS.findIndex(x => x.id === pid) }; };
     T.steps = [
       { id: 'intro', text: () => t('tut_s1'), target: () => T.humanRect(), cond: () => Game.selId === T.hid },
-      { id: 'card', text: () => t('tut_s2'), target: () => T.rect(E.prayWin), next: true },
-      { id: 'pick', text: () => fmt(t('tut_s3'), { rec: POWERS[rec().idx].n[li()], key: rec().idx + 1 }), target: () => T.rect(E.powWin), cond: () => !!Game.power && Game.power !== 'eye' },
-      { id: 'cast', text: () => t('tut_s4'), target: () => T.humanRect(), cond: () => G.stats.casts > 0, back: () => !Game.power && G.stats.casts === 0 },
-      { id: 'result', text: () => t('tut_s5'), target: () => T.rect(E.banner), next: true, enter: () => { if (E.banner.style.display === 'none') UI.banner('…', t('tut_s5')); } },
-      { id: 'chron', text: () => t('tut_s6'), target: () => T.rect(E.chronBtn), cond: () => Game.modals.indexOf('chron') >= 0 },
+      { id: 'pick', text: () => T.wrong ? fmt(t('tut_wrong'), { rec: POWERS[rec().idx].n[li()] }) : fmt(t('tut_pick'), { rec: POWERS[rec().idx].n[li()], key: rec().idx + 1 }), target: () => T.rect(E.powWin), cond: () => Game.power === rec().pid },
+      { id: 'cast', text: () => Game.modals.indexOf('menu') >= 0 ? t('tut_dir') : t('tut_s4'), target: () => T.humanRect(), cond: () => G.stats.casts > 0, back: () => !Game.power && G.stats.casts === 0 && Game.modals.indexOf('menu') < 0 },
+      { id: 'chron', text: () => t('tut_res'), target: () => T.rect(E.chronBtn), cond: () => Game.modals.indexOf('chron') >= 0 },
       { id: 'chron2', text: () => t('tut_s6b'), noHole: true, cond: () => Game.modals.indexOf('chron') < 0 },
+      { id: 'echo', text: () => t('tut_echo'), noHole: true, next: true },
       { id: 'counsel', text: () => t('tut_s7'), target: () => T.rect(E.counselBtn), cond: () => Game.modals.indexOf('counsel') >= 0 },
       { id: 'counsel2', text: () => t('tut_s7b'), noHole: true, cond: () => Game.modals.indexOf('counsel') < 0 },
-      { id: 'balance', text: () => t('tut_s8'), target: () => T.union(T.rect(E.balWin), T.rect(E.goalWin)), next: true },
-      { id: 'speed', text: () => t('tut_s9'), target: () => T.rect(E.timeWin), next: true },
-      { id: 'end', text: () => t('tut_s10'), noHole: true, next: true, last: true },
+      { id: 'end', text: () => t('tut_end2'), target: () => T.union(T.rect(E.balWin), T.rect(E.timeWin)), next: true, last: true },
     ];
   },
   start() {
@@ -57,13 +60,18 @@ const Tut = {
     $('tut').style.display = 'block'; this.show(); UI.lastPray = ''; UI.refresh(true);
   },
   stop(done) {
-    this.on = false; Game.tut = null; const d = $('tut'); d.style.display = 'none'; d.innerHTML = ''; Game.paused = false;
+    this.on = false; Game.tut = null; this.applyLocks('end'); const d = $('tut'); d.style.display = 'none'; d.innerHTML = ''; Game.paused = false;
     if (done !== false) { Game.settings.tutDone = true; Game.saveSettings(); }
     UI.banner && (UI.el.banner.style.display = 'none'); UI.bannerT = 0; UI.refresh(true);
   },
   next() { this.i++; if (this.i >= this.steps.length) { this.stop(true); return; } Snd.se('ok'); this.show(); },
+  applyLocks(id) {
+    const E = UI.el; if (!E) return; const full = !this.on || Game.settings.fullUI === true; const open = { intro: [], pick: [], cast: [], chron: ['util'], chron2: ['util'], echo: ['util', 'feed'], counsel: ['util', 'feed'], counsel2: ['util', 'feed'], end: 'all' }[id] || [];
+    const g = { goal: E.goalWin, bal: E.balWin, feed: E.feedWin, fav: E.favWin, mini: E.miniWin, util: E.utilWin, info: E.infoWin };
+    for (const k in g) { const el = g[k]; if (!el) continue; const lock = !full && open !== 'all' && open.indexOf(k) < 0; el.classList.toggle('locked', lock); if (lock) el.title = t('locked_tip'); else el.removeAttribute('title'); }
+  },
   show() {
-    const s = this.steps[this.i]; if (!s) return; if (s.enter) s.enter();
+    const s = this.steps[this.i]; if (!s) return; if (s.enter) s.enter(); this.applyLocks(s.id);
     const d = $('tut'); d.innerHTML = '';
     this.hole = h('div', { class: 'hole' }); this.box = h('div', { class: 'box win glass', style: 'padding:8px 12px' });
     this.txt = h('div', { style: 'font-size:16px;line-height:1.55;color:#fff' });
@@ -76,13 +84,23 @@ const Tut = {
     this.txt.textContent = s.text();
     if (r) { this.hole.style.display = 'block'; this.hole.style.left = (r.x - 6) + 'px'; this.hole.style.top = (r.y - 6) + 'px'; this.hole.style.width = (r.w + 12) + 'px'; this.hole.style.height = (r.h + 12) + 'px'; }
     else this.hole.style.display = 'none';
-    let bx, by; const bw = 420;
-    if (r) { const cxm = r.x + r.w / 2, cym = r.y + r.h / 2; if (r.y > 380 && r.w > 300) { bx = clamp(cxm - bw / 2, 10, 1270 - bw); by = r.y - 200; } else if (cxm < 640) { bx = r.x + r.w + 24; by = clamp(cym - 70, 70, 540); } else { bx = r.x - bw - 24; by = clamp(cym - 70, 70, 540); } if (bx + bw > 1270 || bx < 4) { bx = clamp(cxm - bw / 2, 10, 1270 - bw); by = r.y > 360 ? r.y - 200 : r.y + r.h + 20; } }
-    else { bx = 430; by = Game.modals.length ? 640 : 280; if (Game.modals.length) bx = 430; }
-    this.box.style.left = Math.round(bx) + 'px'; this.box.style.top = Math.round(clamp(by, 4, 600)) + 'px';
+    const bw = 420, bh = Math.max(120, Math.ceil((this.box.offsetHeight || 150) / (Scale.s || 1))); let bx, by;
+    if (Game.modals.length || !r) { bx = Game.modals.length ? 800 : 430; by = Game.modals.length ? 576 : 280; }
+    else {
+      const ov = (x, y) => !(x + bw < r.x - 8 || x > r.x + r.w + 8 || y + bh < r.y - 8 || y > r.y + r.h + 8);
+      const fits = (x, y) => x >= 4 && y >= 4 && x + bw <= 1276 && y + bh <= 716 && !ov(x, y);
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      const cands = [[r.x + r.w + 24, cy - bh / 2], [r.x - bw - 24, cy - bh / 2], [cx - bw / 2, r.y + r.h + 24], [cx - bw / 2, r.y - bh - 24], [830, 70], [20, 580], [430, 580], [430, 60]];
+      let pick = null; for (const c of cands) { const x = clamp(c[0], 4, 1276 - bw), y = clamp(c[1], 4, 716 - bh); if (fits(x, y)) { pick = [x, y]; break; } }
+      if (!pick) pick = [clamp(cx - bw / 2, 4, 1276 - bw), r.y > 360 ? 70 : 540];
+      bx = pick[0]; by = pick[1];
+    }
+    this.box.style.left = Math.round(bx) + 'px'; this.box.style.top = Math.round(clamp(by, 4, 716 - bh)) + 'px';
   },
   update() {
     if (!this.on) return; const s = this.steps[this.i]; if (!s) return;
+    if (s.id === 'pick' && Game.power && Game.power !== 'eye' && Game.power !== (G.prayers.find(q => q.id === this.pid) ? PRAYER_ANS[G.prayers.find(q => q.id === this.pid).kind][0] : 'grace')) { Game.power = null; this.wrong = true; UI.refresh(true); }
+    if (s.id !== 'pick') this.wrong = false;
     if (s.back && s.back()) { this.i = Math.max(0, this.i - 1); this.show(); return; }
     if (s.cond && s.cond()) { this.next(); return; }
     this.layout();

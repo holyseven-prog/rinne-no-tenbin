@@ -77,6 +77,7 @@ Screens.settings = function () {
       opts(t('text_speed'), [[1, '▸'], [2, '▸▸'], [3, '▸▸▸']], st.text, v => { st.text = v; }),
       opts(t('names_label'), [['key', t('names_opt_key')], ['all', t('names_opt_all')], ['none', t('names_opt_none')]], st.names || 'key', v => { st.names = v; }),
       opts(t('theme_label'), [['black', t('theme_black')], ['blue', t('theme_blue')]], st.theme || 'black', v => { st.theme = v; Game.applyTheme(); }),
+      opts(t('fullui_label'), [[true, t('on')], [false, t('off')]], st.fullUI === true, v => { st.fullUI = v; }),
       opts(t('autoslow_label'), [[true, t('on')], [false, t('off')]], st.autoSlow !== false, v => { st.autoSlow = v; }),
       opts(t('advisor_label'), [[true, t('on')], [false, t('off')]], st.advisor !== false, v => { st.advisor = v; }),
       opts(t('mute') + ' (M)', [[true, t('on')], [false, t('off')]], !!Snd.muted, v => { Snd.setMuted(v); }),

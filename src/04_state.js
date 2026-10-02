@@ -30,6 +30,7 @@ function newGame(o) {
   };
   initWorldState();
   rebuildIdx();
+  G.main = G.flags.kyle || 0; G.mainLocked = false;
   chronPrologue();
   return G;
 }

@@ -9,3 +9,8 @@ Single-file HTML god-sim prototype (ja / zh-TW). Open `index.html` in a browser.
 ## Versions
 - Latest: `/` (v0.2, improvement requirements v0.1 applied)
 - Old prototype kept for reference: `/versions/v0.1/` (git tag `v0.1-prototype`)
+
+## V3.2 (M0) notes
+- Story facts are bound to the simulation: monsters come from the event, promises exist only after a chapter showed one (`promised`), companions must be related (spouse/lover/master/party/high relation/guild), job-specific nouns are filtered per POV job, a "main character" line with transition sentences, <=8 chapters in the first 3 years.
+- Tests: `test/story_check.js` (55/60 per-game pass, averages all green), `test/reader_check.js` (reader knowledge check, PASS), `test/readability_check.js`, `test/tut.js` (3 branches, `CHROME_PATH` env supported).
+- Not done: F6 (place consistency inside text) is only handled by header-first rule; locked HUD has native title tooltip, not a custom hover.

@@ -44,7 +44,7 @@ for (const lang of ['ja', 'zh']) {
     for (const scene of Object.keys(X.SCN)) {
       const hs = G.humans.filter(h => h.alive); const a = hs[(s * 3) % hs.length], b = hs[(s * 3 + 7) % hs.length], c = hs[(s * 3 + 11) % hs.length];
       const ev = { id: 1000 + s * 50 + Object.keys(X.SCN).indexOf(scene), t: G.tick, type: 'x', actors: [a.id, b.id], payload: { mon: 'goblin', n: 12, reward: 30, prev: ['ミレイ', '米蕾'], tier: 2 }, tags: [], tension: 0.5, emotion: 0.5, place: ['town', 'field', 'guild', 'church', 'plaza', 'house'][s % 6], pos: { x: a.x, y: a.y }, used: false, names: { [a.id]: a.name, [b.id]: b.name } };
-      const ch = scene === 'supplement' ? X.chronSupplement(a.id) : X.makeChapter(scene, ev);
+      const ch = scene === 'supplement' ? X.chronSupplement(a.id) : X.makeChapter(scene, ev); if (!ch) continue;
       for (const lg of ['ja', 'zh']) {
         X.setLang(lg); const r = X.renderChapter(ch); const txt = r.paras.map(p => p.text).join('') + r.hist + r.title; total++;
         if (/\{[A-Za-z]+\}/.test(txt) || /\?\?/.test(txt) || /undefined|NaN|\[object/.test(txt)) { rbad++; console.log('PLACEHOLDER', lg, scene, txt.slice(0, 120)); }

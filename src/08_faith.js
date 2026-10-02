@@ -55,6 +55,7 @@ function castPower(pid, tid, dir) {
   const outcome = rollOutcome(p);
   const pk0 = h ? ((prayerOf(h) || {}).kind || '') : '';
   G.faith -= cost; G.hist.push({ p: pid, t: G.tick }); G.stats.casts++;
+  if (h && !G.mainLocked) { G.mainLocked = true; if (!G.chapters.some(c => c.who && c.who[0] === G.main) && h.age >= 16 && h.alive) G.main = h.id; }
   const res = { ok: true, outcome, cost, pid, p, tid, name: h ? h.name : s ? s.name : null, dir }; const bal0 = G.balance; G._gain = 0; G._pk = '';
   if (pid === 'oracle') doOracle(h, outcome, dir || 'kind', res);
   else if (pid === 'grace') doGrace(h, outcome, res);

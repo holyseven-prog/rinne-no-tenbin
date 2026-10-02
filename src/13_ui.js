@@ -193,6 +193,7 @@ const UI = {
     if (Game.hover !== null) { const p = POWERS[Game.hover]; info = p.d[li()]; const tid = Game.selId; const hh = tid ? hById(tid) : null; if (hh && hh.alive && p.id !== 'force') info += '\n' + t('succ') + ' ' + Math.round(successProb(p.id, hh) * 100) + '%'; }
     else info = t('key_hint');
     E.infoWin.textContent = ''; info.split('\n').forEach((l, i) => E.infoWin.appendChild(h('div', i ? { class: 'gold' } : { class: 'dim' }, l)));
+    if (this.bannerT && typeof Screens !== 'undefined' && Screens.stack && Screens.stack.length && E.banner.style.display !== 'none') { E.banner.style.display = 'none'; this.bannerT = 0; }
     if (this.bannerT && now > this.bannerT) { E.banner.style.display = 'none'; this.bannerT = 0; }
     this.refreshPrayers(); this.refreshFav(); this.refreshGoal(); this.refreshRes();
   },
@@ -206,7 +207,7 @@ const UI = {
     pan(lx, ly, '#ffd860'); pan(rx, ry, '#8a50c8'); c.fillStyle = '#ffe9a0'; c.beginPath(); c.arc(lx, ly + 8, 4, 0, 7); c.fill(); c.fillStyle = '#b070f0'; c.beginPath(); c.arc(rx, ry + 8, 4, 0, 7); c.fill();
   },
   refreshPrayers() {
-    const E = this.el; const allP = openPrayers().sort((a, b) => b.urg - a.urg); const prs = allP.slice(0, 4); this.prayMore = allP.length - prs.length;
+    const E = this.el; const allP = openPrayers().sort((a, b) => b.urg - a.urg); const prs = allP.slice(0, 3); this.prayMore = allP.length - prs.length;
     const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0)).join(',') + LANG + this.prayMore;
     if (sig !== this.lastPray) {
       this.lastPray = sig; E.prayList.innerHTML = '';

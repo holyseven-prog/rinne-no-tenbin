@@ -43,6 +43,7 @@ Screens.chronicle = function (chId) {
     const people = []; G.spot.forEach(i => people.push(i)); G.track.forEach(i => { if (people.indexOf(i) < 0) people.push(i); });
     const sp = h('div', { style: 'margin-top:4px;border-top:1px solid var(--edge2);padding-top:3px' }, h('div', { class: 'gold', style: 'font-weight:bold;font-size:13px' }, t('h_spot')));
     people.forEach(i => { const hh = hById(i); if (!hh || !hh.alive) return; const tr = G.track.indexOf(i) >= 0; sp.appendChild(h('div', { style: 'font-size:13px;display:flex;justify-content:space-between;margin-bottom:1px' }, h('span', { style: 'cursor:pointer', onclick: () => { Screens.closeAll(); Screens.focusHuman(i); } }, (tr ? '◆ ' : '◇ ') + hh.name[L]), h('span', { class: 'btn' + (tr ? ' on' : ''), style: 'font-size:11px;padding:0 4px', onclick: () => { chronTrackToggle(i); Screens.rerender(); } }, tr ? t('h_tracked') : t('h_track')))); });
+    if (!people.some(i => { const hh = hById(i); return hh && hh.alive; })) sp.appendChild(h('div', { class: 'sm dim', style: 'margin-top:3px' }, t('h_spot_none')));
     left.appendChild(sp);
     // ---- center ----
     let center;
