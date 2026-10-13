@@ -210,7 +210,7 @@ function attachWarHooks() {
   G.uiAttached = true;
   G.onBattle = B => { Game.speedIdx = Math.min(Game.speedIdx, 1); Snd.se('hit'); Render.shake = 4; setTimeout(() => Screens.battle(), 50); };
   G.onBattleEnd = B => { Screens.rerender(); };
-  G.onCouncil = C => { setTimeout(() => Screens.council(), 50); };
+  G.onCouncil = C => { setTimeout(() => { if (Game.tut && Game.tut.on) return; Screens.council(); }, 50); }; // during the tutorial the council waits (opened when it ends)
   G.onCard = id => { UI.cardSig = ''; Snd.se('pray'); };
 }
 /* ---------- dragon sprite (48x40) ---------- */

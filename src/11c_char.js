@@ -13,13 +13,19 @@ function mixHex(a, b, k) { const A = hexRgb(a), B = hexRgb(b); return rgbHex(A[0
 function roleOf(h) { if (h.age < ADULT_AGE) return 'child'; if (h.job === 'swordsman') return (h.age < 56 && (h.lvl || 1) >= 6) ? 'hero' : 'warrior'; return h.job; }
 function humanRamps(h) {
   const L = h.look, role = roleOf(h), child = role === 'child', elder = h.age >= 56, female = h.sex === 'F';
-  let cloth = child ? CLOTH_COL[L.cloth % CLOTH_COL.length] : (ROLE_CLOTH[role] || CLOTH_COL[L.cloth % CLOTH_COL.length]);
+  const VAR = !child && ROLE_VARIANT[role] ? ROLE_VARIANT[role][lookVariant(h)] : null;
+  let cloth = child ? CLOTH_COL[L.cloth % CLOTH_COL.length] : ((VAR && VAR.cloth) || ROLE_CLOTH[role] || CLOTH_COL[L.cloth % CLOTH_COL.length]);
   if (elder && !ROBE_JOBS[role] && role !== 'warrior') cloth = mixHex(cloth, '#8f8472', 0.55);
   if (!child && (role === 'farmer' || role === 'merchant') && !elder) cloth = mixHex(cloth, CLOTH_COL[L.cloth % CLOTH_COL.length], 0.25);
   if (female && !child && (role === 'farmer' || role === 'merchant' || role === 'herbalist')) cloth = mixHex(cloth, '#d86a8a', 0.4);
   const sage = role === 'mage' && !female;
   const hairHex = elder || sage ? '#eceaf4' : HAIR_COL[L.hair % HAIR_COL.length];
-  const R = { s: mkRamp(SKIN_COL[L.skin % SKIN_COL.length]), h: mkRamp(hairHex), c: mkRamp(cloth), u: mkRamp(role === 'smith' ? '#3a3a46' : darkHex(cloth, 0.84)), t: mkRamp(ROLE_TRIM[role] || '#c8b078'), p: mkRamp(role === 'smith' ? '#3a3a46' : PANTS_COL[(L.cloth + L.hair) % 4]), b: mkRamp('#5a3a24'), m: mkRamp(role === 'warrior' ? '#b4c0d8' : '#aeb4c4'), w: mkRamp('#8a5a30'), g: mkRamp('#e8c040'), a: mkRamp(JOB_ACCENT[role] || '#a8703a') };
+  const R = { s: mkRamp(SKIN_COL[L.skin % SKIN_COL.length]), h: mkRamp(hairHex), c: mkRamp(cloth), u: mkRamp(role === 'smith' ? '#3a3a46' : darkHex(cloth, 0.84)), t: mkRamp(ROLE_TRIM[role] || '#c8b078'), p: mkRamp(role === 'smith' ? '#3a3a46' : PANTS_COL[(L.cloth + L.hair) % 4]), b: mkRamp('#5a3a24'), m: mkRamp(role === 'warrior' ? '#b4c0d8' : '#aeb4c4'), w: mkRamp('#8a5a30'), g: mkRamp('#e8c040'), a: mkRamp((VAR && VAR.acc) || JOB_ACCENT[role] || '#a8703a') };
+  R.u = { o: R.c.o, d: R.c.o, b: R.c.d, l: R.c.b, h: R.c.l }; // sleeves reuse the cloth ramp (fewer colours)
+  { const sk = SKIN_COL[L.skin % SKIN_COL.length]; R.s = { o: '#181020', d: mixHex(sk, '#9a5a44', 0.32), b: sk, l: mixHex(sk, '#fff6ea', 0.35), h: mixHex(sk, '#fff6ea', 0.35) }; } // warm brown shade instead of red
+  // V3.4 colour budget: skin / hair / cloth keep 3 tones, everything else 2 (<= 16 colours per sprite incl. outline)
+  Object.keys(R).forEach(k => { const r = R[k]; R[k] = (k === 's' || k === 'h' || k === 'c') ? { o: r.o, d: r.d, b: r.b, l: r.l, h: r.l } : k === 'm' ? { o: r.o, d: r.d, b: r.b, l: r.l, h: r.l } : { o: r.o, d: r.d, b: r.b, l: r.b, h: r.b }; });
+  R.u = { o: R.c.o, d: R.c.d, b: R.c.d, l: R.c.b, h: R.c.b };
   if (child) { R.t = mkRamp(darkHex(cloth, 0.7)); }
   return R;
 }
@@ -29,18 +35,19 @@ function putR(g, rows, y, dy) { blit(g, mirRows(rows), 8, y + (dy || 0), false);
 function putItem(g, rows, oy, dy, ox) { rows.forEach((r, j) => { const y = oy + dy + j; if (y < 0 || y >= 24) return; for (let i = 0; i < 16; i++) { const x = i + (ox || 0); if (r[i] !== '.' && x >= 0 && x < 16) g[y][x] = r[i]; } }); }
 function putPix(g, pts, ch, dy) { pts.forEach(p => { const y = p[1] + (dy || 0); if (y >= 0 && y < 24 && p[0] >= 0 && p[0] < 16) g[y][p[0]] = ch; }); }
 function blitO(g, o, dy, mirror, ox) { blit(g, o.rows, ox || 0, o.oy + (dy || 0), mirror); }
-const MALE_STYLES = [0, 3, 5, 6], FEM_STYLES = [1, 2, 7, 3];
+const MALE_STYLES = [0, 3, 5, 6, 9], FEM_STYLES = [1, 2, 7, 8, 5];
 function humanGrid(h, dir, frame) {
   const g = emptyGrid(16, 24); const child = h.age < ADULT_AGE, elder = h.age >= 56, role = roleOf(h), female = h.sex === 'F'; const L = h.look;
   const view = dir === 0 ? 'F' : dir === 1 ? 'B' : 'S'; const robe = !child && ROBE_JOBS[role]; const skirt = !child && !robe && female && SKIRT_JOBS[role] && !elder || (!child && !robe && female && elder && SKIRT_JOBS[role]);
   const wf = frame < 4 ? frame : 0; const atk = frame === 5, pray = frame === 6; const bob = frame === 4 ? 1 : 0;
   const hdy = bob + (elder && !child ? 2 : 0);
-  const k = (L.style + L.hair) % 4;
-  let hstyle = child ? (female ? 7 : [0, 3, 5, 6][L.style % 4]) : elder ? (female ? 5 : 4) : role === 'hero' ? (female ? 2 : 6) : female ? FEM_STYLES[k] : MALE_STYLES[k];
-  if (role === 'smith' && !female && !elder) hstyle = [0, 6, 0, 3][k]; if (role === 'mage' && !female && !elder) hstyle = 0;
+  const k = (L.style + L.hair) % 5; const VAR = !child && ROLE_VARIANT[role] ? ROLE_VARIANT[role][lookVariant(h)] : {};
+  let hstyle = child ? (female ? [7, 2][L.style % 2] : [0, 3, 5, 9][L.style % 4]) : elder ? (female ? 8 : 4) : role === 'hero' ? (female ? 1 : 6) : female ? FEM_STYLES[k] : MALE_STYLES[k];
+  if (role === 'smith' && !female && !elder) hstyle = [0, 6, 9, 3, 9][k]; if (role === 'mage' && !female && !elder) hstyle = 0;
+  const hatKey = elder && !VAR.hat ? null : (VAR.hat === undefined ? (role === 'weaponer' || role === 'armorer' ? 'merchant' : role) : VAR.hat); const helmOn = role === 'warrior' && hatKey === 'helm'; const armorOn = role === 'warrior' && VAR.armor !== 0;
   const bowOn = female && !elder && role !== 'warrior' && role !== 'mage' && role !== 'priest';
   if (child) {
-    const HYc = 9;
+    const HYc = 8;
     if (view === 'S') {
       blit(g, SD.childLegS[wf], 0, 20); blit(g, SD.childTorsoS, 0, 17); blit(g, SD.childArmS, wf === 1 ? 1 : wf === 3 ? -1 : 0, 18);
       blit(g, SD.headS, 0, HYc); const hr = SD.hairS[hstyle]; blit(g, hr.rows, 0, hr.oy - HY + HYc); if (female) putPix(g, SD.bowS, 'P', HYc - HY);
@@ -61,14 +68,14 @@ function humanGrid(h, dir, frame) {
     else if (skirt) { blit(g, SD.legS[wf].map((r, i) => i < 1 ? '................' : r), 0, LYY + 1 - 1 + 0); blitO(g, SD.dressS, 0, false); }
     else blit(g, SD.legS[wf], 0, LYY);
     blit(g, SD.torsoS, 0, TYY);
-    if (role === 'warrior') blitO(g, SD.armorS, 0, false);
+    if (armorOn) blitO(g, SD.armorS, 0, false);
     (SD.over[role === 'warrior' || role === 'hero' ? 'swordsman' : role === 'weaponer' ? 'merchant' : role === 'armorer' ? 'smith' : role] || { S: [] }).S.forEach(o => blit(g, o.rows, 0, o.oy));
     const adx = wf === 1 ? 1 : wf === 3 ? -1 : 0; const ady = atk ? -3 : 0; const hx = elder ? 1 : 0;
     if (pray) blit(g, [Rw(8, "uuu"), Rw(9, "ss")], 0, 15); else blit(g, role === 'smith' ? [Rw(7, "uu"), Rw(7, "ss"), Rw(7, "ss"), Rw(7, "ss"), Rw(7, "ss")] : SD.armS, adx, 13 + ady);
     blit(g, SD.headS, hx, HY + hdy); const hr = SD.hairS[hstyle]; blit(g, hr.rows, hx, hr.oy + hdy);
     if (elder && !female) blit(g, SD.beardS, hx, 10 + hdy); if (role === 'mage' && !female) blitO(g, SD.beardLongS, hdy, false);
-    if (role === 'warrior') { blitO(g, SD.helm.S, hdy, false); blitO(g, SD.helm.plumeS, hdy, false); }
-    else { const hat = SD.hat[role === 'weaponer' || role === 'armorer' ? 'merchant' : role]; if (hat) blit(g, hat.S.rows, hx, hat.S.oy + hdy); }
+    if (helmOn) { blitO(g, SD.helm.S, hdy, false); blitO(g, SD.helm.plumeS, hdy, false); }
+    else { const hat = hatKey && SD.hat[hatKey]; if (hat) blit(g, hat.S.rows, hx, hat.S.oy + hdy); }
     if (role === 'hero') blitO(g, SD.circletS, hdy, false); if (role === 'priest') blitO(g, SD.haloS, hdy, false);
     if (bowOn) putPix(g, SD.bowS, 'P', hdy);
     if (itn && !pray) { const it = SD.item[itn]; putItem(g, it.S, it.soy, ady, adx); }
@@ -79,10 +86,10 @@ function humanGrid(h, dir, frame) {
   if (role === 'hero' && view === 'F') blitO(g, SD.capeBackF, 0, true);
   if (robe) { blit(g, view === 'F' ? SD.torsoF : SD.torsoB, 0, TYY, true); blit(g, SD.robeF, 0, 17, true); blit(g, SD.robeLegF, 0, 21, true); }
   else if (skirt) { putL(g, SD.legF.slice(1), LYY + 1, lf); putR(g, SD.legF.slice(1), LYY + 1, rt); blit(g, view === 'F' ? SD.torsoF : SD.torsoB, 0, TYY, true); blitO(g, SD.dressF, 0, true); }
-  else { putL(g, SD.legF, LYY, lf); putR(g, SD.legF, LYY, rt); blit(g, view === 'F' ? SD.torsoF : SD.torsoB, 0, TYY, true); }
+  else { putL(g, SD.legF, LYY, lf); putR(g, SD.legF, LYY, rt); blit(g, view === 'F' ? (female && role !== 'warrior' && role !== 'smith' ? SD.torsoFemF : SD.torsoF) : SD.torsoB, 0, TYY, true); }
   if (role === 'smith') blitO(g, SD.broadF, 0, true);
   if (elder && !robe) blitO(g, SD.humpF, 0, true);
-  if (role === 'warrior') blitO(g, SD.armorF, 0, true);
+  if (armorOn) blitO(g, SD.armorF, 0, true);
   const ov = (SD.over[role === 'warrior' || role === 'hero' ? 'swordsman' : role === 'weaponer' ? 'merchant' : role === 'armorer' ? 'smith' : role] || { F: [], B: [] })[view]; ov.forEach(o => { if (role === 'hero' && o.oy === 12) return; blit(g, o.rows, 0, o.oy, true); });
   if (role === 'hero' && view === 'F') blitO(g, SD.heroOverF, 0, true); if (role === 'hero' && view === 'B') blitO(g, SD.capeB, 0, true);
   const alt = wf === 1 ? -1 : wf === 3 ? 1 : 0; const aryR = atk ? -4 : -alt;
@@ -94,8 +101,8 @@ function humanGrid(h, dir, frame) {
   const hr = (view === 'F' ? SD.hairF : SD.hairB)[hstyle]; blit(g, hr.rows, 0, hr.oy + hdy, true);
   if (view === 'F' && elder && !female) blit(g, SD.beardF, 0, 10 + hdy, true);
   if (view === 'F' && role === 'mage' && !female) blitO(g, SD.beardLongF, hdy, true);
-  if (role === 'warrior') { const hm = SD.helm[view]; blitO(g, hm, hdy, true); blitO(g, SD.helm.plumeF, hdy, true); }
-  else { const hat = SD.hat[role === 'weaponer' || role === 'armorer' ? 'merchant' : role]; if (hat) { const ht = hat[view]; blit(g, ht.rows, 0, ht.oy + hdy, true); } }
+  if (helmOn) { const hm = SD.helm[view]; blitO(g, hm, hdy, true); blitO(g, SD.helm.plumeF, hdy, true); }
+  else { const hat = hatKey && SD.hat[hatKey]; if (hat) { const ht = hat[view]; blit(g, ht.rows, 0, ht.oy + hdy, true); } }
   if (role === 'hero' && view === 'F') blitO(g, SD.circletF, hdy, true); if (role === 'priest') blitO(g, SD.haloF, hdy, true);
   if (bowOn) putPix(g, SD.bowF, 'P', hdy);
   if (itn && !pray) { const it = SD.item[itn]; if (view === 'F') putItem(g, it.F, it.oy, atk ? -4 : alt === -1 ? 1 : alt === 1 ? -1 : 0, 0); else if (it.B.length) putItem(g, it.B, it.boy, 0, 0); if (elder && view === 'F') blitO(g, SD.caneCrook.F ? { oy: SD.caneCrook.oy, rows: SD.caneCrook.F } : null, 0, false); }
@@ -106,7 +113,19 @@ function humanSprite(h, dir, frame) {
   const key = [role, L.hair, L.style, L.skin, L.cloth, elder ? 1 : 0, h.sex || 'M', dir, frame].join('.');
   if (spriteCache[key]) return spriteCache[key];
   const d = dir === 3 ? 2 : dir; const grid = humanGrid(h, d, frame);
-  let cv = bakeGrid(grid, 16, 24, humanRamps(h));
+  const RM = humanRamps(h); let cv = limitColors(bakeGrid(grid, 16, 24, RM, { outlineCol: '#181020' }), 16, [RM.s.d, RM.s.b, RM.s.l, RM.h.d, RM.h.b, RM.h.l, '#181020', '#1c1626']);
   if (dir === 2) { const f = mkCanvas(16, 24), fc = f.getContext('2d'); fc.translate(16, 0); fc.scale(-1, 1); fc.drawImage(cv, 0, 0); cv = f; } // side art faces right; dir 2 = moving left
   spriteCache[key] = cv; return cv;
+}
+/* V3.4: keep every character sprite at <= 16 colours (merge the closest pairs) */
+function limitColors(cv, maxN, protect) {
+  const prot = {}; (protect || []).forEach(hx => { const [r, g, b] = hexRgb(hx); prot[(r << 16) | (g << 8) | b] = 1; });
+  const c = cv.getContext('2d'); const im = c.getImageData(0, 0, cv.width, cv.height); const d = im.data; const cnt = {};
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { const k = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2]; cnt[k] = (cnt[k] || 0) + 1; }
+  let keys = Object.keys(cnt).map(Number); if (keys.length <= maxN) return cv; const map = {}; keys.forEach(k => map[k] = k);
+  const rgb = k => [(k >> 16) & 255, (k >> 8) & 255, k & 255];
+  while (keys.length > maxN) { let best = null, bd = 1e9; for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) { const a = rgb(keys[i]), b = rgb(keys[j]); const dd = (a[0] - b[0]) ** 2 * 0.3 + (a[1] - b[1]) ** 2 * 0.59 + (a[2] - b[2]) ** 2 * 0.11; const pen = prot[keys[i]] && prot[keys[j]] ? 1e7 : 0; if (dd + pen < bd) { bd = dd + pen; best = [i, j]; } }
+    const [i, j] = best; const keep = prot[keys[i]] && !prot[keys[j]] ? keys[i] : prot[keys[j]] && !prot[keys[i]] ? keys[j] : cnt[keys[i]] >= cnt[keys[j]] ? keys[i] : keys[j], drop = keep === keys[i] ? keys[j] : keys[i]; cnt[keep] += cnt[drop]; Object.keys(map).forEach(k => { if (map[k] === drop) map[k] = keep; }); keys = keys.filter(k => k !== drop); }
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { const k = map[(d[i] << 16) | (d[i + 1] << 8) | d[i + 2]]; d[i] = (k >> 16) & 255; d[i + 1] = (k >> 8) & 255; d[i + 2] = k & 255; }
+  c.putImageData(im, 0, 0); return cv;
 }

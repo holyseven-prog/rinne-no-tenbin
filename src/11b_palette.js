@@ -54,7 +54,7 @@ function bakeGrid(grid, W, H, ramps, opts) {
       if (col[y][x]) continue; const nb = [[0, 1], [-1, 0], [1, 0], [0, -1]]; let src = null;
       for (const [dx, dy] of nb) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < W && yy < H && col[yy][xx]) { src = grid[yy][xx]; break; } }
       if (!src) continue;
-      let base = ramps[src] ? ramps[src].o : '#1c1626'; if (FIXED_COL[src]) base = '#1c1626';
+      let base = opts.outlineCol || (ramps[src] ? ramps[src].o : '#1c1626'); if (FIXED_COL[src] && !opts.outlineCol) base = '#1c1626';
       px.push([x, y, base]);
     }
     px.forEach(p => { c.fillStyle = p[2]; c.fillRect(p[0], p[1], 1, 1); });

@@ -17,6 +17,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     await pg.evaluateOnNewDocument(l => { try { localStorage.setItem('rinne_tenbin_v1_settings', JSON.stringify({ bgm: 0, se: 0, speed: 0, text: 3, lang: l, names: 'key', theme: 'black', autoSlow: true, advisor: true, tutDone: false })); } catch (e) { } }, lang);
     await pg.goto(URL); await wait(600); await pg.mouse.click(640, 360); await wait(400);
     await pg.evaluate(() => { __RT.ui.Game.pendingGod = 'mercy'; __RT.ui.Screens.opEnd(); }); await wait(900);
+    for (let i = 0; i < 30 && !(await pg.evaluate(() => !!(__RT.ui.Game.tut && __RT.ui.Game.tut.on))); i++) await wait(200); // world bake can take a moment
     return pg;
   }
   const boxOK = async (pg, name) => { const r = await pg.evaluate(() => { const b = document.querySelector('#tut .box'); if (!b) return null; const sr = document.getElementById('stage').getBoundingClientRect(), r = b.getBoundingClientRect(), s = sr.width / 1280; return { l: (r.left - sr.left) / s, t: (r.top - sr.top) / s, r: (r.right - sr.left) / s, b: (r.bottom - sr.top) / s }; }); ck('box inside viewport @' + name, !!r && r.l >= 0 && r.t >= 0 && r.r <= 1281 && r.b <= 721, r ? JSON.stringify(r) : 'none'); };

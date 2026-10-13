@@ -4,7 +4,7 @@
    Fixed: e eye, r mouth, P blush, f white, L gem, Q red, N green, Y yellow, X dark, K cork/brown
    Layout (y): hat 1.., hair 3.., head 4..11, torso 12..18, legs 19..22  (outline adds 1px around)                          */
 const Rw = (x, s) => '.'.repeat(x) + s + '.'.repeat(Math.max(0, 16 - x - s.length));
-const HY = 4, TYY = 12, LYY = 19;
+const HY = 3, TYY = 12, LYY = 19;
 
 const SD = {
   /* ---------------- FRONT ---------------- */

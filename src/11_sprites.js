@@ -54,7 +54,7 @@ const Render = {
     for (const it of list) { if (it.k === 0 && prayers[it.e.id]) { const p = prayers[it.e.id]; const sx = it.x * TS + 8 - cx, sy = it.y * TS + 12 - cy; const pul = 0.55 + 0.25 * Math.sin(this.time / 8 + it.e.id); const col = p.urg > 0.75 ? '255,120,80' : p.urg > 0.5 ? '255,200,80' : '255,240,160'; const gr = c.createLinearGradient(0, sy - 52, 0, sy); gr.addColorStop(0, `rgba(${col},0)`); gr.addColorStop(1, `rgba(${col},${pul})`); c.fillStyle = gr; c.fillRect(sx - 3, sy - 52, 6, 52); c.fillStyle = `rgba(255,255,255,${pul * .6})`; c.fillRect(sx - 1, sy - 48, 2, 48); } }
     for (const it of list) {
       const e = it.e; const sx = Math.round(it.x * TS + 8 - cx), sy = Math.round(it.y * TS + 14 - cy);
-      c.fillStyle = 'rgba(24,28,70,0.36)'; c.beginPath(); c.ellipse(sx + 1, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.4, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(24,28,70,0.2)'; c.beginPath(); c.ellipse(sx + 1, sy, it.k && (e.boss || e.cad >= 0) ? 8 : 4, 1.5, 0, 0, 7); c.fill();
+      c.globalCompositeOperation = 'multiply'; c.fillStyle = '#999999'; c.beginPath(); c.ellipse(sx + 2, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.4, 0, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over';
       if (it.k === 0) { const sl = soulOf(e); if (sl && sl.fav) { c.strokeStyle = '#ffd860'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } else if (G.track.indexOf(e.id) >= 0) { c.strokeStyle = '#60d8ff'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } if (e.id === Game.flashId) { const k = 8 + Math.sin(this.time / 4) * 3; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.ellipse(sx, sy - 6, k, k * 1.2, 0, 0, 7); c.stroke(); } }
       let spr, ox = 0, oy = 0;
       if (it.k === 0) {
@@ -83,6 +83,8 @@ const Render = {
         if (e.hp < e.maxHp || e.boss || e.cad >= 0) { const w = e.boss ? 40 : e.cad >= 0 ? 26 : 14; fr(c, '#000a', sx - w / 2 - 1, sy - bh - 3 + bob, w + 2, 4); fr(c, '#3a3a3a', sx - w / 2, sy - bh - 2 + bob, w, 2); fr(c, e.boss ? '#c040ff' : '#e04040', sx - w / 2, sy - bh - 2 + bob, Math.max(1, Math.round(w * e.hp / e.maxHp)), 2); }
       }
     }
+    // V3.4 overhang layer: tree crowns / chimneys / spires above their base row cover the characters standing behind them
+    c.drawImage(getWorldOverlay(sea), cx, cy, 640, 360, 0, 0, 640, 360);
     // soul orbs, particles
     for (let i = this.parts.length - 1; i >= 0; i--) { const p = this.parts[i]; p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) { this.parts.splice(i, 1); continue; } c.globalAlpha = Math.min(1, p.life / 14); c.fillStyle = p.col; const sx = p.x - cx, sy = p.y - cy; if (p.glow) { c.globalAlpha *= 0.4; c.fillRect(Math.round(sx) - 2, Math.round(sy) - 2, 5, 5); c.globalAlpha = Math.min(1, p.life / 14); } c.fillRect(Math.round(sx), Math.round(sy), p.s, p.s); }
     c.globalAlpha = 1;
@@ -108,7 +110,7 @@ const Mini = {
   base: null,
   build() {
     const cv = mkCanvas(MW, MH), c = cv.getContext('2d');
-    const col = { [T.GRASS]: '#58a840', [T.FLOWER]: '#58a840', [T.PATH]: '#c8aa78', [T.DOOR]: '#c8aa78', [T.PLAZA]: '#a8a8b0', [T.WATER]: '#2f6ec8', [T.SAND]: '#e0cc90', [T.FIELD]: '#8a6038', [T.DARK]: '#3a3446', [T.TREE]: '#2f6a2a', [T.ROCK]: '#7a7a86', [T.BLD]: '#b84a3a', [T.FENCE]: '#8a6a3a' };
+    const col = { [T.GRASS]: '#58a840', [T.FLOWER]: '#58a840', [T.PATH]: '#c8aa78', [T.DOOR]: '#c8aa78', [T.PLAZA]: '#a8a8b0', [T.WATER]: '#2f6ec8', [T.SAND]: '#e0cc90', [T.FIELD]: '#8a6038', [T.DARK]: '#3a3446', [T.TREE]: '#2f6a2a', [T.ROCK]: '#7a7a86', [T.BLD]: '#b84a3a', [T.FENCE]: '#8a6a3a', [T.CLIFF]: '#6c6034', [T.LEDGE]: '#2b6428' };
     for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) fr(c, col[W.tiles[y * MW + x]] || '#000', x, y, 1, 1);
     W.blds.forEach(b => { const k = b.kind === 'castle' ? '#7a30a0' : b.kind === 'guild' ? '#e8c030' : b.kind === 'church' ? '#fff' : '#b84a3a'; fr(c, k, b.x, b.y, b.w, b.h); });
     this.base = cv;

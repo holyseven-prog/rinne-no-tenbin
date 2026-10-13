@@ -32,3 +32,9 @@ Single-file HTML god-sim prototype (ja / zh-TW). Open `index.html` in a browser.
 - Code: `src/07b_assault.js`, `src/07c_council.js` (sim), `src/14e_war_ui.js` (UI). NPC facing fixed (`test/facing.js`).
 - Tests: `test/v4_sim.js [N]` (balance + calibration), `test/v4_ui.js [ja|zh]` (council -> prep -> 3-phase battle -> report -> ending), `test/v4_one.js <seed>`.
 - Spec sheet: docs/輪廻の天秤_仕様書_規格書_v0.6.xlsx (sheet 16 = V4).
+
+## V3.4 (pixel-art refinement, SFC-level density)
+- Bigger buildings and a re-laid town (house 5x4, shops 6x4, guild/tavern/inn 7x5 two floors, church 7x6 + bell tower/spire, castle 7x8), 2-tier cliffs on the north edge and a cliff wall with a stair gate east (new tiles CLIFF / LEDGE).
+- `src/11d_world.js` rewritten: 5-step material ramps (Appendix A), clustered grass + tufts, irregular roads with ruts, irregular flagstones, tiled roofs, stone / plank / half-timber walls, framed windows, multiply shadows (x0.6), conifer / broadleaf / shrub trees, 32 props, >=4 objects per 8x8 town block, and an overhang layer (tree tops, chimneys, spires drawn over characters).
+- Characters (`src/11a_spritedata3.js`, `11c_char.js`): 2.5-head proportions (head+hair = 11/24 rows), 1x2 eyes, 10 hair silhouettes, 3 looks per job, slimmer female torso, #181020 outline, <=16 colours per sprite.
+- Shots / self-review: `node test/v34_shots.js v33|v34` -> `test/out/visual/v34/`; copies in `docs/figures/v34/`, table in `docs/V3.4_自我評分表.md`. Spec sheet v0.7.

@@ -1,11 +1,11 @@
 /* ================= V4-A1: assault timeline, village defense, 3-phase battles, consequences, chains ================= */
 const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
-  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 43, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
+  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 44, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
   wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 52, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 60, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 65, kind: 'dragon', mon: 'dragon', scale: 1.3 },
   wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 66, kind: 'wave', mon: 'wolf', scale: 1.2 },
-  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 102, kind: 'king', mon: 'boss', scale: 1.6 },
+  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 100, kind: 'king', mon: 'boss', scale: 1.6 },
 };
 const ASSAULT_ORDER = ['wave1', 'wave2', 'dragon', 'wave3', 'king'];
 const GRADES = ['crush', 'win', 'pyrrhic', 'loss', 'rout']; // 大勝 勝利 慘勝 敗北 潰滅
@@ -35,8 +35,8 @@ function defenseParts() {
   if (G.flags.aid) pw += 6;
   const combat = clamp(pw / 40, 0, 1) * 100;
   const works = clamp(G.walls * 20 * (G.wallHp / 100) + (G.ruins && Object.keys(G.ruins).length ? -5 * Object.keys(G.ruins).length : 0), 0, 100);
-  const morale = clamp(46 + (G.faith / 150 - 0.45) * 30 + (G.moraleMod || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
-  const supply = clamp(G.town.food / 400 * 40 + G.town.potions / 30 * 30 + G.town.gearStock / 10 * 30, 0, 100);
+  const ans = (G.stats.answered || 0) / ((G.stats.prayers || 0) + 6); const morale = clamp(44 + ans * 36 + (G.moraleMod || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
+  const supply = clamp(Math.min(40, G.town.food / 700 * 40) + Math.min(30, G.town.potions / 30 * 30) + Math.min(30, G.town.gearStock / 10 * 30), 0, 100);
   const divine = clamp(G.prep || 0, 0, 100);
   return { combat, works, morale, supply, divine };
 }
@@ -178,7 +178,7 @@ function applyConsequences(a, grade) {
   }
   // chains
   if (a.id === 'wave2') { const w1 = isWin(G.assaults[0].grade), w2 = win; G.chain.dragonType = w1 && w2 ? 'expedition' : (w1 || w2) ? 'field' : 'village'; }
-  if (a.id === 'dragon') G.chain.dragonOutcome = grade === 'crush' || grade === 'win' ? 'slain' : grade === 'pyrrhic' ? 'repelled' : 'lost';
+  if (a.id === 'dragon') G.chain.dragonOutcome = grade === 'crush' || (grade === 'win' && rnd() < 0.6) ? 'slain' : grade === 'win' || grade === 'pyrrhic' ? 'repelled' : 'lost';
   if (a.id === 'wave3') G.chain.cadres = win ? 1 : 3;
   godXp(win ? 25 : 10);
   return res;

@@ -60,7 +60,7 @@ const Tut = {
     $('tut').style.display = 'block'; this.show(); UI.lastPray = ''; UI.refresh(true);
   },
   stop(done) {
-    this.on = false; Game.tut = null; this.applyLocks('end'); const d = $('tut'); d.style.display = 'none'; d.innerHTML = ''; Game.paused = false;
+    this.on = false; Game.tut = null; this.applyLocks('end'); const d = $('tut'); d.style.display = 'none'; d.innerHTML = ''; Game.paused = false; if (G && G.council && !G.council.done && Game.modals.indexOf('council') < 0) setTimeout(() => Screens.council(), 200);
     if (done !== false) { Game.settings.tutDone = true; Game.saveSettings(); }
     UI.banner && (UI.el.banner.style.display = 'none'); UI.bannerT = 0; UI.refresh(true);
   },

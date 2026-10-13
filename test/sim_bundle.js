@@ -154,8 +154,8 @@ const PLACES = { // key -> names
 
 /* ---- 03_world.js ---- */
 /* ================= world / map / pathfinding ================= */
-const T = { GRASS: 0, PATH: 1, WATER: 2, TREE: 3, ROCK: 4, FENCE: 5, FLOWER: 6, BRIDGE: 7, FIELD: 8, DARK: 9, BLD: 10, PLAZA: 11, DOOR: 12, SAND: 13 };
-const BLOCK = new Uint8Array(16); BLOCK[T.WATER] = 1; BLOCK[T.TREE] = 1; BLOCK[T.ROCK] = 1; BLOCK[T.FENCE] = 1; BLOCK[T.BLD] = 1;
+const T = { GRASS: 0, PATH: 1, WATER: 2, TREE: 3, ROCK: 4, FENCE: 5, FLOWER: 6, BRIDGE: 7, FIELD: 8, DARK: 9, BLD: 10, PLAZA: 11, DOOR: 12, SAND: 13, CLIFF: 14, LEDGE: 15 };
+const BLOCK = new Uint8Array(16); BLOCK[T.WATER] = 1; BLOCK[T.TREE] = 1; BLOCK[T.ROCK] = 1; BLOCK[T.FENCE] = 1; BLOCK[T.BLD] = 1; BLOCK[T.CLIFF] = 1; BLOCK[T.LEDGE] = 1;
 const TOWN_X0 = 16, TOWN_X1 = 42, FIELD_X0 = 43, PLATEAU_X0 = 56;
 const PLAZA = { x: 28, y: 21 };
 
@@ -174,15 +174,13 @@ function buildWorld() {
   for (let y = 25; y <= 35; y++) for (let x = 45; x <= 53; x++) { const dx = (x - 49) / 3.6, dy = (y - 30) / 4.2; if (dx * dx + dy * dy <= 1) set(x, y, T.WATER); }
   for (let y = 24; y <= 36; y++) for (let x = 44; x <= 54; x++) { if (get(x, y) !== T.WATER) { const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(d => get(x + d[0], y + d[1]) === T.WATER); if (n) set(x, y, T.SAND); } }
   // trees: borders and field
-  for (let x = 14; x <= 44; x++) { for (let y = 0; y <= 4; y++) if (rg.chance(0.75)) set(x, y, T.TREE); for (let y = 37; y < MH; y++) if (rg.chance(0.75)) set(x, y, T.TREE); }
+  for (let x = 14; x <= 44; x++) { if (rg.chance(0.5)) set(x, 4, T.TREE); for (let y = 37; y < MH; y++) if (rg.chance(0.75)) set(x, y, T.TREE); }
   for (let x = FIELD_X0; x < PLATEAU_X0; x++) for (let y = 0; y < MH; y++) { if (get(x, y) === T.GRASS || get(x, y) === T.FLOWER) { if (y >= 21 && y <= 25) continue; if (rg.chance(0.11)) set(x, y, T.TREE); else if (rg.chance(0.02)) set(x, y, T.ROCK); } }
   for (let x = PLATEAU_X0; x < MW; x++) for (let y = 0; y < MH; y++) { if (rg.chance(0.12) && !(y >= 9 && y <= 24 && x >= 56)) set(x, y, T.ROCK); }
-  // north / south fence of the farm
-  for (let x = 0; x < 15; x++) { set(x, 0, T.TREE); if (rg.chance(0.5)) set(x, 1, T.TREE); }
   for (let x = 0; x < 15; x++) for (let y = 29; y < MH; y++) if (rg.chance(0.55)) set(x, y, T.TREE);
   // roads
   const road = (x0, y0, x1, y1) => { for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) { if (get(x, y) !== T.WATER) set(x, y, T.PATH); } };
-  road(0, 23, 60, 23); road(17, 14, 42, 14); road(17, 31, 42, 31); road(17, 35, 42, 35); road(28, 6, 28, 35); road(60, 17, 60, 23); road(14, 14, 14, 23);
+  road(0, 23, 60, 23); road(14, 14, 42, 14); road(14, 31, 42, 31); road(15, 36, 42, 36); road(28, 13, 28, 36); road(60, 17, 60, 23); road(14, 14, 14, 31);
   // plaza
   for (let y = 17; y <= 22; y++) for (let x = 25; x <= 31; x++) if (get(x, y) !== T.PATH || (x !== 28 && y !== 23)) set(x, y, T.PLAZA);
   // buildings
@@ -193,14 +191,17 @@ function buildWorld() {
     set(b.door.x, b.door.y, T.DOOR); if (get(b.appr.x, b.appr.y) !== T.PATH && get(b.appr.x, b.appr.y) !== T.PLAZA) set(b.appr.x, b.appr.y, T.PATH);
     blds.push(b); return b;
   };
-  mk('church', 25, 9, 6, 5, 6);
-  [[18, 11], [22, 11], [33, 11], [37, 11], [40, 11]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, i % 4));
-  mk('guild', 18, 19, 6, 4, 2); mk('tavern', 33, 19, 5, 4, 3); mk('shop', 39, 19, 4, 4, 1);
-  mk('smithy', 17, 27, 5, 4, 4); mk('apothecary', 23, 27, 4, 4, 5); mk('inn', 30, 27, 6, 4, 0);
-  [[41, 28]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 2) % 4)); mk('armor', 37, 27, 4, 4, 5);
-  [[18, 32], [22, 32], [32, 32], [36, 32], [40, 32]].forEach((p, i) => mk('house', p[0], p[1], 3, 3, (i + 1) % 4));
-  mk('hut', 3, 20, 3, 3, 1); mk('hut', 11, 20, 3, 3, 2); mk('mill', 6, 19, 3, 4, 7);
-  mk('castle', 58, 11, 5, 6, 8);
+  // V3.4: bigger buildings (house 5x4, shops 6x4, guild/tavern/inn 7x5, church 7x6 + spire, castle 7x8)
+  mk('church', 25, 7, 7, 6, 6);
+  mk('house', 16, 9, 5, 4, 0); mk('shop', 32, 9, 6, 4, 1); mk('house', 38, 9, 5, 4, 2);
+  mk('guild', 16, 18, 7, 5, 2); mk('tavern', 33, 18, 7, 5, 3);
+  mk('smithy', 16, 27, 6, 4, 4); mk('apothecary', 22, 27, 6, 4, 5); mk('inn', 29, 26, 7, 5, 0); mk('armor', 37, 27, 6, 4, 5);
+  [[16, 32], [22, 32], [30, 32], [36, 32]].forEach((p, i) => mk('house', p[0], p[1], 5, 4, (i + 1) % 4));
+  mk('hut', 0, 20, 5, 3, 1); mk('hut', 10, 20, 4, 3, 2); mk('mill', 6, 19, 3, 4, 7);
+  mk('castle', 57, 9, 7, 8, 8);
+  // cliffs: north band (2 tiers, ledge on top) and the east wall of the demon plateau with a stair gate on the main road
+  for (let x = 0; x < PLATEAU_X0; x++) { const top = 1; const bot = x < 14 ? 2 : 3 + (hsh01(x, 7) < 0.3 ? 1 : 0); for (let y = 0; y < top; y++) set(x, y, T.LEDGE); for (let y = top; y <= bot; y++) if (get(x, y) !== T.PATH) set(x, y, T.CLIFF); }
+  for (let y = 0; y < MH; y++) { if (Math.abs(y - 23) <= 1) { set(PLATEAU_X0 - 1, y, T.PATH); continue; } set(PLATEAU_X0 - 1, y, T.CLIFF); }
   // fountain & well (1x1 blocked deco)
   set(28, 19, T.BLD); set(25, 21, T.BLD); set(31, 21, T.BLD);
   // clear spawn areas
@@ -209,6 +210,7 @@ function buildWorld() {
   const homes = blds.filter(b => b.kind === 'house' || b.kind === 'hut').map(b => b.id);
   return { tiles, blds, bk, fields, homes, get, set };
 }
+function hsh01(x, s) { let n = Math.imul(x + 101, 374761393) ^ Math.imul(s + 7, 668265263); n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
 const W = buildWorld();
 const walkable = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH && !BLOCK[W.tiles[y * MW + x]];
 
@@ -1279,11 +1281,11 @@ function scripted() {
 /* ================= V4-A1: assault timeline, village defense, 3-phase battles, consequences, chains ================= */
 const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
-  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 43, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
+  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 44, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
   wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 52, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 60, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 65, kind: 'dragon', mon: 'dragon', scale: 1.3 },
   wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 66, kind: 'wave', mon: 'wolf', scale: 1.2 },
-  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 102, kind: 'king', mon: 'boss', scale: 1.6 },
+  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 100, kind: 'king', mon: 'boss', scale: 1.6 },
 };
 const ASSAULT_ORDER = ['wave1', 'wave2', 'dragon', 'wave3', 'king'];
 const GRADES = ['crush', 'win', 'pyrrhic', 'loss', 'rout']; // 大勝 勝利 慘勝 敗北 潰滅
@@ -1313,8 +1315,8 @@ function defenseParts() {
   if (G.flags.aid) pw += 6;
   const combat = clamp(pw / 40, 0, 1) * 100;
   const works = clamp(G.walls * 20 * (G.wallHp / 100) + (G.ruins && Object.keys(G.ruins).length ? -5 * Object.keys(G.ruins).length : 0), 0, 100);
-  const morale = clamp(46 + (G.faith / 150 - 0.45) * 30 + (G.moraleMod || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
-  const supply = clamp(G.town.food / 400 * 40 + G.town.potions / 30 * 30 + G.town.gearStock / 10 * 30, 0, 100);
+  const ans = (G.stats.answered || 0) / ((G.stats.prayers || 0) + 6); const morale = clamp(44 + ans * 36 + (G.moraleMod || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
+  const supply = clamp(Math.min(40, G.town.food / 700 * 40) + Math.min(30, G.town.potions / 30 * 30) + Math.min(30, G.town.gearStock / 10 * 30), 0, 100);
   const divine = clamp(G.prep || 0, 0, 100);
   return { combat, works, morale, supply, divine };
 }
@@ -1456,7 +1458,7 @@ function applyConsequences(a, grade) {
   }
   // chains
   if (a.id === 'wave2') { const w1 = isWin(G.assaults[0].grade), w2 = win; G.chain.dragonType = w1 && w2 ? 'expedition' : (w1 || w2) ? 'field' : 'village'; }
-  if (a.id === 'dragon') G.chain.dragonOutcome = grade === 'crush' || grade === 'win' ? 'slain' : grade === 'pyrrhic' ? 'repelled' : 'lost';
+  if (a.id === 'dragon') G.chain.dragonOutcome = grade === 'crush' || (grade === 'win' && rnd() < 0.6) ? 'slain' : grade === 'win' || grade === 'pyrrhic' ? 'repelled' : 'lost';
   if (a.id === 'wave3') G.chain.cadres = win ? 1 : 3;
   godXp(win ? 25 : 10);
   return res;
@@ -2343,7 +2345,7 @@ function renderChapter(ch) {
   // first-mention annotation (R2-4)
   const ann = (id, rel) => { const inf = (ch.info || {})[id]; if (!inf || !inf.job) return; const nm = nameOf(id); const lab = rel && inf.rel ? inf.rel[L] : JOBS[inf.job] ? JOBS[inf.job].n[L] : ''; if (!lab) return; for (const pp of paras) { const i = pp.text.indexOf(nm); if (i >= 0 && pp.tag !== 'res') { pp.text = pp.text.slice(0, i + nm.length) + '（' + lab + '）' + pp.text.slice(i + nm.length); break; } } };
   if (ch.a[0] && !fx || ch.fixedKey === 'master_farewell') { ann(ch.a[0], false); if (ch.a[1] && ch.a[1] !== ch.a[0]) ann(ch.a[1], true); if (ch.a[2] && ch.a[2] !== ch.a[0] && ch.a[2] !== ch.a[1]) ann(ch.a[2], true); }
-  if (trans) { const arr = ch.cont ? TRANS_CONT : trans.rl ? TRANS_REL : TRANS_PLAIN; const seen = G.chapters.some(c => c.id < ch.id && c.a.indexOf(ch.mainId) >= 0); const mn = !seen && ch.mainJob && JOBS[ch.mainJob] ? trans.mn + '（' + JOBS[ch.mainJob].n[L] + '）' : trans.mn; paras.unshift(mk(fmt(arr[(ch.trI || 0) % arr.length][L], { MN: mn, R: trans.rl, A: v.A }), 'infer')); }
+  if (trans) { const arr = ch.cont ? TRANS_CONT : trans.rl ? TRANS_REL : TRANS_PLAIN; const seen = G.chapters.some(c => c.id < ch.id && (c.who || []).indexOf(ch.mainId) >= 0); const mn = !seen && ch.mainJob && JOBS[ch.mainJob] ? trans.mn + '（' + JOBS[ch.mainJob].n[L] + '）' : trans.mn; paras.unshift(mk(fmt(arr[(ch.trI || 0) % arr.length][L], { MN: mn, R: trans.rl, A: v.A }), 'infer')); }
   // header
   const date = dateStr(ch.t, G.gen); const place = PLACES[ch.pl] ? PLACES[ch.pl][L] : PLACES.town[L];
   const protLine = protNames.length ? t('h_prot') + '：' + (ch.who || []).map((i, k) => nameOf(i) + (((ch.info || {})[i] || {}).job ? '（' + JOBS[ch.info[i].job].n[L] + (k > 0 && ch.info[i].rel ? '・' + ch.info[i].rel[L] : '') + '）' : '')).join(L ? '、' : '・') : t('h_prot') + '：—';
