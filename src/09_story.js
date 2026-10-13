@@ -103,11 +103,15 @@ function sceneFor(ev) {
     case 'destined_reunion': return 'reunion'; case 'soul_echo': return 'awakening'; case 'reincarnation': return p.echo ? 'echo_dream' : null;
     case 'boss_awaken': case 'boss_sortie': return 'omen';
     case 'cadre_slain': return 'battle'; case 'boss_slain': return 'revelation';
+    case 'assault_omen': return p.step === 3 && (p.a === 'dragon' || p.a === 'king') ? 'omen' : null;
+    case 'assault_start': return p.a === 'dragon' || p.a === 'king' ? 'eve' : null;
+    case 'assault_end': return p.win ? 'battle' : 'siege';
+    case 'festival': return 'family_day'; case 'hero_born': return 'promotion'; case 'dragon_pact': return p.ok ? 'answered' : null;
     case 'ending_doom': return 'finale_doom'; case 'ending_godleft': return 'finale_godleft'; case 'ending_stagnant': return 'finale_stagnant';
   }
   return null;
 }
-const FORCE_EV = { master_farewell: 1, boss_awaken: 1, boss_slain: 1, boss_sortie: 1, ending_doom: 1, ending_godleft: 1, ending_stagnant: 1, boss_expedition: 1, cadre_slain: 1 };
+const FORCE_EV = { assault_omen: 1, assault_start: 1, assault_end: 1, master_farewell: 1, boss_awaken: 1, boss_slain: 1, boss_sortie: 1, ending_doom: 1, ending_godleft: 1, ending_stagnant: 1, boss_expedition: 1, cadre_slain: 1 };
 const TURNING = { death: 0.9, boss_awaken: 1, boss_slain: 1, cadre_slain: 0.9, boss_expedition: 0.95, marriage: 0.7, love_start: 0.65, betrayal: 0.7, reconcile: 0.6, destined_reunion: 0.9, soul_echo: 0.8, miracle: 0.8, monster_raid: 0.55, siege: 0.8, birth: 0.6, promotion: 0.5, quest_fail: 0.5, first_battle: 0.55, divine_act: 0.5, love_notice: 0.5, reincarnation: 0.7, prayer_expired: 0.4 };
 function protOf(ev) { return ev.actors[0] || 0; }
 function dramaScore(ev) {
@@ -135,9 +139,9 @@ function infoOf(id, otherId) { const h = G.idx[id]; if (!h) return null; const o
 function castOf(ev, sc, seed) {
   const rg = new RNG(seed); const meta = SMETA[sc] || {}; let ids = ev.actors.filter(i => G.idx[i] && G.idx[i].alive !== false || (ev.names && ev.names[i])).slice(0, 3);
   ids = ids.filter((i, k) => ids.indexOf(i) === k);
-  const hero = () => { const a = G.humans.filter(h => h.alive && isAdv(h)).sort((x, y) => advPower(y) - advPower(x)); return a[0] ? a[0].id : 0; };
-  if (meta.kind === 'war' && (!ids.length || sc === 'omen' || sc === 'siege' || sc === 'raid')) { const hid = hero(); if (hid) ids = [hid].concat(ids.filter(i => i !== hid)); }
-  if (!ids.length && !(sc === 'prologue')) { const a = G.humans.filter(h => h.alive && h.age >= 16); if (a.length) ids = [rg.pick(a).id]; }
+  const hero = () => { const mh = G.idx[G.main]; if (mh && mh.alive && isAdv(mh)) return mh.id; const a = G.humans.filter(h => h.alive && isAdv(h)).sort((x, y) => advPower(y) - advPower(x)); return a[0] ? a[0].id : 0; };
+  if (meta.kind === 'war' && (!ids.length || sc === 'omen' || sc === 'siege' || sc === 'raid' || (ev.type === 'assault_end' && ids.indexOf(G.main) < 0))) { const hid = hero(); if (hid) ids = [hid].concat(ids.filter(i => i !== hid)); }
+  if (!ids.length && !(sc === 'prologue')) { let a = G.humans.filter(h => h.alive && h.age >= 16); if (!a.length) a = G.humans.filter(h => h.alive); if (a.length) ids = [rg.pick(a).id]; }
   if (sc === 'funeral' && ids.length) { const d = G.idx[ids[0]]; let b = 0; if (d) { const rl = relatedList(d); b = rl[0] || 0; } if (b && ids.indexOf(b) < 0) ids.push(b); }
   else if (ids.length < 2 && ids.length) { const b = partnerOf(G.idx[ids[0]]); if (b && ids.indexOf(b) < 0) ids.push(b); }
   if (ids.length < 2 && ids.length && (meta.kind === 'war' || FORCE_EV[ev.type])) { const h0 = G.idx[ids[0]]; const o = G.humans.filter(h => h.alive && isAdv(h) && h.id !== ids[0]).sort((x, y) => ((h0 && h0.rel[y.id]) || 0) - ((h0 && h0.rel[x.id]) || 0) || advPower(y) - advPower(x))[0]; if (o) ids.push(o.id); }
@@ -169,6 +173,7 @@ function makeChapter(scene, ev, over) {
   const meta = SMETA[scene] || {}; const fx = over && over.fixedKey;
   let ids = ev ? (fx ? ev.actors.slice(0, 2).filter(i => G.idx[i]) : castOf(ev, scene, seed)) : [];
   if (fx && fx !== 'master_farewell' && fx !== 'prologue' && !ids.length) ids = [];
+  if (ev && !fx && !ids.length) { ev.used = true; return null; }
   const forced = !!(ev && FORCE_EV[ev.type]);
   if (ev && !fx && SCN[scene] && ids.length) { const h0 = G.idx[ids[0]]; if (h0 && !povJobOK(scene, h0.job)) { ev.used = true; return null; } if (ids.length < 2 && !forced) { if (meta.prot === 2 || scene === 'funeral' || !singleOK(scene)) { ev.used = true; return null; } } }
   const an = {}, info = {}; ids.forEach((i, k) => { const e = G.idx[i]; an[i] = (ev && ev.names && ev.names[i]) || (e && e.name) || ['？', '？']; info[i] = infoOf(i, k === 0 ? (ids[1] || 0) : ids[0]) || {}; });
@@ -221,14 +226,14 @@ function makeChapter(scene, ev, over) {
   // ----- foreshadow: resolve / plant -----
   if (!fx && SCN[scene] && ids.length) {
     const rs = RESOLVE[scene] || [];
-    G.fores.forEach(f => { if (f.state === 'open' && rs.indexOf(f.type) >= 0 && ids.indexOf(f.hid) >= 0 && G.tick - f.planted > 36 && G.tick - f.planted < 3 * TICK_YEAR) { f.state = 'done'; f.doneAt = G.tick; { const pin = f.partner && ids.indexOf(f.partner) < 0 ? infoOf(f.partner, ids[0]) : null; const lab = pin ? (pin.rel || (pin.job && JOBS[pin.job] ? JOBS[pin.job].n : null)) : null; ch.res.push({ ty: f.type, kept: scene !== 'funeral' && scene !== 'defeat', v: Object.assign({}, f.v, { lab }) }); } } });
-    (PLANT[scene] || []).filter(ty => ty !== 'promise').forEach(ty => { if (ids[0] && !G.fores.some(f => f.hid === ids[0] && f.type === ty && (f.state === 'open' || G.tick - f.planted < TICK_YEAR))) { G.fores.push({ id: G.nid++, type: ty, hid: ids[0], partner: ids[1] || 0, planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null } }); } });
+    G.fores.forEach(f => { if (f.state === 'open' && rs.indexOf(f.type) >= 0 && ids.indexOf(f.hid) >= 0 && G.tick - f.planted > 36 && G.tick - f.planted < 3 * TICK_YEAR) { f.state = 'done'; f.doneAt = G.tick; { const pin = f.partner && f.partner !== ids[0] ? infoOf(f.partner, ids[0]) : null; const lab = pin ? (pin.rel || (pin.job && JOBS[pin.job] ? JOBS[pin.job].n : null)) : null; ch.res.push({ ty: f.type, kept: scene !== 'funeral' && scene !== 'defeat', v: Object.assign({}, f.v, { lab }) }); } } });
+    (PLANT[scene] || []).filter(ty => ty !== 'promise').forEach(ty => { if (ids[0] && !G.fores.some(f => f.hid === ids[0] && f.type === ty && (f.state === 'open' || G.tick - f.planted < TICK_YEAR))) { G.fores.push({ id: G.nid++, type: ty, hid: ids[0], partner: ids[1] || 0, planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null, lab: (info[ids[1]] && info[ids[1]].rel) || (G.idx[ids[1]] && JOBS[G.idx[ids[1]].job] ? JOBS[G.idx[ids[1]].job].n : null) } }); } });
     if (G.fores.length > 150) G.fores = G.fores.filter(f => f.state === 'open' || G.tick - f.planted < 2 * TICK_YEAR);
   }
   ch.pk = computePicks(ch, rg);
   if (mainH && ids[0] && ids[0] !== G.main && G.idx[ids[0]]) ch.relMain = relKey(mainH, G.idx[ids[0]]);
   { const pc = G.chapters[G.chapters.length - 1]; ch.cont = !!(pc && pc.who && who[0] && pc.who[0] === who[0]); const kk = ch.cont ? 'c' : (ch.relMain ? 'r' : 'p'); ch.trI = pickUniq(rg, 'TR.' + kk + '.' + (ids[0] || 0), kk === 'c' ? 6 : 8); }
-  if ((scene === 'depart' || scene === 'eve') && ids.length >= 2 && SCN[scene]) { const k = SCN[scene].talk.indexOf('promise'); if (k >= 0 && ch.pk['l' + k] >= 0) { ch.promised = true; memOf(G.idx[ids[0]]).promise = { who: ids[1], ref: ch.id, t: G.tick }; if (G.idx[ids[1]]) memOf(G.idx[ids[1]]).promise = { who: ids[0], ref: ch.id, t: G.tick }; G.fores.push({ id: G.nid++, type: 'promise', hid: ids[0], partner: ids[1], planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null } }); } }
+  if ((scene === 'depart' || scene === 'eve') && ids.length >= 2 && SCN[scene]) { const k = SCN[scene].talk.indexOf('promise'); if (k >= 0 && ch.pk['l' + k] >= 0) { ch.promised = true; memOf(G.idx[ids[0]]).promise = { who: ids[1], ref: ch.id, t: G.tick }; if (G.idx[ids[1]]) memOf(G.idx[ids[1]]).promise = { who: ids[0], ref: ch.id, t: G.tick }; G.fores.push({ id: G.nid++, type: 'promise', hid: ids[0], partner: ids[1], planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null, lab: (info[ids[1]] && info[ids[1]].rel) || (G.idx[ids[1]] && JOBS[G.idx[ids[1]].job] ? JOBS[G.idx[ids[1]].job].n : null) } }); } }
   G.chapters.push(ch); if (G.chapters.length > 400) G.chapters.splice(0, 40);
   if (ev) { ev.used = true; ev.ch = ch.id; }
   // summary for recap / final review
@@ -292,8 +297,8 @@ function chronTick() {
     if (G.tick - ((G.lastScene || {})[sc] || -999) < (SC_CD[sc] || 150)) continue;
     const s = dramaScore(ev); if (s > bs) { bs = s; best = ev; }
   }
-  const since = (G.tick - (G.lastChapTick || 0)) / (1 + Math.max(0, G.chapNo - 55) / 40) * (G.tick < START_TICK + 3 * TICK_YEAR ? 0.14 : 1);
-  if (G.tick < START_TICK + 3 * TICK_YEAR && G.chapNo > 7) return;
+  const since = (G.tick - (G.lastChapTick || 0)) / (G.assaults ? 1 + Math.max(0, G.chapNo - 32) / 10 : 1 + Math.max(0, G.chapNo - 55) / 40) * (G.tick < START_TICK + 3 * TICK_YEAR ? 0.14 : 1);
+  if (G.tick < START_TICK + 3 * TICK_YEAR && G.chapNo > (G.assaults ? 4 : 7)) return;
   if (best && ((bs >= 0.5 && since >= TUNE_STORY.gap) || (bs >= 0.3 && since >= TUNE_STORY.slow) || (bs >= 0.78 && since >= 36))) {
     const sc = sceneFor(best); const ch0 = makeChapter(sc, best); if (!ch0) return; G.lastChapTick = G.tick; G.lastScene = G.lastScene || {}; G.lastScene[sc] = G.tick;
     G.events.forEach(e => { if (!e.used && ((e.type === best.type && Math.abs(e.t - best.t) < 12) || (e.t < best.t && !FORCE_EV[e.type]))) { noteEvent(e); } });

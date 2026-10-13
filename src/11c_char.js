@@ -107,6 +107,6 @@ function humanSprite(h, dir, frame) {
   if (spriteCache[key]) return spriteCache[key];
   const d = dir === 3 ? 2 : dir; const grid = humanGrid(h, d, frame);
   let cv = bakeGrid(grid, 16, 24, humanRamps(h));
-  if (dir === 3) { const f = mkCanvas(16, 24), fc = f.getContext('2d'); fc.translate(16, 0); fc.scale(-1, 1); fc.drawImage(cv, 0, 0); cv = f; }
+  if (dir === 2) { const f = mkCanvas(16, 24), fc = f.getContext('2d'); fc.translate(16, 0); fc.scale(-1, 1); fc.drawImage(cv, 0, 0); cv = f; } // side art faces right; dir 2 = moving left
   spriteCache[key] = cv; return cv;
 }

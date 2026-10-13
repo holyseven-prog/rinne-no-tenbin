@@ -27,6 +27,8 @@ const out = [];
   await key('1'); await wait(600); s = await state(); await ck('opening via key 1', s.scene === 'opening');
   await pg.mouse.click(640, 300); await wait(200); await pg.mouse.click(640, 300); await wait(300); await shot('03_opening');
   await key('Escape'); await wait(800); s = await state(); await ck('play after skip', s.scene === 'play');
+  // V4: the opening council (time stops until decrees are chosen)
+  await wait(600); s = await state(); await ck('V4 council opens', s.modals === 'council', s.modals); await shot('12_council'); await ev(() => { autoCouncil(); __RT.ui.Screens.closeAll(); }); await wait(200); s = await state(); await ck('council resolved', s.modals === '');
   // keys
   await key('h'); s = await state(); await ck('H opens chron', s.modals === 'chron'); await shot('05_chron'); await key('Escape');
   await key('r'); s = await state(); await ck('R opens residents', s.modals === 'residents'); await shot('06_res'); await key('Escape');
@@ -49,7 +51,7 @@ const out = [];
   await wait(1200); const f0 = (await state()).faith; await key('1'); const pw = await ev(() => __RT.ui.Game.power); await ck('key 1 selects oracle', pw === 'oracle');
   // click on resident on canvas
   const pos = await ev(() => { const h = __RT.G().idx[__RT.ui.Game.selId]; const R = __RT.ui.Render; return { x: (h.x * 16 + 8 - R.cam.x) * 2, y: (h.y * 16 - 2 - R.cam.y) * 2 }; });
-  if (pos.x > 0 && pos.x < 1270 && pos.y > 0 && pos.y < 710) { await pg.mouse.click(pos.x, pos.y); await wait(300); s = await state(); await ck('oracle menu open', s.modals === 'menu'); await shot('08_menu');
+  if (pos.x > 0 && pos.x < 1270 && pos.y > 0 && pos.y < 710) { await pg.mouse.click(pos.x, pos.y); await wait(300); s = await state(); if (s.modals !== 'menu') console.log('dbg-click', JSON.stringify(pos), await ev(() => { const el = document.elementFromPoint(320, 180); return (el && (el.id + '.' + el.className)) + ' sel=' + __RT.ui.Game.selId + ' pw=' + __RT.ui.Game.power; }), await ev(() => { const e = document.elementsFromPoint(0, 0); return ''; })); await ck('oracle menu open', s.modals === 'menu'); await shot('08_menu');
     await clickBtn(lang === 'ja' ? '勇気' : '勇氣'); await wait(300); s = await state(); await ck('oracle cast', s.casts === 1, 'faith ' + f0 + '->' + s.faith); await shot('10_cast'); }
   else out.push('SKIP click (target offscreen ' + JSON.stringify(pos) + ')');
   // save/load roundtrip

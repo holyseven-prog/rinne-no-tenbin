@@ -19,9 +19,12 @@ const Save = {
 };
 function attachHooks() {
   G.fx = G.fx || []; G.fxOn = true; Render.parts.length = 0; Render.nums.length = 0;
+  attachWarHooks();
   G.onEvent = ev => {
-    const l = evLine(ev);
-    if (l && (ev.tension >= 0.5 || ['death', 'birth', 'marriage', 'promotion', 'reincarnation'].indexOf(ev.type) >= 0)) UI.pushFeed(l, ev.tension >= 0.8 ? '#ffb8a0' : (ev.type === 'birth' || ev.type === 'marriage') ? '#a8ffc0' : '#ffffff', ev.pos, ev.tension >= 0.8);
+    const cls = feedClass(ev); const l = evLineV4(ev) || evLine(ev);
+    if (cls === 'B') UI.pushRoutine(ev);
+    else if (l && (cls === 'S' || cls === 'A' || ev.tension >= 0.5)) UI.pushFeed(l, cls === 'S' ? '#ffb8a0' : (ev.type === 'birth' || ev.type === 'marriage' || ev.type === 'festival') ? '#a8ffc0' : '#ffffff', ev.pos, cls === 'S');
+    if (cls === 'S' && ev.type !== 'assault_start' && ev.type !== 'council') Game.autoSlow();
     if (['death', 'siege', 'boss_sortie', 'destined_reunion'].indexOf(ev.type) >= 0 || (ev.type === 'monster_raid' && ev.payload.cad >= 0)) { const a = ev.actors[0] && G.idx[ev.actors[0]]; if (ev.type !== 'death' || (a && (soulOf(a).fav || G.spot.indexOf(a.id) >= 0 || G.track.indexOf(a.id) >= 0 || isAdv(a)))) Game.autoSlow(); }
     if (ev.type === 'monster_raid' || ev.type === 'siege') { Snd.se('hit'); Render.shake = 3; }
     if (ev.type === 'promotion') Snd.se('level');
@@ -32,7 +35,7 @@ function attachHooks() {
   G.onReincarnate = (hh, s) => { Snd.se('reincarnate'); UI.lastFav = ''; };
   G.onDeath = hh => { UI.lastFav = ''; };
   G.onChapter = ch => { if (ch.no > 1) { UI.pushFeed(t('new_chapter') + '：' + renderChapter(ch).title, '#ffe9a0', null, false); Snd.se('page'); } };
-  G.onEnd = e => { Screens.ending(); };
+  G.onEnd = e => { if (G.battle) return; Screens.ending(); };
   G.onAwaken = () => { Game.cutscene(); };
 }
 function pickBgm() {
@@ -114,7 +117,7 @@ Object.assign(Game, {
     this.miniT += dt; if (this.miniT > 0.12 && UI.el.miniCv) { this.miniT = 0; Mini.draw(UI.el.miniCv, Render.cam.x, Render.cam.y); }
     this.hudT += dt; if (this.hudT > 0.16) { this.hudT = 0; UI.refresh(); if (this.tut) this.tut.update(); }
     if (sc === 'play' && !stopped && dayIdx(G.tick) !== this.advDayChecked) { this.advDayChecked = dayIdx(G.tick); this.advisorTick(); }
-    UI.tickToasts(now);
+    UI.tickToasts(now); if (sc === 'play' && UI.flushRoutine) UI.flushRoutine();
     this.bgmT += dt; if (this.bgmT > 1) { this.bgmT = 0; const b = pickBgm(); if (b && b !== this.bgmName && now > (this.divineUntil || 0) && !Screens.stack.some(s => s.name === 'cutscene')) { this.bgmName = b; Snd.playSong(b); } }
     if (sc === 'play' && dayIdx(G.tick) !== this.lastDay) { this.lastDay = dayIdx(G.tick); if (now - this.saveT > 8000) { this.saveT = now; Save.write(0); } }
   },
@@ -148,6 +151,7 @@ function onKeyDown(e) {
     case '1': case '2': case '3': case '4': case '5': selectPower(+kl - 1); break;
     case 'x': if (G.eye > 0) { Game.power = Game.power === 'eye' ? null : 'eye'; UI.refresh(true); } break;
     case 'h': Screens.chronicle(); break;
+    case 'b': Screens.defense(); break;
     case 'r': Screens.residents(); break;
     case 's': if (!e.shiftKey || true) Screens.souls(); break;
     case 'g': Screens.counsel(); break;

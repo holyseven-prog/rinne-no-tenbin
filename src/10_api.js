@@ -23,7 +23,7 @@ const RT = {
       adv: G.humans.filter(h => h.alive && isAdv(h)).length, monsters: G.monsters.filter(m => m.alive && !m.dormant).length, prayers: openPrayers().length, stats: G.stats };
   },
   setSpeed(n) { if (typeof Game !== 'undefined') Game.setSpeed(n); },
-  step(n) { for (let i = 0; i < n && !G.ending; i++) tick(); return G.tick; },
+  step(n) { G.forceAuto = 1; try { for (let i = 0; i < n && !G.ending; i++) tick(); } finally { G.forceAuto = 0; } return G.tick; },
   seed(n) { newGame({ seed: n, god: G.god, lang: LANG }); },
   newGame(o) { newGame(o); if (typeof Game !== 'undefined' && Game.afterNew) Game.afterNew(); return RT.state(); },
   policy(p) { G.policy = p; },

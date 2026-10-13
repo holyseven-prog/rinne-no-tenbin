@@ -41,7 +41,7 @@ const Render = {
     const cam = this.cam; const cx = Math.round(cam.x + (this.shake ? (Math.random() - .5) * this.shake : 0)), cy = Math.round(cam.y);
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.drawImage(getWorldCanvas(sea), cx, cy, 640, 360, 0, 0, 640, 360);
-    const hf = (G.tick % TICK_DAY) / 6; this.drawWaterAnim(c, cx, cy, sea); this.drawAnimProps(c, cx, cy, sea, opts.noNight ? 0 : darkness(hf));
+    const hf = (G.tick % TICK_DAY) / 6; this.drawWaterAnim(c, cx, cy, sea); this.drawAnimProps(c, cx, cy, sea, opts.noNight ? 0 : darkness(hf)); if (G.assaults) this.drawDefense(c, cx, cy, sea);
     // plateau fog
     if (cx + 640 > PLATEAU_X0 * TS) { c.globalAlpha = 0.18 + (G.awakened ? 0.12 : 0) + Math.sin(this.time / 40) * 0.04; fr(c, '#9a50d0', PLATEAU_X0 * TS - cx, 0, 640, 360); c.globalAlpha = 1; }
     // entities
@@ -79,7 +79,7 @@ const Render = {
         const atk = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.4 && Math.sin(this.time / 2.5 + e.id) > 0.2; spr = monsterSprite(e, atk ? 2 : (this.time >> 4) & 1); const bw = spr.width, bh = spr.height;
         const bob = e.type === 'bat' ? Math.round(Math.sin(this.time / 5 + e.id) * 2) - 6 : 0;
         if (e.hurt > 0) c.filter = 'brightness(2.6)';
-        c.drawImage(spr, Math.round(sx - bw / 2), Math.round(sy - bh + 2 + bob)); c.filter = 'none';
+        if (e.dir === 2 && !e.boss) { c.save(); c.translate(Math.round(sx), 0); c.scale(-1, 1); c.drawImage(spr, Math.round(-bw / 2), Math.round(sy - bh + 2 + bob)); c.restore(); } else c.drawImage(spr, Math.round(sx - bw / 2), Math.round(sy - bh + 2 + bob)); c.filter = 'none';
         if (e.hp < e.maxHp || e.boss || e.cad >= 0) { const w = e.boss ? 40 : e.cad >= 0 ? 26 : 14; fr(c, '#000a', sx - w / 2 - 1, sy - bh - 3 + bob, w + 2, 4); fr(c, '#3a3a3a', sx - w / 2, sy - bh - 2 + bob, w, 2); fr(c, e.boss ? '#c040ff' : '#e04040', sx - w / 2, sy - bh - 2 + bob, Math.max(1, Math.round(w * e.hp / e.maxHp)), 2); }
       }
     }

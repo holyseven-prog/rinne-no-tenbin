@@ -16,7 +16,7 @@ for (const lang of ['ja', 'zh']) {
       chaps++;
       const r = renderChapter(c); const body = r.paras.map(p => p.text).join('\n'); const all = r.title + '\n' + r.head + '\n' + (r.recap || '') + '\n' + body;
       names.forEach(n => {
-        if (n.length < 2 || !all.includes(n) || known.has(n)) return; if (c.V && c.V[L] === n && c.scene.indexOf('echo') >= 0 || c.scene === 'awakening' || c.scene === 'reunion') return; if (c.M && c.M[L].includes(n)) return; if (n === 'ベン' && !/ベン[^チ]/.test(all)) return;
+        if (n.length < 2 || !all.includes(n) || known.has(n)) return; if (c.V && c.V[L] === n && (c.scene.indexOf('echo') >= 0 || (c.cbs || []).some(cb => cb.ty === 'echo')) || c.scene === 'awakening' || c.scene === 'reunion') return; if (c.M && c.M[L].includes(n)) return; if (n === 'ベン' && !/ベン[^チ]/.test(all)) return;
         // first mention anywhere on this page must be introduced: "名前（職・関係）" or listed in the header with job
         const hdrIntro = r.head.includes(n + '（') || r.head.includes(n + (L ? '(' : '('));
         const k = body.indexOf(n); const bodyIntro = k >= 0 && body.slice(k + n.length, k + n.length + 1) === '（';

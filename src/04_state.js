@@ -31,6 +31,7 @@ function newGame(o) {
   initWorldState();
   rebuildIdx();
   G.main = G.flags.kyle || 0; G.mainLocked = false;
+  initAssaults(); G.godXp = 0; G.godLv = 1; G.decrees = []; G.cards = []; G.stats.decisions = 0; startPeriod();
   chronPrologue();
   return G;
 }

@@ -103,6 +103,7 @@ const MONS = {
   turtle: { n: ['岩殻ガメ', '岩殼龜'], hp: 44, atk: 7, def: 7, spd: 0.7, tier: 2, exp: 11, gold: 4, range: 1.5 },
   goblin: { n: ['小鬼の斥候', '小鬼斥候'], hp: 36, atk: 10, def: 3, spd: 1.0, tier: 2, exp: 12, gold: 5, range: 1.5 },
   skel: { n: ['骸骨剣士', '骷髏劍士'], hp: 58, atk: 13, def: 5, spd: 1.0, tier: 3, exp: 18, gold: 7, range: 1.5 },
+  dragon: { n: ['巨竜ヴァルグ', '巨龍瓦爾格'], hp: 900, atk: 40, def: 20, spd: 0.8, tier: 6, exp: 200, gold: 100, range: 2 },
   wolf: { n: ['魔狼', '魔狼'], hp: 52, atk: 15, def: 3, spd: 1.4, tier: 3, exp: 20, gold: 8, range: 1.5 },
 };
 const MON_BY_TIER = { 1: ['mush', 'bat'], 2: ['turtle', 'goblin'], 3: ['skel', 'wolf'] };
@@ -289,6 +290,7 @@ function newGame(o) {
   initWorldState();
   rebuildIdx();
   G.main = G.flags.kyle || 0; G.mainLocked = false;
+  initAssaults(); G.godXp = 0; G.godLv = 1; G.decrees = []; G.cards = []; G.stats.decisions = 0; startPeriod();
   chronPrologue();
   return G;
 }
@@ -472,7 +474,7 @@ function updateHuman(h) {
 
 function becomeAdult(h) {
   h.child = false; const s = soulOf(h);
-  const job = pickJobForSoul(s);
+  let job = pickJobForSoul(s); if (h.vengeful && rnd() < 0.7) { job = rpick(['swordsman', 'swordsman', 'mage', 'priest']); if (G.period) G.period.orphanAdv++; }
   h.job = job; h.adv = !!JOBS[job].adv && !(job === 'priest' && rchance(0.35)); h.lvl = Math.max(1, h.lvl);
   const st = hStats(h); h.maxHp = st.hp; h.hp = st.hp; h.look.cloth = JOB_CLOTH[job];
   logEvent('coming_of_age', [h.id], { job }, [], 0.3, 0.5);
@@ -691,6 +693,7 @@ function addExp(h, v) {
     if (G.fxOn) G.fx.push({ t: 'lvl', x: h.x, y: h.y });
     if (h.master && h.lvl === 8) { const ms = hById(h.master); if (ms && ms.alive) logEvent('mentor_parting', [ms.id, h.id], {}, ['relation'], 0.6, 0.8, h); h.master = 0; }
     if (h.lvl === 5 || h.lvl === 10 || h.lvl === 15) logEvent('promotion', [h.id], { lvl: h.lvl }, ['growth'], 0.5, 0.7, h);
+    if (h.lvl === 6 && h.job === 'swordsman' && h.age < 56) logEvent('hero_born', [h.id], {}, ['growth'], 0.9, 0.9, h);
   }
 }
 
@@ -1148,7 +1151,7 @@ function birthNatural(mother) {
 /* ---------- day update ---------- */
 function aliveHumans() { return G.humans.filter(h => h.alive); }
 function awaken() {
-  G.awakened = true; G.boss.dormant = false; G.raidDay = dayIdx(G.tick) + 5; G.awakenAt = G.tick;
+  G.awakened = true; if (!G.assaults) G.boss.dormant = false; G.raidDay = dayIdx(G.tick) + 5; G.awakenAt = G.tick;
   logEvent('boss_awaken', [], {}, ['boss'], 1, 1, BOSS.home);
   G.balance = clamp(G.balance - 12, -100, 100);
   G.pendingCutscene = 'awaken';
@@ -1184,8 +1187,9 @@ function dayUpdate() {
   if (rchance(0.12)) { const th = alive.filter(h => h.job === 'thief' && h.alive && h.age >= 16); if (th.length) { const t = rpick(th), v = rpick(alive.filter(h => h !== t && h.gold > 10 && h.age >= 14) || [t]); if (v && v !== t) { const amt = Math.min(v.gold, rint(8, 25)); v.gold -= amt; t.gold += amt; soulOf(t).k.evil += 1.5; t.guilt = 1; v.rel[t.id] = (v.rel[t.id] || 0) - 40; G.dayEvil += 0.5; logEvent('betrayal', [t.id, v.id], { amt }, ['crime'], 0.65, 0.8, t); } } }
   dailyQuests();
   if (d % 6 === 0 && G.humans.some(x => !x.alive && G.tick - (x.diedAt || 0) > TICK_YEAR)) { G.humans = G.humans.filter(x => x.alive || G.tick - (x.diedAt || 0) <= TICK_YEAR); rebuildIdx(); }
-  // monster raids
-  if (!G.awakened) {
+  dailyDefense(); periodDaily();
+  // monster raids (replaced by the assault timeline in V4)
+  if (G.assaults) { } else if (!G.awakened) {
     if (yr >= 4 && d >= G.raidDay && rchance(0.5 + (0.5 - G.balance / 200) * 0.5)) { spawnRaid(2 + (yr >> 2), yr <= 5 ? 1 : 2, false); G.raidDay = d + rint(9, 15); }
     else if (d >= G.raidDay) G.raidDay = d + 3;
   } else {
@@ -1200,7 +1204,7 @@ function dayUpdate() {
 }
 function yearlyUpdate() {
   const yr = yearOf(G.tick); yearEndFores();
-  if (!G.awakened) {
+  if (!G.awakened && !G.assaults) {
     const avg = G.balYear[G.balYear.length - 1] || 0;
     G.awakenOff = clamp((G.awakenOff || 0) + (avg - 10) / 100 * 0.6, -2, 2);
     G.awakenTick = BOSS_BASE_TICK + Math.round(G.awakenOff * TICK_YEAR);
@@ -1220,15 +1224,20 @@ function endGame(kind) {
 function checkEndings() {
   if (G.ending) return;
   const alive = G.stats.alive;
-  if (G.awakened && (G.town.hp <= 0 || alive < 6)) return endGame('doom');
+  if (!G.assaults && G.awakened && (G.town.hp <= 0 || alive < 6)) return endGame('doom');
+  if (G.assaults && alive < 4) return endGame('doom');
   if (G.faith <= 0.5) G.faithZero++; else G.faithZero = Math.max(0, G.faithZero - 3);
   if (G.faithZero > 18 * TICK_DAY && G.tick - (G.lastAnswer || 0) > 12 * TICK_DAY) return endGame('godleft');
-  if (G.stag >= 36) return endGame('stagnant');
+  if (!G.assaults && G.stag >= 36) return endGame('stagnant');
   if (G.tick > START_TICK + 22 * TICK_YEAR) return endGame(G.awakened ? 'doom' : 'stagnant');
 }
 
 /* ---------- main tick ---------- */
 function tick() {
+  if (G.ending) return;
+  if (G.battle && !G.battle.done) { if (G.uiAttached && !G.forceAuto) return; autoBattle(); }
+  if (G.battle && G.battle.done && (!G.uiAttached || G.forceAuto)) G.battle = null;
+  if (G.council && !G.council.done) { if (G.uiAttached && !G.forceAuto) return; autoCouncil(); }
   if (G.ending) return;
   G.tick++;
   const tk = G.tick;
@@ -1244,9 +1253,10 @@ function tick() {
   // town pressure
   const pr = townPressure();
   if (pr > 0) G.town.hp = Math.max(G.awakened ? -1 : 25, G.town.hp - pr * TUNE.townDrain); else G.town.hp = Math.min(100, G.town.hp + 0.012);
-  if (G.town.hp < 70 && !G.sieged && G.awakened) { G.sieged = true; logEvent('siege', [], {}, ['raid'], 0.85, 0.8, PLAZA); } else if (G.town.hp > 95) G.sieged = false;
+  if (!G.assaults && G.town.hp < 70 && !G.sieged && G.awakened) { G.sieged = true; logEvent('siege', [], {}, ['raid'], 0.85, 0.8, PLAZA); } else if (G.town.hp > 95) G.sieged = false;
   if (G.raidAlive === 0) G.townAlert = 0; else G.townAlert = Math.max(G.townAlert, 12);
-  if (tk % 6 === 0) { expirePrayers(); if (G.bossFight && !G.parties.some(p => p.boss && p.state !== 'done')) G.bossFight = false; if (G.awakened) tryBossExpedition(); scripted(); }
+  if (tk % 6 === 0) { expirePrayers(); if (G.bossFight && !G.parties.some(p => p.boss && p.state !== 'done')) G.bossFight = false; if (G.awakened && !G.assaults) tryBossExpedition(); scripted(); }
+  assaultTick(); councilTick(); cardTick();
   if (tk % TICK_DAY === 0) dayUpdate();
   if (G.policy === 'basic') policyBasic();
   chronTick();
@@ -1264,6 +1274,314 @@ function scripted() {
     if (g && k && g.alive && k.alive) logEvent('master_farewell', [g.id, k.id], { fixed: true }, ['relation'], 0.9, 0.8, g);
   }
 }
+
+/* ---- 07b_assault.js ---- */
+/* ================= V4-A1: assault timeline, village defense, 3-phase battles, consequences, chains ================= */
+const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
+const ASSAULT_DEF = {
+  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 43, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
+  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 52, kind: 'wave', mon: 'skel', scale: 1 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 60, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 66, kind: 'wave', mon: 'wolf', scale: 1.2 },
+  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 102, kind: 'king', mon: 'boss', scale: 1.6 },
+};
+const ASSAULT_ORDER = ['wave1', 'wave2', 'dragon', 'wave3', 'king'];
+const GRADES = ['crush', 'win', 'pyrrhic', 'loss', 'rout']; // 大勝 勝利 慘勝 敗北 潰滅
+const GRADE_N = { crush: ['大勝', '大勝'], win: ['勝利', '勝利'], pyrrhic: ['辛勝', '慘勝'], loss: ['敗北', '敗北'], rout: ['壊滅', '潰滅'] };
+const WIN_K = 6;
+const sigm = x => 1 / (1 + Math.exp(-x));
+function initAssaults() {
+  const Y = TICK_YEAR, S0 = START_TICK; const r = (a, b) => Math.round(rrange(a, b) * Y);
+  G.assaults = [
+    { id: 'wave1', t: S0 + r(2.0, 3.0) }, { id: 'wave2', t: S0 + r(4.0, 4.6) }, { id: 'dragon', t: S0 + Math.round(5.5 * Y) },
+    { id: 'wave3', t: S0 + r(7.1, 7.9) }, { id: 'king', t: S0 + 10 * Y },
+  ].map(a => Object.assign(a, { state: 'wait', omen: 0, grade: null, delayed: 0, provoked: 0, pred: null, res: null }));
+  G.walls = 1; G.wallHp = 100; G.wallBuild = 0; G.prep = 0; G.moraleMod = 0; G.devPts = 0; G.territory = 0; G.awe = 20; G.aweMax = 150;
+  G.ruins = {}; G.chain = { dragonType: null, dragonOutcome: null, cadres: 2, dragonAngry: 0 }; G.battle = null; G.loot = []; G.battleLog = [];
+  G.flags.evac = 0; G.flags.aid = 0; G.dragonPact = false; G.titles = {};
+  G.awakenTick = G.assaults[4].t - TICK_YEAR; // demon king revives one year before the march
+}
+function nextAssault() { return (G.assaults || []).find(a => a.state === 'wait'); }
+function assaultName(a, L) { return ASSAULT_DEF[a.id].n[L]; }
+function devLevel() { const p = G.devPts || 0; return p < -3 ? 0 : p < 4 ? 1 : p < 9 ? 2 : 3; }
+const DEV_N = [['寒村', '寒村'], ['村', '村'], ['町', '町'], ['城塞都市', '城塞都市']];
+function wallCap() { return 2 + devLevel(); }
+function heroAlive() { return G.humans.some(h => h.alive && h.job === 'swordsman' && h.lvl >= 6 && h.age < 56); }
+/* ---------- defense (0..100, 5 parts) ---------- */
+function defenseParts() {
+  let pw = 0; for (const h of G.humans) { if (!isAdv(h)) continue; pw += lvlMul(h.lvl) * (1 + 0.07 * h.gear) * (0.55 + 0.45 * h.hp / Math.max(1, h.maxHp)); }
+  if (G.flags.aid) pw += 6;
+  const combat = clamp(pw / 40, 0, 1) * 100;
+  const works = clamp(G.walls * 20 * (G.wallHp / 100) + (G.ruins && Object.keys(G.ruins).length ? -5 * Object.keys(G.ruins).length : 0), 0, 100);
+  const morale = clamp(46 + (G.faith / 150 - 0.45) * 30 + (G.moraleMod || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
+  const supply = clamp(G.town.food / 400 * 40 + G.town.potions / 30 * 30 + G.town.gearStock / 10 * 30, 0, 100);
+  const divine = clamp(G.prep || 0, 0, 100);
+  return { combat, works, morale, supply, divine };
+}
+const DEF_W = { combat: 0.35, works: 0.2, morale: 0.2, supply: 0.15, divine: 0.1 };
+function defenseScore(p) { p = p || defenseParts(); let s = 0; for (const k in DEF_W) s += p[k] * DEF_W[k]; return s; }
+function threatOf(a) {
+  const d = ASSAULT_DEF[a.id]; let t = d.base;
+  t += Math.max(0, -G.balance) / 8; t += (G.territory || 0) * 3; t -= a.provoked ? 8 : 0;
+  if (a.id === 'dragon') { const ty = G.chain.dragonType; t += ty === 'village' ? 6 : ty === 'expedition' ? -4 : 0; t += G.chain.dragonAngry || 0; }
+  if (a.id === 'king') { t += (G.chain.cadres || 2) * 4 - 8; const o = G.chain.dragonOutcome; t += o === 'slain' ? -8 : o === 'repelled' ? 6 : o === 'pact' ? -12 : o === 'lost' ? 12 : 0; }
+  return t;
+}
+function winProb(a, extra) { if (!a) return 0; return sigm((defenseScore() - threatOf(a) + 3 + (extra || 0)) / WIN_K); }
+/* ---------- timeline tick ---------- */
+function assaultTick() {
+  if (!G.assaults) return;
+  const a = nextAssault(); if (!a) return;
+  if (G.tick % 6 === 0) {
+    const left = a.t - G.tick;
+    if (a.omen < 1 && left <= TICK_YEAR) { a.omen = 1; logEvent('assault_omen', [], { a: a.id, step: 1 }, ['assault'], 0.55, 0.5, { x: FIELD_X0 + 4, y: 20 }); for (let i = 0; i < 3; i++) spawnMonster(Math.min(3, 1 + ASSAULT_ORDER.indexOf(a.id) % 3)); }
+    if (a.omen < 2 && left <= TICK_YEAR / 2) { a.omen = 2; logEvent('assault_omen', [], { a: a.id, step: 2, p: Math.round(winProb(a) * 100) }, ['assault'], 0.6, 0.5, PLAZA); }
+    if (a.omen < 3 && left <= SEASON_T) { a.omen = 3; logEvent('assault_omen', [], { a: a.id, step: 3, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 0.8, 0.7, a.id === 'king' ? BOSS.home : { x: FIELD_X0 + 4, y: 20 }); if (a.id === 'king' && !G.awakened) awaken(); }
+  }
+  if (!G.awakened && G.tick >= G.awakenTick) awaken();
+  if (G.tick >= a.t && !G.battle) startBattle(a);
+}
+/* ---------- prep actions ---------- */
+const PREP = {
+  walls: { n: ['村長に神託：防壁を築く', '向村長降神諭：修築防壁'], d: ['守備↑（2日かけて1段階。糧食30）', '守備↑（花 2 天升 1 級，糧食 30）'], cost: 10, lv: 1, ok: () => G.walls + (G.wallBuild > 0 ? 1 : 0) < wallCap() && G.town.food >= 30 && !(G.wallBuild > 0), run: () => { G.town.food -= 30; G.wallBuild = 2 * TICK_DAY; } },
+  weapons: { n: ['鍛冶に神託：武器を打つ', '向鐵匠降神諭：打造武器'], d: ['戦力↑（冒険者3人の装備+1）', '戰力↑（3 名冒險者裝備 +1）'], cost: 12, lv: 1, ok: () => !G.ruins[bldIdOf('smithy')] && G.humans.some(h => isAdv(h) && h.gear < 6), run: () => { G.humans.filter(h => isAdv(h) && h.gear < 6).sort((a, b) => b.lvl - a.lvl).slice(0, 3).forEach(h => { h.gear++; const st = hStats(h); h.maxHp = st.hp; }); } },
+  train: { n: ['試煉：冒険者に修行させる', '試煉：讓冒險者修行'], d: ['戦力↑（多くがLv+1、けがの危険あり）', '戰力↑（多數 Lv+1，有受傷風險）'], cost: 25, lv: 1, ok: () => G.humans.some(isAdv), run: () => { G.humans.filter(isAdv).forEach(h => { const r = rnd(); if (r < 0.72) addExp(h, 30 * h.lvl); else if (r < 0.9) h.hp = Math.max(1, h.hp * 0.5); }); } },
+  harvest: { n: ['豊穣の恩寵', '豐收恩寵'], d: ['補給↑（糧食+80）', '補給↑（糧食 +80）'], cost: 18, lv: 1, ok: () => G.town.food < 380, run: () => { G.town.food = Math.min(400, G.town.food + 80); } },
+  potions: { n: ['薬師に神託：薬を作る', '向藥師降神諭：製藥'], d: ['補給↑（薬+6）', '補給↑（藥 +6）'], cost: 8, lv: 1, ok: () => G.town.potions < 28, run: () => { G.town.potions = Math.min(30, G.town.potions + 6); } },
+  bless: { n: ['戦前の加護', '戰前加護'], d: ['神の備え↑（攻防の1季前から）', '神的備戰↑（攻防前 1 季內可用）'], cost: 15, lv: 1, ok: () => { const a = nextAssault(); return a && a.t - G.tick <= SEASON_T && (G.prep || 0) < 60; }, run: () => { G.prep = Math.min(60, (G.prep || 0) + 30); } },
+  aid: { n: ['公会長に神託：隣国へ援軍', '向公會長降神諭：向鄰國求援'], d: ['戦力↑（次の攻防だけ）。戦後に糧食60を返礼', '戰力↑（僅下一場）；戰後回禮糧食 60'], cost: 20, lv: 1, ok: () => !G.flags.aid, run: () => { G.flags.aid = 1; } },
+  evac: { n: ['子供と老人を避難させる', '疏散孩童與老人'], d: ['負けた時の犠牲↓、ただし士気↓', '戰敗時傷亡↓，但士氣↓'], cost: 5, lv: 1, ok: () => !G.flags.evac, run: () => { G.flags.evac = 1; } },
+  barrier: { n: ['結界：攻防を1季遅らせる', '結界：攻防延後 1 季'], d: ['準備期間が増える（攻防ごとに1回）', '多 1 季準備（每場 1 次）'], cost: 55, lv: 3, ok: () => { const a = nextAssault(); return a && !a.delayed && a.t - G.tick > 6; }, run: () => { const a = nextAssault(); a.delayed = 1; shiftAssault(a, SEASON_T); } },
+  provoke: { n: ['挑発の啓示：攻防を1季早める', '挑釁啟示：攻防提早 1 季'], d: ['敵の準備不足で脅威↓。畏怖↑・士気↓', '敵方準備不足，威脅↓；畏怖↑、士氣↓'], cost: 0, awe: -15, lv: 3, ok: () => { const a = nextAssault(); return a && !a.provoked && a.t - G.tick > SEASON_T + 6; }, run: () => { const a = nextAssault(); a.provoked = 1; a.t -= SEASON_T; G.moraleMod -= 8; } },
+  dragonTalk: { n: ['竜語：巨竜と語らう', '龍語：與巨龍對話'], d: ['成功すれば巨竜と契約（戦わずに味方に）。失敗すると竜が怒る', '成功則與巨龍締約（不戰而成盟友）；失敗會激怒巨龍'], cost: 40, lv: 3, ok: () => { const a = nextAssault(); return a && a.id === 'dragon' && a.t - G.tick <= TICK_YEAR && !G.dragonPact && !G.flags.talked; }, run: () => { G.flags.talked = 1; const m = defenseParts().morale; const pr = clamp(0.3 + m / 250 + (G.god === 'mercy' ? 0.2 : 0) + (G.balance > 20 ? 0.1 : 0), 0, 0.9); if (rnd() < pr) { G.dragonPact = true; logEvent('dragon_pact', [], { ok: 1 }, ['assault'], 0.85, 0.9, PLAZA); } else { G.chain.dragonAngry = 6; logEvent('dragon_pact', [], { ok: 0 }, ['assault'], 0.6, 0.6, PLAZA); } } },
+};
+const PREP_ORDER = ['walls', 'weapons', 'train', 'harvest', 'potions', 'bless', 'aid', 'evac', 'barrier', 'provoke', 'dragonTalk'];
+function bldIdOf(kind) { const b = W.blds.find(x => x.kind === kind); return b ? b.id : -1; }
+function shiftAssault(a, dt) { a.t += dt; const i = G.assaults.indexOf(a); for (let k = i + 1; k < G.assaults.length; k++) { const p = G.assaults[k - 1], q = G.assaults[k]; if (q.t < p.t + TICK_YEAR / 2) q.t = p.t + TICK_YEAR / 2; } }
+function prepAvailable(id) { const P = PREP[id]; if (!P || !G.assaults || !nextAssault()) return false; if ((G.godLv || 1) < P.lv) return false; if (P.cost > G.faith) return false; if (P.awe && G.awe + P.awe < 0) return false; return P.ok(); }
+function doPrep(id) {
+  if (!prepAvailable(id)) return false; const P = PREP[id]; G.faith -= P.cost; if (P.awe) G.awe = clamp(G.awe + P.awe, 0, G.aweMax); if (id === 'provoke') G.awe = clamp(G.awe + 20, 0, G.aweMax);
+  P.run(); G.stats.preps = (G.stats.preps || 0) + 1; G.prepLog = G.prepLog || []; G.prepLog.push({ id, t: G.tick });
+  logEvent('prep', [], { id }, ['assault'], 0.3, 0.3, PLAZA); return true;
+}
+function prepDelta(id) { // rough effect on win probability, for the advisor and the UI
+  const a = nextAssault(); if (!a) return 0; const p0 = winProb(a); const s = { faith: G.faith, food: G.town.food, potions: G.town.potions, prep: G.prep, walls: G.walls, wallHp: G.wallHp, aid: G.flags.aid, evac: G.flags.evac, mm: G.moraleMod };
+  let p1 = p0;
+  if (id === 'walls') { G.walls = Math.min(wallCap(), G.walls + 1); G.town.food -= 30; } else if (id === 'harvest') G.town.food += 80; else if (id === 'potions') G.town.potions += 6; else if (id === 'bless') G.prep = Math.min(60, G.prep + 30); else if (id === 'aid') G.flags.aid = 1; else if (id === 'evac') G.flags.evac = 1;
+  else if (id === 'weapons' || id === 'train') { const sc = id === 'weapons' ? 0.06 : 0.09; p1 = sigm((defenseScore() + 35 * sc * (id === 'train' ? 1 : 0.8) - threatOf(a) + 3) / WIN_K); }
+  if (id !== 'weapons' && id !== 'train') p1 = winProb(a);
+  if (id === 'provoke') p1 = sigm((defenseScore() - (threatOf(a) - 8) + 3 - 8 * DEF_W.morale) / WIN_K);
+  if (id === 'barrier') p1 = p0 + 0.04;
+  G.faith = s.faith; G.town.food = s.food; G.town.potions = s.potions; G.prep = s.prep; G.walls = s.walls; G.wallHp = s.wallHp; G.flags.aid = s.aid; G.flags.evac = s.evac; G.moraleMod = s.mm;
+  return p1 - p0;
+}
+function advisorPreps(n) { return PREP_ORDER.filter(prepAvailable).filter(id => id !== 'provoke' && id !== 'evac').map(id => ({ id, d: prepDelta(id), c: Math.max(5, PREP[id].cost) })).sort((x, y) => y.d / y.c - x.d / x.c).slice(0, n || 3); }
+function dailyDefense() {
+  if (!G.assaults) return;
+  if (G.wallBuild > 0) { G.wallBuild -= TICK_DAY; if (G.wallBuild <= 0) { G.wallBuild = 0; G.walls = Math.min(wallCap(), G.walls + 1); G.wallHp = 100; logEvent('walls_up', [], { lv: G.walls }, ['assault'], 0.3, 0.4, PLAZA); } }
+  if (G.wallHp < 100 && G.town.food >= 5) { G.wallHp = Math.min(100, G.wallHp + 6); G.town.food -= 1; }
+  for (const id in G.ruins) { if (G.town.food >= 8) { G.ruins[id] -= 25; G.town.food -= 2; if (G.ruins[id] <= 0) { delete G.ruins[id]; logEvent('rebuilt', [], { b: +id }, ['assault'], 0.3, 0.4, PLAZA); } } }
+  G.prep = Math.max(0, (G.prep || 0) - 4);
+  G.moraleMod = (G.moraleMod || 0) * 0.97;
+  G.awe = clamp(G.awe + Math.max(0, -G.balance) / 40 + 0.3 * (G.balance < 70 ? 1 : 0.3), 0, G.aweMax);
+}
+/* ---------- battle ---------- */
+const INTERVENE = {
+  0: [{ id: 'foresight', n: ['預知夢：守りを先に固める', '預知夢：提前布陣'], b: 3, cost: 12, lv: 2 }],
+  1: [{ id: 'guard', n: ['加護：主力を守る', '加護：守護主力'], b: 4, cost: 20, lv: 1 }, { id: 'confuse', n: ['迷い：敵の将を惑わす（畏怖）', '迷惘：迷惑敵將（畏怖）'], b: 4, awe: 18, lv: 2 }],
+  2: [{ id: 'miracle', n: ['奇跡：英雄に力を', '奇蹟：賜英雄力量'], b: 6, cost: 45, lv: 5 }],
+};
+const PHASE_N = [['前哨戦', '前哨戰'], ['本戦', '主戰'], ['決戦', '決勝']];
+function startBattle(a) {
+  a.state = 'battle'; const D = defenseScore(), T = threatOf(a); const L = WIN_K * Math.log(1 / Math.max(1e-6, rnd()) - 1) * -1; // logistic noise
+  a.pred = Math.round(winProb(a) * 100);
+  G.battle = { a: a.id, D, T, L, phase: 0, bonus: 0, choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
+  if (a.id === 'dragon' && G.dragonPact) { G.battle.pact = true; }
+  logEvent('assault_start', [], { a: a.id, p: a.pred, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 1, 0.9, a.id === 'king' ? PLAZA : { x: FIELD_X0, y: 23 });
+  if (G.onBattle) G.onBattle(G.battle);
+}
+function battleOptions(phase) { return (INTERVENE[phase] || []).filter(o => (G.godLv || 1) >= o.lv); }
+function canIntervene(o) { return o.cost ? G.faith >= o.cost : G.awe >= (o.awe || 0); }
+function battleStep(choice) { // choice: option id | 'none' | 'monsters'
+  const B = G.battle; if (!B || B.done) return null;
+  if (B.pact) { finishBattle(); return B; }
+  let bonus = 0; const opt = (INTERVENE[B.phase] || []).find(o => o.id === choice);
+  if (opt && (G.godLv || 1) >= opt.lv && canIntervene(opt)) { if (opt.cost) G.faith -= opt.cost; if (opt.awe) G.awe -= opt.awe; bonus = opt.b; G.stats.interventions = (G.stats.interventions || 0) + 1; }
+  else if (choice === 'monsters') { bonus = -[6, 8, 10][B.phase]; G.awe = clamp(G.awe + [12, 18, 28][B.phase], 0, G.aweMax); B.helpMon++; }
+  B.choices.push(opt || choice === 'monsters' ? (opt ? opt.id : 'monsters') : 'none'); B.bonus += bonus;
+  const part = (B.D - B.T) / 3 + bonus + B.L / 3; B.partial.push(part); B.phase++;
+  if (B.phase >= 3) finishBattle();
+  return B;
+}
+function gradeOf(m) { return m >= 14 ? 'crush' : m >= 4 ? 'win' : m >= -3 ? 'pyrrhic' : m >= -14 ? 'loss' : 'rout'; }
+function finishBattle() {
+  const B = G.battle, a = G.assaults.find(x => x.id === B.a); B.done = true;
+  const m = B.D - B.T + B.bonus + B.L; let grade = B.pact ? 'pact' : gradeOf(m); B.m = m; B.grade = grade; a.predFinal = Math.round(sigm((B.D - B.T + B.bonus + 3) / WIN_K) * 100); a.grade = grade; a.state = 'done';
+  const res = applyConsequences(a, grade); B.res = res; a.res = res; G.battleLog.push({ id: a.id, grade, pred: a.pred, m: Math.round(m), deaths: res.deaths.length, t: G.tick });
+  G.flags.aid = 0; G.flags.evac = 0; G.prep = 0; G.flags.talked = 0; if (G.period && !isWin(grade)) G.period.losses++;
+  settleDecrees('battle', res); if (a.id === 'dragon') settleDecrees('dragon');
+  logEvent('assault_end', res.heroes.slice(0, 2), { a: a.id, grade, win: isWin(grade), mon: ASSAULT_DEF[a.id].mon, deaths: res.deaths.length }, ['assault'], 1, 1, PLAZA);
+  if (G.onBattleEnd) G.onBattleEnd(B);
+  if (a.id === 'king') { if (isWin(grade)) { G.boss.alive = false; logEvent('boss_slain', res.heroes.slice(0, 1), {}, ['boss'], 1, 1, BOSS.home); endGame('victory'); } else endGame('doom'); }
+}
+function isWin(g) { return g === 'crush' || g === 'win' || g === 'pyrrhic' || g === 'pact'; }
+function applyConsequences(a, grade) {
+  const k = ASSAULT_DEF[a.id]; const win = isWin(grade); const res = { deaths: [], ruined: [], levels: [], loot: [], dev: 0, migrants: 0, titles: [], heroes: [] };
+  const advs = G.humans.filter(isAdv).sort((x, y) => advPower(y) - advPower(x)); res.heroes = advs.slice(0, 3).map(h => h.id);
+  if (grade === 'pact') { G.chain.dragonOutcome = 'pact'; G.moraleMod += 10; G.balance = clamp(G.balance + 6, -100, 100); res.note = 'pact'; godXp(15); return res; }
+  // experience
+  advs.forEach((h, i) => { const n = win ? (i < 3 ? rint(2, 4) : rint(1, 2)) : rint(0, 1); for (let j = 0; j < n; j++) addExp(h, 30 * h.lvl); if (n) res.levels.push([h.id, n]); });
+  // casualties
+  const nd = { crush: [0, 1], win: [1, 2], pyrrhic: [2, 4], loss: [4, 7], rout: [7, 11] }[grade]; let dn = Math.round(rint(nd[0], nd[1]) * (k.kind === 'wave' ? 1 : 1.25));
+  const pool = G.humans.filter(h => h.alive && h.age >= 6); const w = h => (isAdv(h) ? 4 : 1) * ((h.child || h.age >= 56) ? (G.flags.evac ? 0.15 : 1) : 1) * (h.job === 'historian' ? 0.2 : 1);
+  for (let i = 0; i < dn && pool.length > 6; i++) { let tot = 0; pool.forEach(h => tot += w(h)); let r = rnd() * tot; let pick = pool[0]; for (const h of pool) { r -= w(h); if (r <= 0) { pick = h; break; } } pool.splice(pool.indexOf(pick), 1); killHuman(pick, 'battle', null); res.deaths.push(pick.id); G.humans.forEach(o => { if (o.alive && o.parent === pick.id && o.age < 16) o.vengeful = 1; }); }
+  res.levels = res.levels.filter(l => !res.deaths.includes(l[0]));
+  // buildings & walls
+  const nr = { crush: 0, win: 0, pyrrhic: 1, loss: 2, rout: 4 }[grade] + (a.id === 'dragon' && G.chain.dragonType === 'village' && !win ? 2 : 0);
+  const cand = W.blds.filter(b => b.kind !== 'castle' && b.kind !== 'mill' && !G.ruins[b.id]); for (let i = 0; i < nr && cand.length; i++) { const b = cand.splice(rint(0, cand.length - 1), 1)[0]; G.ruins[b.id] = 100; res.ruined.push(b.id); }
+  G.wallHp = Math.max(0, G.wallHp - { crush: 5, win: 15, pyrrhic: 35, loss: 60, rout: 90 }[grade]); if (grade === 'rout' && G.walls > 0) G.walls--;
+  // supplies, morale, balance, faith / awe
+  G.town.food = Math.max(0, G.town.food * (win ? 0.85 : 0.6) - (G.flags.aid ? 60 : 0)); G.town.potions = Math.floor(G.town.potions * 0.5); G.town.gearStock = Math.max(0, G.town.gearStock - (win ? 0 : 2));
+  G.moraleMod += { crush: 15, win: 10, pyrrhic: 0, loss: -12, rout: -20 }[grade];
+  G.balance = clamp(G.balance + { crush: 10, win: 6, pyrrhic: 2, loss: -10, rout: -16 }[grade], -100, 100);
+  if (win) G.faith = Math.min(G.faithMax, G.faith + 20); G.awe = clamp(G.awe + (win ? 5 : 25), 0, G.aweMax);
+  const dd = { crush: 3, win: 2, pyrrhic: 1, loss: -2, rout: -4 }[grade]; const dv0 = devLevel(); G.devPts += dd; res.dev = devLevel() - dv0; if (res.dev) logEvent('dev_change', [], { lv: devLevel(), up: res.dev > 0 }, ['assault'], 0.6, 0.6, PLAZA);
+  if (!win) G.territory = (G.territory || 0) + 1;
+  // loot, titles, migrants
+  if (win) {
+    const best = advs[0]; if (best) { const tt = a.id === 'dragon' ? ['竜殺し', '屠龍者'] : a.id === 'king' ? ['勇者', '勇者'] : ['守護者', '守護者']; G.titles[best.id] = tt; res.titles.push([best.id, tt]); }
+    const lt = a.id === 'dragon' ? [['竜殺しの剣', '屠龍劍'], ['竜鱗の鎧', '龍鱗鎧']] : [['魔物の核', '魔物核'], ['精霊銀', '精靈銀']]; res.loot = lt; G.loot.push(...lt); advs.slice(0, a.id === 'dragon' ? 2 : 1).forEach(h => { h.gear = Math.min(8, h.gear + (a.id === 'dragon' ? 2 : 1)); const st = hStats(h); h.maxHp = st.hp; });
+    const mg = grade === 'crush' ? rint(2, 3) : grade === 'win' ? rint(1, 2) : 0; for (let i = 0; i < mg && G.humans.filter(x => x.alive).length < POP_MAX; i++) { addMigrant(); res.migrants++; }
+    if (grade !== 'pyrrhic') logEvent('festival', advs.slice(0, 2).map(h => h.id), { a: a.id }, ['assault'], 0.55, 0.9, PLAZA);
+  }
+  // chains
+  if (a.id === 'wave2') { const w1 = isWin(G.assaults[0].grade), w2 = win; G.chain.dragonType = w1 && w2 ? 'expedition' : (w1 || w2) ? 'field' : 'village'; }
+  if (a.id === 'dragon') G.chain.dragonOutcome = grade === 'crush' || grade === 'win' ? 'slain' : grade === 'pyrrhic' ? 'repelled' : 'lost';
+  if (a.id === 'wave3') G.chain.cadres = win ? 1 : 3;
+  godXp(win ? 25 : 10);
+  return res;
+}
+function addMigrant() {
+  const jobs = ['farmer', 'farmer', 'swordsman', 'mage', 'priest', 'merchant', 'smith', 'herbalist']; const job = rpick(jobs);
+  const homes = W.homes.filter(hi => G.humans.filter(o => o.alive && o.home === hi).length < 5); const home = homes.length ? rpick(homes) : rpick(W.homes);
+  const h = mkHuman({ job, age: rint(18, 34), lvl: job === 'swordsman' || job === 'mage' || job === 'priest' ? rint(2, 4) : 1, home }); const d = homeDoor(h); const p = nearestWalkable(d.x, d.y); placeAt(h, p.x, p.y);
+  G.humans.push(h); G.idx[h.id] = h; logEvent('migrant', [h.id], { job }, [], 0.35, 0.5, h);
+}
+/* auto-resolve battles (no UI attached, or fast-forward) */
+function autoBattle() {
+  const B = G.battle; if (!B || B.done) return;
+  if (B.pact) { finishBattle(); return; }
+  const pol = G.policy || 'none';
+  while (!B.done) {
+    let ch = 'none';
+    if (pol === 'basic') { const opts = battleOptions(B.phase).filter(canIntervene).sort((x, y) => y.b - x.b); if (opts.length) ch = opts[0].id; }
+    battleStep(ch);
+  }
+}
+
+/* ---- 07c_council.js ---- */
+/* ================= V4-A2: god level, council & decrees, edicts, era cards ================= */
+const GOD_LV_XP = [0, 20, 50, 90, 140, 200, 270, 350, 440, 540];
+function godLvOf(xp) { let lv = 1; for (let i = 0; i < GOD_LV_XP.length; i++) if (xp >= GOD_LV_XP[i]) lv = i + 1; return lv; }
+function godXp(n) { G.godXp = (G.godXp || 0) + n; const lv = godLvOf(G.godXp); if (lv > (G.godLv || 1)) { G.godLv = lv; logEvent('god_lv', [], { lv }, ['god'], 0.6, 0.6, PLAZA); } }
+const GOD_SKILL = { 2: ['預知夢・迷い', '預知夢・迷惘'], 3: ['結界・挑発・竜語', '結界・挑釁・龍語'], 5: ['奇跡', '奇蹟'], 6: ['（化身降臨：今後）', '（化身降臨：日後）'] };
+/* decrees: check(when) returns true/false/null(not yet) */
+const DECREES = {
+  noDeath: { side: 'h', n: ['次の攻防で死者を出さない', '下一場攻防零死亡'], at: 'battle', check: r => r.deaths.length === 0 },
+  slayer: { side: 'h', n: ['竜殺しを生む（巨竜を討つ）', '誕生屠龍者（討伐巨龍）'], at: 'dragon', check: () => G.chain.dragonOutcome === 'slain', phase: 0 },
+  hero: { side: 'h', n: ['勇者を誕生させる（剣士Lv6）', '讓勇者誕生（劍士 Lv6）'], at: 'council', check: () => heroAlive() },
+  town: { side: 'h', n: ['村を町に育てる', '把村莊發展成町'], at: 'council', check: () => devLevel() >= 2 },
+  walls3: { side: 'h', n: ['防壁を3段以上にする', '防壁達到 3 級以上'], at: 'council', check: () => G.walls >= 3 },
+  letLose: { side: 'm', n: ['魔物に一戦を取らせる', '讓魔物贏下一場'], at: 'council', check: per => per.losses > 0 },
+  dragonNorth: { side: 'm', n: ['巨竜に北山を占拠させる', '讓巨龍佔據北山'], at: 'dragon', check: () => G.chain.dragonOutcome === 'lost', phase: 0 },
+  awe100: { side: 'm', n: ['畏怖を100以上にする', '畏怖達到 100 以上'], at: 'council', check: () => G.awe >= 100 },
+  balance25: { side: 'b', n: ['天秤を±25の内に保つ（期間の8割）', '天秤維持在 ±25 內（期間 8 成）'], at: 'council', check: per => per.balDays > 0 && per.balIn / per.balDays >= 0.8 },
+  pact: { side: 'b', n: ['巨竜と契約する', '與巨龍締約'], at: 'dragon', check: () => G.chain.dragonOutcome === 'pact', phase: 0 },
+  orphan: { side: 'b', n: ['遺された子を冒険者にする', '讓遺孤成為冒險者'], at: 'council', check: per => per.orphanAdv > 0 },
+};
+const EDICTS = {
+  harvest: { n: ['豊穣の勅', '豐穰之敕'], d: ['糧食+120（信仰30）', '糧食 +120（信仰 30）'], cost: 30, run: () => { G.town.food = Math.min(400, G.town.food + 120); } },
+  unity: { n: ['結束の勅', '團結之敕'], d: ['士気+15（信仰30）', '士氣 +15（信仰 30）'], cost: 30, run: () => { G.moraleMod += 15; } },
+  dread: { n: ['畏れの勅', '畏懼之敕'], d: ['畏怖+40、士気-10', '畏怖 +40、士氣 -10'], cost: 0, run: () => { G.awe = clamp(G.awe + 40, 0, G.aweMax); G.moraleMod -= 10; } },
+};
+function councilOffer(idx) {
+  const rg = new RNG((G.seed * 31 + idx * 977) >>> 0); const pick = arr => arr[rg.int(0, arr.length - 1)];
+  const early = idx === 0; const h = early ? ['slayer', 'hero', 'noDeath', 'walls3'] : ['town', 'noDeath', 'walls3', 'hero'];
+  const m = early ? ['dragonNorth', 'letLose', 'awe100'] : ['letLose', 'awe100']; const b = early ? ['pact', 'balance25', 'orphan'] : ['balance25', 'orphan'];
+  return [pick(h), pick(m), pick(b)];
+}
+function startPeriod() { G.period = { from: G.tick, losses: 0, balDays: 0, balIn: 0, orphanAdv: 0 }; }
+function openCouncil(idx) {
+  // settle decrees that are checked at councils
+  const settled = settleDecrees('council');
+  G.council = { idx, offer: councilOffer(idx), settled, picked: [], edict: null, done: false, t: G.tick };
+  logEvent('council', [], { idx }, ['god'], 0.7, 0.6, PLAZA);
+  if (G.onCouncil) G.onCouncil(G.council);
+}
+function closeCouncil(picked, edict) {
+  const C = G.council; if (!C || C.done) return; C.done = true; C.picked = (picked || []).slice(0, 2);
+  G.decrees = (G.decrees || []).filter(d => d.state !== 'active' || DECREES[d.id].at !== 'council');
+  C.picked.forEach(id => G.decrees.push({ id, from: C.idx, state: 'active', t: G.tick }));
+  if (edict && EDICTS[edict] && G.faith >= EDICTS[edict].cost) { G.faith -= EDICTS[edict].cost; EDICTS[edict].run(); C.edict = edict; G.stats.edicts = (G.stats.edicts || 0) + 1; }
+  startPeriod(); G.stats.decisions = (G.stats.decisions || 0) + 1;
+}
+function settleDecrees(at, ctx) {
+  const out = []; (G.decrees || []).forEach(d => {
+    if (d.state !== 'active') return; const D = DECREES[d.id]; if (!D) return;
+    let ok = null;
+    if (at === 'battle' && D.at === 'battle') ok = D.check(ctx);
+    else if (at === 'dragon' && D.at === 'dragon') ok = D.check(ctx);
+    else if (at === 'council' && D.at === 'council') ok = D.check(G.period || { losses: 0, balDays: 0, balIn: 0, orphanAdv: 0 });
+    if (ok === null) return; d.state = ok ? 'done' : 'fail'; out.push({ id: d.id, ok });
+    if (ok) { godXp(30); if (D.side === 'm') G.awe = clamp(G.awe + 25, 0, G.aweMax); else G.faith = Math.min(G.faithMax, G.faith + 20); }
+  });
+  if (out.length) logEvent('decree_settle', [], { n: out.length, ok: out.filter(o => o.ok).length }, ['god'], 0.5, 0.5, PLAZA);
+  G.decreeLog = (G.decreeLog || []).concat(out.map(o => Object.assign({ t: G.tick }, o)));
+  return out;
+}
+function councilTick() {
+  if (!G.assaults) return;
+  if (!G.councilDone0 && G.tick >= START_TICK + 12 && !G.council) { G.councilDone0 = 1; openCouncil(0); }
+  const dr = G.assaults.find(a => a.id === 'dragon'); if (dr && dr.state === 'done' && !G.councilDone1 && !G.battle) { G.councilDone1 = 1; G.council = null; openCouncil(1); }
+  if (G.council && !G.council.done && !G.uiAttached || G.council && !G.council.done && G.forceAuto) autoCouncil();
+}
+function autoCouncil() { const C = G.council; const pol = G.policy || 'none'; const prefer = C.offer.filter(id => DECREES[id].side !== 'm'); const picked = (pol === 'basic' ? prefer.concat(C.offer) : C.offer).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2); closeCouncil(picked, pol === 'basic' && G.faith > 90 ? 'unity' : null); }
+function periodDaily() {
+  if (!G.period) return; G.period.balDays++; if (Math.abs(G.balance) <= 25) G.period.balIn++;
+}
+/* ---------- era cards (時代の兆し) ---------- */
+const CARDS = {
+  caravan: { n: ['商隊がやって来た', '商隊來了'], d: ['迎え入れれば糧食と金が入る。', '迎接的話，會帶來糧食與金錢。'], opts: { push: { n: ['迎える（信仰5）', '迎接（信仰 5）'], cost: 5, run: () => { G.town.food = Math.min(400, G.town.food + 50); G.town.gold += 60; } }, stop: { n: ['追い返す', '趕走'], run: () => { G.moraleMod -= 2; } } }, rec: 'push' },
+  recruit: { n: ['若者が冒険者を志した', '年輕人想當冒險者'], d: ['後押しすれば戦力が増える。畑の人手は減る。', '推一把會增加戰力，但田裡少了人手。'], opts: { push: { n: ['後押し（信仰8）', '推一把（信仰 8）'], cost: 8, run: () => { const c = G.humans.filter(h => h.alive && h.job === 'farmer' && h.age >= 16 && h.age < 30); if (c.length) { const h = rpick(c); h.job = 'swordsman'; h.adv = true; const st = hStats(h); h.maxHp = st.hp; h.hp = st.hp; logEvent('coming_of_age', [h.id], { job: 'swordsman' }, [], 0.4, 0.5, h); } } }, stop: { n: ['畑に残す', '留在田裡'], run: () => { G.town.food += 20; } } }, rec: 'push' },
+  plague: { n: ['疫病の兆し', '疫病的徵兆'], d: ['止めないと死者が出るかもしれない。', '不阻止的話，可能會有人死去。'], opts: { stop: { n: ['清める（信仰15）', '淨化（信仰 15）'], cost: 15, run: () => { } } }, leave: () => { const c = G.humans.filter(h => h.alive && (h.age >= 56 || h.child)); for (let i = 0; i < Math.min(2, c.length); i++) if (rnd() < 0.5) killHuman(rpick(c), 'illness', null); G.moraleMod -= 5; }, rec: 'stop' },
+  nest: { n: ['魔物の巣が見つかった', '發現魔物巢穴'], d: ['放っておくと魔物の領地が広がる。', '放著不管，魔物的領地會擴大。'], opts: { push: { n: ['冒険者に攻めさせる', '派冒險者進攻'], run: () => { G.humans.filter(isAdv).slice(0, 4).forEach(h => { addExp(h, 20 * h.lvl); if (rnd() < 0.12) h.hp = Math.max(1, h.hp * 0.4); }); } }, stop: { n: ['封じる（信仰20）', '封印（信仰 20）'], cost: 20, run: () => { G.territory = Math.max(0, (G.territory || 0) - 1); } } }, leave: () => { G.territory = (G.territory || 0) + 1; }, rec: 'push' },
+  festival: { n: ['祭りをしたいと声が上がった', '有人提議辦祭典'], d: ['糧食を使うが、士気が上がる。', '會用掉糧食，但士氣會上升。'], opts: { push: { n: ['祭りを開く（糧食40）', '舉辦祭典（糧食 40）'], run: () => { G.town.food = Math.max(0, G.town.food - 40); G.moraleMod += 8; } }, stop: { n: ['見送る', '先不辦'], run: () => { } } }, rec: 'push', need: () => G.town.food > 120 },
+  migrants: { n: ['移民の一団が来た', '一群移民到來'], d: ['受け入れると人が増える。糧食は減る。', '接納的話人口增加，糧食會減少。'], opts: { push: { n: ['受け入れる（糧食30）', '接納（糧食 30）'], run: () => { G.town.food = Math.max(0, G.town.food - 30); addMigrant(); addMigrant(); } }, stop: { n: ['断る', '拒絕'], run: () => { } } }, rec: 'push', need: () => G.humans.filter(h => h.alive).length < POP_MAX - 4 },
+  rumor: { n: ['不穏なうわさが広がっている', '不安的謠言在擴散'], d: ['放っておくと士気が下がり、畏怖が増える。', '放著不管士氣會下降，畏怖會增加。'], opts: { stop: { n: ['お告げで鎮める（信仰10）', '以神諭平息（信仰 10）'], cost: 10, run: () => { } } }, leave: () => { G.moraleMod -= 6; G.awe = clamp(G.awe + 10, 0, G.aweMax); }, rec: 'stop' },
+  smithIdea: { n: ['鍛冶が新しい技を思いついた', '鐵匠想到了新技術'], d: ['後押しすれば装備がよくなる。', '推一把的話裝備會變好。'], opts: { push: { n: ['後押し（信仰12）', '推一把（信仰 12）'], cost: 12, run: () => { G.town.gearStock = Math.min(10, G.town.gearStock + 3); G.humans.filter(isAdv).slice(0, 2).forEach(h => { h.gear = Math.min(8, h.gear + 1); }); } } }, rec: 'push', need: () => !G.ruins[bldIdOf('smithy')] },
+  envoy: { n: ['魔王軍の密使が現れた', '魔王軍密使現身'], d: ['通せば畏怖が増えるが、魔王軍が強くなる。', '放行的話畏怖增加，但魔王軍變強。'], opts: { push: { n: ['通す（畏怖+20）', '放行（畏怖 +20）'], run: () => { G.awe = clamp(G.awe + 20, 0, G.aweMax); G.chain.cadres = (G.chain.cadres || 2) + 1; } }, stop: { n: ['追い払う（信仰10）', '驅逐（信仰 10）'], cost: 10, run: () => { } } }, rec: 'stop', need: () => yearOf(G.tick) >= 5 },
+};
+const CARD_KEYS = Object.keys(CARDS);
+function cardTick() {
+  if (!G.assaults || G.ending) return;
+  if (G.tick % TICK_DAY === 0) {
+    G.cards = (G.cards || []).filter(c => { if (G.tick - c.t >= 2 * TICK_DAY) { resolveCard(c, 'leave'); return false; } return true; });
+    if (dayIdx(G.tick) % 3 === 1 && (G.cards || []).length < 1 && rnd() < 0.7) {
+      const n = 1; for (let i = 0; i < n; i++) { const pool = CARD_KEYS.filter(k => (!CARDS[k].need || CARDS[k].need()) && !(G.cards || []).some(c => c.id === k) && G.tick - ((G.cardSeen || {})[k] || -1e9) > 4 * SEASON_T); if (!pool.length) break; const id = rpick(pool); (G.cardSeen = G.cardSeen || {})[id] = G.tick; G.cards.push({ id, t: G.tick, n: G.nid++ }); if (G.onCard) G.onCard(id); }
+    }
+  }
+  if ((G.cards || []).length && (!G.uiAttached || G.forceAuto)) { const pol = G.policy || 'none'; G.cards.slice().forEach(c => { if (pol === 'basic') { const C = CARDS[c.id]; const o = C.opts[C.rec]; decideCard(c.n, o && (!o.cost || G.faith >= o.cost + 30) ? C.rec : 'leave'); } else decideCard(c.n, 'leave'); }); }
+}
+function resolveCard(c, opt) {
+  const C = CARDS[c.id]; if (!C) return; if (opt === 'leave') { if (C.leave) C.leave(); } else { const o = C.opts[opt]; if (!o) return; if (o.cost && G.faith < o.cost) { if (C.leave) C.leave(); return; } if (o.cost) G.faith -= o.cost; o.run(); }
+  G.stats.decisions = (G.stats.decisions || 0) + (opt === 'leave' ? 0 : 1); G.cardLog = (G.cardLog || []).concat([{ id: c.id, opt, t: G.tick }]); G.stats.cards = (G.stats.cards || 0) + 1;
+}
+function decideCard(n, opt) { const i = (G.cards || []).findIndex(c => c.n === n); if (i < 0) return false; const c = G.cards.splice(i, 1)[0]; resolveCard(c, opt); return true; }
+/* ---------- event tiers (S: stop & show, A: highlight, B: routine summary) ---------- */
+const FEED_S = { assault_start: 1, assault_end: 1, hero_born: 1, boss_awaken: 1, dragon_pact: 1, council: 1, boss_slain: 1, ending_doom: 1, ending_victory: 1, ending_godleft: 1 };
+const FEED_A = { death: 1, marriage: 1, betrayal: 1, birth: 1, love_start: 1, dev_change: 1, festival: 1, promotion: 1, god_lv: 1, decree_settle: 1, master_farewell: 1, destined_reunion: 1, miracle: 1, reincarnation: 1 };
+const FEED_B = { party_formed: 1, quest_clear: 1, quest_fail: 1, first_battle: 1, prep: 1, walls_up: 1, rebuilt: 1, coming_of_age: 1, migrant: 1, gear: 1, quarrel: 1, reconcile: 1, love_notice: 1, divine_act: 1, prayer_expired: 1, monster_raid: 1 };
+function feedClass(ev) { if (ev.type === 'assault_omen') return ev.payload && ev.payload.step === 3 ? 'S' : 'A'; if (FEED_S[ev.type]) return 'S'; if (FEED_A[ev.type]) return 'A'; if (FEED_B[ev.type]) return 'B'; return ev.tension >= 0.6 ? 'A' : null; }
 
 /* ---- 08_faith.js ---- */
 /* ================= faith / divine powers / counsel / policy ================= */
@@ -1333,7 +1651,7 @@ function castPower(pid, tid, dir) {
   if (pid === 'oracle') G.tut.oracle = true;
   if (pid === 'soul') res.dir = dir || 'good'; if (pid === 'force') res.dir = dir || 'light';
   res.gain = G._gain || 0; res.pk = G._pk || ''; res.bal = G.balance - bal0; G._gain = 0; G._pk = '';
-  G.stats.lastCast = res;
+  G.stats.lastCast = res; if (outcome === 'success' || outcome === 'crit') godXp(1);
   if (G.fxOn) { G.fx.push({ t: 'divine', x: h ? h.x : tgtH ? tgtH.x : PLAZA.x, y: h ? h.y : tgtH ? tgtH.y : PLAZA.y, pid, out: outcome }); }
   const rsv = h ? G.fores.some(f => f.state === 'open' && f.hid === h.id && (f.type === 'dream' || f.type === 'wish')) : false;
   if (h && (outcome === 'crit' || outcome === 'success') && pid !== 'force') { G.bigActs.push({ pid, out: outcome, name: h.name, t: G.tick }); G.bigActs.sort((a, b) => (b.out === 'crit') - (a.out === 'crit')); if (G.bigActs.length > 6) G.bigActs.length = 6; }
@@ -1457,6 +1775,7 @@ function counselActions(goal) {
 /* ---------- auto policy ('basic') ---------- */
 function policyBasic() {
   if (G.tick % 6 !== 0) return;
+  if (G.assaults && policyPrep()) return;
   const yr = yearOf(G.tick);
   const bank = G.awakened ? 120 : yr >= 5 ? 100 : 26;
   let n = 0;
@@ -1485,6 +1804,19 @@ function policyBasic() {
   }
   if (!G.awakened && n < 1 && G.faith > 70 + 15) { const hurt = G.humans.filter(h => h.alive && isAdv(h) && h.hp < h.maxHp * 0.5 && !h.inside)[0]; if (hurt && rchance(0.3)) { castPower('grace', hurt.id); n++; } }
   if (!G.awakened && yr <= 4 && G.faith > 90 && n < 1 && rchance(0.08)) { const y = G.humans.filter(h => h.alive && isAdv(h) && h.hp > h.maxHp * 0.9).sort((a, b) => a.lvl - b.lvl)[0]; if (y) castPower('trial', y.id); }
+}
+
+/* V4: preparation policy used by the 'basic' auto-player (follows the advisor) */
+function policyPrep() {
+  const a = nextAssault(); if (!a) return false; const left = a.t - G.tick;
+  if (a.id === 'dragon' && left <= TICK_YEAR && prepAvailable('dragonTalk') && (((G.seed * 2654435761) >>> 0) % 100 < (G.god === 'mercy' ? 60 : 25))) { doPrep('dragonTalk'); return true; }
+  const talkPlan = a.id === 'dragon' && !G.dragonPact && !G.flags.talked && (G.godLv || 1) >= PREP.dragonTalk.lv && (((G.seed * 2654435761) >>> 0) % 100 < (G.god === 'mercy' ? 60 : 25));
+  if (talkPlan && left <= TICK_YEAR * 1.3 && (left > TICK_YEAR || G.faith < 40)) return true;
+  if (left > TICK_YEAR) return false;
+  const reserve = left <= SEASON_T ? 30 : 45;
+  for (const s of advisorPreps(3)) { if (G.faith >= PREP[s.id].cost + reserve && s.d > 0.005) { doPrep(s.id); return true; } }
+  if (left <= SEASON_T && prepAvailable('bless') && G.faith >= 15 + 25) { doPrep('bless'); return true; }
+  return false;
 }
 
 /* ---- 09_chron.js ---- */
@@ -1718,11 +2050,15 @@ function sceneFor(ev) {
     case 'destined_reunion': return 'reunion'; case 'soul_echo': return 'awakening'; case 'reincarnation': return p.echo ? 'echo_dream' : null;
     case 'boss_awaken': case 'boss_sortie': return 'omen';
     case 'cadre_slain': return 'battle'; case 'boss_slain': return 'revelation';
+    case 'assault_omen': return p.step === 3 && (p.a === 'dragon' || p.a === 'king') ? 'omen' : null;
+    case 'assault_start': return p.a === 'dragon' || p.a === 'king' ? 'eve' : null;
+    case 'assault_end': return p.win ? 'battle' : 'siege';
+    case 'festival': return 'family_day'; case 'hero_born': return 'promotion'; case 'dragon_pact': return p.ok ? 'answered' : null;
     case 'ending_doom': return 'finale_doom'; case 'ending_godleft': return 'finale_godleft'; case 'ending_stagnant': return 'finale_stagnant';
   }
   return null;
 }
-const FORCE_EV = { master_farewell: 1, boss_awaken: 1, boss_slain: 1, boss_sortie: 1, ending_doom: 1, ending_godleft: 1, ending_stagnant: 1, boss_expedition: 1, cadre_slain: 1 };
+const FORCE_EV = { assault_omen: 1, assault_start: 1, assault_end: 1, master_farewell: 1, boss_awaken: 1, boss_slain: 1, boss_sortie: 1, ending_doom: 1, ending_godleft: 1, ending_stagnant: 1, boss_expedition: 1, cadre_slain: 1 };
 const TURNING = { death: 0.9, boss_awaken: 1, boss_slain: 1, cadre_slain: 0.9, boss_expedition: 0.95, marriage: 0.7, love_start: 0.65, betrayal: 0.7, reconcile: 0.6, destined_reunion: 0.9, soul_echo: 0.8, miracle: 0.8, monster_raid: 0.55, siege: 0.8, birth: 0.6, promotion: 0.5, quest_fail: 0.5, first_battle: 0.55, divine_act: 0.5, love_notice: 0.5, reincarnation: 0.7, prayer_expired: 0.4 };
 function protOf(ev) { return ev.actors[0] || 0; }
 function dramaScore(ev) {
@@ -1750,9 +2086,9 @@ function infoOf(id, otherId) { const h = G.idx[id]; if (!h) return null; const o
 function castOf(ev, sc, seed) {
   const rg = new RNG(seed); const meta = SMETA[sc] || {}; let ids = ev.actors.filter(i => G.idx[i] && G.idx[i].alive !== false || (ev.names && ev.names[i])).slice(0, 3);
   ids = ids.filter((i, k) => ids.indexOf(i) === k);
-  const hero = () => { const a = G.humans.filter(h => h.alive && isAdv(h)).sort((x, y) => advPower(y) - advPower(x)); return a[0] ? a[0].id : 0; };
-  if (meta.kind === 'war' && (!ids.length || sc === 'omen' || sc === 'siege' || sc === 'raid')) { const hid = hero(); if (hid) ids = [hid].concat(ids.filter(i => i !== hid)); }
-  if (!ids.length && !(sc === 'prologue')) { const a = G.humans.filter(h => h.alive && h.age >= 16); if (a.length) ids = [rg.pick(a).id]; }
+  const hero = () => { const mh = G.idx[G.main]; if (mh && mh.alive && isAdv(mh)) return mh.id; const a = G.humans.filter(h => h.alive && isAdv(h)).sort((x, y) => advPower(y) - advPower(x)); return a[0] ? a[0].id : 0; };
+  if (meta.kind === 'war' && (!ids.length || sc === 'omen' || sc === 'siege' || sc === 'raid' || (ev.type === 'assault_end' && ids.indexOf(G.main) < 0))) { const hid = hero(); if (hid) ids = [hid].concat(ids.filter(i => i !== hid)); }
+  if (!ids.length && !(sc === 'prologue')) { let a = G.humans.filter(h => h.alive && h.age >= 16); if (!a.length) a = G.humans.filter(h => h.alive); if (a.length) ids = [rg.pick(a).id]; }
   if (sc === 'funeral' && ids.length) { const d = G.idx[ids[0]]; let b = 0; if (d) { const rl = relatedList(d); b = rl[0] || 0; } if (b && ids.indexOf(b) < 0) ids.push(b); }
   else if (ids.length < 2 && ids.length) { const b = partnerOf(G.idx[ids[0]]); if (b && ids.indexOf(b) < 0) ids.push(b); }
   if (ids.length < 2 && ids.length && (meta.kind === 'war' || FORCE_EV[ev.type])) { const h0 = G.idx[ids[0]]; const o = G.humans.filter(h => h.alive && isAdv(h) && h.id !== ids[0]).sort((x, y) => ((h0 && h0.rel[y.id]) || 0) - ((h0 && h0.rel[x.id]) || 0) || advPower(y) - advPower(x))[0]; if (o) ids.push(o.id); }
@@ -1784,6 +2120,7 @@ function makeChapter(scene, ev, over) {
   const meta = SMETA[scene] || {}; const fx = over && over.fixedKey;
   let ids = ev ? (fx ? ev.actors.slice(0, 2).filter(i => G.idx[i]) : castOf(ev, scene, seed)) : [];
   if (fx && fx !== 'master_farewell' && fx !== 'prologue' && !ids.length) ids = [];
+  if (ev && !fx && !ids.length) { ev.used = true; return null; }
   const forced = !!(ev && FORCE_EV[ev.type]);
   if (ev && !fx && SCN[scene] && ids.length) { const h0 = G.idx[ids[0]]; if (h0 && !povJobOK(scene, h0.job)) { ev.used = true; return null; } if (ids.length < 2 && !forced) { if (meta.prot === 2 || scene === 'funeral' || !singleOK(scene)) { ev.used = true; return null; } } }
   const an = {}, info = {}; ids.forEach((i, k) => { const e = G.idx[i]; an[i] = (ev && ev.names && ev.names[i]) || (e && e.name) || ['？', '？']; info[i] = infoOf(i, k === 0 ? (ids[1] || 0) : ids[0]) || {}; });
@@ -1836,14 +2173,14 @@ function makeChapter(scene, ev, over) {
   // ----- foreshadow: resolve / plant -----
   if (!fx && SCN[scene] && ids.length) {
     const rs = RESOLVE[scene] || [];
-    G.fores.forEach(f => { if (f.state === 'open' && rs.indexOf(f.type) >= 0 && ids.indexOf(f.hid) >= 0 && G.tick - f.planted > 36 && G.tick - f.planted < 3 * TICK_YEAR) { f.state = 'done'; f.doneAt = G.tick; { const pin = f.partner && ids.indexOf(f.partner) < 0 ? infoOf(f.partner, ids[0]) : null; const lab = pin ? (pin.rel || (pin.job && JOBS[pin.job] ? JOBS[pin.job].n : null)) : null; ch.res.push({ ty: f.type, kept: scene !== 'funeral' && scene !== 'defeat', v: Object.assign({}, f.v, { lab }) }); } } });
-    (PLANT[scene] || []).filter(ty => ty !== 'promise').forEach(ty => { if (ids[0] && !G.fores.some(f => f.hid === ids[0] && f.type === ty && (f.state === 'open' || G.tick - f.planted < TICK_YEAR))) { G.fores.push({ id: G.nid++, type: ty, hid: ids[0], partner: ids[1] || 0, planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null } }); } });
+    G.fores.forEach(f => { if (f.state === 'open' && rs.indexOf(f.type) >= 0 && ids.indexOf(f.hid) >= 0 && G.tick - f.planted > 36 && G.tick - f.planted < 3 * TICK_YEAR) { f.state = 'done'; f.doneAt = G.tick; { const pin = f.partner && f.partner !== ids[0] ? infoOf(f.partner, ids[0]) : null; const lab = pin ? (pin.rel || (pin.job && JOBS[pin.job] ? JOBS[pin.job].n : null)) : null; ch.res.push({ ty: f.type, kept: scene !== 'funeral' && scene !== 'defeat', v: Object.assign({}, f.v, { lab }) }); } } });
+    (PLANT[scene] || []).filter(ty => ty !== 'promise').forEach(ty => { if (ids[0] && !G.fores.some(f => f.hid === ids[0] && f.type === ty && (f.state === 'open' || G.tick - f.planted < TICK_YEAR))) { G.fores.push({ id: G.nid++, type: ty, hid: ids[0], partner: ids[1] || 0, planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null, lab: (info[ids[1]] && info[ids[1]].rel) || (G.idx[ids[1]] && JOBS[G.idx[ids[1]].job] ? JOBS[G.idx[ids[1]].job].n : null) } }); } });
     if (G.fores.length > 150) G.fores = G.fores.filter(f => f.state === 'open' || G.tick - f.planted < 2 * TICK_YEAR);
   }
   ch.pk = computePicks(ch, rg);
   if (mainH && ids[0] && ids[0] !== G.main && G.idx[ids[0]]) ch.relMain = relKey(mainH, G.idx[ids[0]]);
   { const pc = G.chapters[G.chapters.length - 1]; ch.cont = !!(pc && pc.who && who[0] && pc.who[0] === who[0]); const kk = ch.cont ? 'c' : (ch.relMain ? 'r' : 'p'); ch.trI = pickUniq(rg, 'TR.' + kk + '.' + (ids[0] || 0), kk === 'c' ? 6 : 8); }
-  if ((scene === 'depart' || scene === 'eve') && ids.length >= 2 && SCN[scene]) { const k = SCN[scene].talk.indexOf('promise'); if (k >= 0 && ch.pk['l' + k] >= 0) { ch.promised = true; memOf(G.idx[ids[0]]).promise = { who: ids[1], ref: ch.id, t: G.tick }; if (G.idx[ids[1]]) memOf(G.idx[ids[1]]).promise = { who: ids[0], ref: ch.id, t: G.tick }; G.fores.push({ id: G.nid++, type: 'promise', hid: ids[0], partner: ids[1], planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null } }); } }
+  if ((scene === 'depart' || scene === 'eve') && ids.length >= 2 && SCN[scene]) { const k = SCN[scene].talk.indexOf('promise'); if (k >= 0 && ch.pk['l' + k] >= 0) { ch.promised = true; memOf(G.idx[ids[0]]).promise = { who: ids[1], ref: ch.id, t: G.tick }; if (G.idx[ids[1]]) memOf(G.idx[ids[1]]).promise = { who: ids[0], ref: ch.id, t: G.tick }; G.fores.push({ id: G.nid++, type: 'promise', hid: ids[0], partner: ids[1], planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null, lab: (info[ids[1]] && info[ids[1]].rel) || (G.idx[ids[1]] && JOBS[G.idx[ids[1]].job] ? JOBS[G.idx[ids[1]].job].n : null) } }); } }
   G.chapters.push(ch); if (G.chapters.length > 400) G.chapters.splice(0, 40);
   if (ev) { ev.used = true; ev.ch = ch.id; }
   // summary for recap / final review
@@ -1907,8 +2244,8 @@ function chronTick() {
     if (G.tick - ((G.lastScene || {})[sc] || -999) < (SC_CD[sc] || 150)) continue;
     const s = dramaScore(ev); if (s > bs) { bs = s; best = ev; }
   }
-  const since = (G.tick - (G.lastChapTick || 0)) / (1 + Math.max(0, G.chapNo - 55) / 40) * (G.tick < START_TICK + 3 * TICK_YEAR ? 0.14 : 1);
-  if (G.tick < START_TICK + 3 * TICK_YEAR && G.chapNo > 7) return;
+  const since = (G.tick - (G.lastChapTick || 0)) / (G.assaults ? 1 + Math.max(0, G.chapNo - 32) / 10 : 1 + Math.max(0, G.chapNo - 55) / 40) * (G.tick < START_TICK + 3 * TICK_YEAR ? 0.14 : 1);
+  if (G.tick < START_TICK + 3 * TICK_YEAR && G.chapNo > (G.assaults ? 4 : 7)) return;
   if (best && ((bs >= 0.5 && since >= TUNE_STORY.gap) || (bs >= 0.3 && since >= TUNE_STORY.slow) || (bs >= 0.78 && since >= 36))) {
     const sc = sceneFor(best); const ch0 = makeChapter(sc, best); if (!ch0) return; G.lastChapTick = G.tick; G.lastScene = G.lastScene || {}; G.lastScene[sc] = G.tick;
     G.events.forEach(e => { if (!e.used && ((e.type === best.type && Math.abs(e.t - best.t) < 12) || (e.t < best.t && !FORCE_EV[e.type]))) { noteEvent(e); } });
@@ -2071,7 +2408,7 @@ const CB = {
   echo: [['{A}は時々、知らないはずの町の夢を見る。', '{A}有時會夢到明明不認識的城鎮。'], ['なぜか{A}には、見たこともない人の顔がなつかしく思えた。', '不知為什麼，{A}覺得那些沒見過的人臉，似曾相識。'], ['{V}という名前が、{A}の頭のすみにずっと残っていた。', '{V}這個名字，一直留在{A}腦海的一角。'], ['どこかで聞いたことのある歌を、{A}は口ずさんでいた。', '{A}哼著不知在哪聽過的歌。']],
 };
 const FRES = {
-  promise: { k: [['{A}は、{B}との約束を守ることができた。', '{A}守住了和{B}的約定。'], ['「戻る」と言った約束は、こうして果たされた。', '說好「會回來」的約定，就這樣實現了。'], ['{B}に言った「必ず」は、うそではなかった。', '對{B}說的「一定」，不是謊話。']], b: [['{B}との約束は、守れなかった。それでも、{A}の気持ちは本物だった。', '和{B}的約定沒能守住，但{A}的心意是真的。'], ['果たせなかった約束だけが、あとに残った。', '只剩下沒能實現的約定。'], ['「必ず戻る」。その言葉は、{B}の耳に残り続けるだろう。', '那句「一定回來」，會一直留在{B}的耳邊吧。']] },
+  promise: { k: [['{A}は、{B}との約束を守ることができた。', '{A}守住了和{B}的約定。'], ['「戻る」と言った約束は、こうして果たされた。', '說好「會回來」的約定，就這樣實現了。'], ['{B}に言った「必ず」は、うそではなかった。', '對{B}說的「一定」，不是謊話。'], ['{A}は帰ってきた。{B}と交わした約束のとおりに。', '{A}回來了，就像和{B}約好的那樣。'], ['{B}の前に立って、{A}は小さくうなずいた。約束は守られた。', '{A}站在{B}面前，輕輕點了點頭。約定守住了。']], b: [['{B}との約束は、守れなかった。それでも、{A}の気持ちは本物だった。', '和{B}的約定沒能守住，但{A}的心意是真的。'], ['果たせなかった約束だけが、あとに残った。', '只剩下沒能實現的約定。'], ['「必ず戻る」。その言葉は、{B}の耳に残り続けるだろう。', '那句「一定回來」，會一直留在{B}的耳邊吧。']] },
   dream: { k: [['あの夢で聞いた声は、このことだったのかもしれない。', '那個夢裡聽到的聲音，說的或許就是這件事。'], ['夢のなかのお告げが、いま形になった。', '夢中的神諭，現在成真了。'], ['{A}は、あの夜の夢を思い出していた。夢は、うそではなかった。', '{A}想起那一晚的夢，夢並沒有騙人。']], b: [['あの夢は、こんな結末を教えていたのだろうか。', '那個夢，是在預告這樣的結局嗎？'], ['夢のお告げは、いつも少し遅れて意味が分かる。', '夢中的神諭，總是晚一點才懂意思。'], ['{A}は、あの夜の夢を忘れようとした。', '{A}試著忘掉那一晚的夢。']] },
   secret: { k: [['ずっと隠してきたことを、{A}はついに口にした。', '一直隱瞞的事，{A}終於說出口了。'], ['ひみつを話すと、{A}の肩は少し軽くなった。', '說出秘密後，{A}的肩膀輕了一些。'], ['{A}の心にささっていたとげが、やっと抜けた。', '扎在{A}心上的刺，終於拔掉了。']], b: [['{A}のひみつは、だれにも知られないまま残った。', '{A}的祕密，在沒人知道的情況下被留了下來。'], ['言えなかった言葉は、{A}といっしょに眠った。', '沒能說出口的話，和{A}一起長眠了。'], ['ひみつは、ひみつのまま終わった。', '祕密，就這樣一直是祕密。']] },
   omen: { k: [['あの日の空の色は、この日のことを知らせていたのだ。', '那天天空的顏色，就是在預告今天的事。'], ['不吉な兆しは、やはり本物だった。', '不祥的徵兆，果然是真的。'], ['「嵐が来る」という予感は、当たっていた。', '「暴風雨要來了」的預感，說中了。']], b: [['兆しを知っていても、人は止められなかった。', '即使知道徵兆，人們也沒能阻止。'], ['もっと早く気づいていれば、と{A}は思った。', '{A}心想：要是能早點發現就好了。'], ['兆しは、ずっと前から出ていた。', '徵兆，早就出現了。']] },
@@ -2513,7 +2850,7 @@ const RT = {
       adv: G.humans.filter(h => h.alive && isAdv(h)).length, monsters: G.monsters.filter(m => m.alive && !m.dormant).length, prayers: openPrayers().length, stats: G.stats };
   },
   setSpeed(n) { if (typeof Game !== 'undefined') Game.setSpeed(n); },
-  step(n) { for (let i = 0; i < n && !G.ending; i++) tick(); return G.tick; },
+  step(n) { G.forceAuto = 1; try { for (let i = 0; i < n && !G.ending; i++) tick(); } finally { G.forceAuto = 0; } return G.tick; },
   seed(n) { newGame({ seed: n, god: G.god, lang: LANG }); },
   newGame(o) { newGame(o); if (typeof Game !== 'undefined' && Game.afterNew) Game.afterNew(); return RT.state(); },
   policy(p) { G.policy = p; },

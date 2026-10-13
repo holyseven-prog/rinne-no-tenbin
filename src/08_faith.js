@@ -65,7 +65,7 @@ function castPower(pid, tid, dir) {
   if (pid === 'oracle') G.tut.oracle = true;
   if (pid === 'soul') res.dir = dir || 'good'; if (pid === 'force') res.dir = dir || 'light';
   res.gain = G._gain || 0; res.pk = G._pk || ''; res.bal = G.balance - bal0; G._gain = 0; G._pk = '';
-  G.stats.lastCast = res;
+  G.stats.lastCast = res; if (outcome === 'success' || outcome === 'crit') godXp(1);
   if (G.fxOn) { G.fx.push({ t: 'divine', x: h ? h.x : tgtH ? tgtH.x : PLAZA.x, y: h ? h.y : tgtH ? tgtH.y : PLAZA.y, pid, out: outcome }); }
   const rsv = h ? G.fores.some(f => f.state === 'open' && f.hid === h.id && (f.type === 'dream' || f.type === 'wish')) : false;
   if (h && (outcome === 'crit' || outcome === 'success') && pid !== 'force') { G.bigActs.push({ pid, out: outcome, name: h.name, t: G.tick }); G.bigActs.sort((a, b) => (b.out === 'crit') - (a.out === 'crit')); if (G.bigActs.length > 6) G.bigActs.length = 6; }
@@ -189,6 +189,7 @@ function counselActions(goal) {
 /* ---------- auto policy ('basic') ---------- */
 function policyBasic() {
   if (G.tick % 6 !== 0) return;
+  if (G.assaults && policyPrep()) return;
   const yr = yearOf(G.tick);
   const bank = G.awakened ? 120 : yr >= 5 ? 100 : 26;
   let n = 0;
@@ -217,4 +218,17 @@ function policyBasic() {
   }
   if (!G.awakened && n < 1 && G.faith > 70 + 15) { const hurt = G.humans.filter(h => h.alive && isAdv(h) && h.hp < h.maxHp * 0.5 && !h.inside)[0]; if (hurt && rchance(0.3)) { castPower('grace', hurt.id); n++; } }
   if (!G.awakened && yr <= 4 && G.faith > 90 && n < 1 && rchance(0.08)) { const y = G.humans.filter(h => h.alive && isAdv(h) && h.hp > h.maxHp * 0.9).sort((a, b) => a.lvl - b.lvl)[0]; if (y) castPower('trial', y.id); }
+}
+
+/* V4: preparation policy used by the 'basic' auto-player (follows the advisor) */
+function policyPrep() {
+  const a = nextAssault(); if (!a) return false; const left = a.t - G.tick;
+  if (a.id === 'dragon' && left <= TICK_YEAR && prepAvailable('dragonTalk') && (((G.seed * 2654435761) >>> 0) % 100 < (G.god === 'mercy' ? 60 : 25))) { doPrep('dragonTalk'); return true; }
+  const talkPlan = a.id === 'dragon' && !G.dragonPact && !G.flags.talked && (G.godLv || 1) >= PREP.dragonTalk.lv && (((G.seed * 2654435761) >>> 0) % 100 < (G.god === 'mercy' ? 60 : 25));
+  if (talkPlan && left <= TICK_YEAR * 1.3 && (left > TICK_YEAR || G.faith < 40)) return true;
+  if (left > TICK_YEAR) return false;
+  const reserve = left <= SEASON_T ? 30 : 45;
+  for (const s of advisorPreps(3)) { if (G.faith >= PREP[s.id].cost + reserve && s.d > 0.005) { doPrep(s.id); return true; } }
+  if (left <= SEASON_T && prepAvailable('bless') && G.faith >= 15 + 25) { doPrep('bless'); return true; }
+  return false;
 }

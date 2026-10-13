@@ -47,7 +47,7 @@ function updateHuman(h) {
 
 function becomeAdult(h) {
   h.child = false; const s = soulOf(h);
-  const job = pickJobForSoul(s);
+  let job = pickJobForSoul(s); if (h.vengeful && rnd() < 0.7) { job = rpick(['swordsman', 'swordsman', 'mage', 'priest']); if (G.period) G.period.orphanAdv++; }
   h.job = job; h.adv = !!JOBS[job].adv && !(job === 'priest' && rchance(0.35)); h.lvl = Math.max(1, h.lvl);
   const st = hStats(h); h.maxHp = st.hp; h.hp = st.hp; h.look.cloth = JOB_CLOTH[job];
   logEvent('coming_of_age', [h.id], { job }, [], 0.3, 0.5);
@@ -266,6 +266,7 @@ function addExp(h, v) {
     if (G.fxOn) G.fx.push({ t: 'lvl', x: h.x, y: h.y });
     if (h.master && h.lvl === 8) { const ms = hById(h.master); if (ms && ms.alive) logEvent('mentor_parting', [ms.id, h.id], {}, ['relation'], 0.6, 0.8, h); h.master = 0; }
     if (h.lvl === 5 || h.lvl === 10 || h.lvl === 15) logEvent('promotion', [h.id], { lvl: h.lvl }, ['growth'], 0.5, 0.7, h);
+    if (h.lvl === 6 && h.job === 'swordsman' && h.age < 56) logEvent('hero_born', [h.id], {}, ['growth'], 0.9, 0.9, h);
   }
 }
 

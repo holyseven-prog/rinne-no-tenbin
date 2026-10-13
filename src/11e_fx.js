@@ -71,3 +71,18 @@ Render.drawDivine = function (c, cx, cy) {
   c.globalCompositeOperation = 'source-over';
   if (b.life <= 0) this.beam = null;
 };
+
+/* ---- V4: palisade / stone walls by level, ruined buildings (smoke & fire), the dragon's lair ---- */
+Render.drawDefense = function (c, cx, cy, sea) {
+  const t = this.time; const lv = G.walls || 0; const hpf = (G.wallHp === undefined ? 100 : G.wallHp) / 100;
+  const stake = (wx, wy, stone) => { const sx = wx - cx, sy = wy - cy; if (sx < -16 || sx > 656 || sy < -20 || sy > 380) return; if (stone) { fr(c, '#3a3a48', sx - 1, sy - 9, 10, 12); fr(c, '#8a8a9a', sx, sy - 8, 8, 10); fr(c, '#b0b0c0', sx, sy - 8, 8, 2); fr(c, '#5a5a6a', sx + 3, sy - 6, 1, 8); } else { fr(c, '#2a1c14', sx - 1, sy - 11, 5, 14); fr(c, '#8a5a30', sx, sy - 10, 3, 12); fr(c, '#b0804a', sx, sy - 12, 3, 2); } };
+  if (lv >= 1) { const x = 43 * TS + 4; for (let y = 6 * TS; y < 37 * TS; y += 7) { if (Math.abs(y - 23 * TS - 4) < 12) continue; if (hpf < 1 && ((y * 13) % 100) / 100 > hpf) continue; stake(x, y, lv >= 3); } }
+  if (lv >= 2) { for (let x = 16 * TS; x < 43 * TS; x += 7) { if (Math.abs(x - 28 * TS - 4) < 12) continue; if (hpf < 1 && ((x * 7) % 100) / 100 > hpf) continue; stake(x, 5 * TS + 8, lv >= 4); stake(x, 37 * TS + 4, lv >= 4); } }
+  if (lv >= 4) [[43, 5], [43, 37], [16, 5], [16, 37]].forEach(p => { const sx = p[0] * TS - cx, sy = p[1] * TS - cy; if (sx < -30 || sx > 670 || sy < -40 || sy > 400) return; fr(c, '#2a2a38', sx - 2, sy - 22, 16, 26); fr(c, '#9a9aaa', sx - 1, sy - 21, 14, 24); fr(c, '#c0c0d0', sx - 1, sy - 21, 14, 3); for (let i = 0; i < 3; i++) fr(c, '#2a2a38', sx + i * 5, sy - 25, 3, 4); fr(c, '#1a1a24', sx + 4, sy - 12, 4, 6); });
+  for (const id in (G.ruins || {})) { const b = W.blds[id]; if (!b) continue; const px = b.x * TS - cx, py = b.y * TS - cy, w = b.w * TS, hgt = b.h * TS; if (px < -80 || px > 700 || py < -80 || py > 420) continue;
+    c.globalAlpha = 0.55; fr(c, '#1a1010', px + 4, py + 6, w - 8, hgt * 0.5); c.globalAlpha = 0.35; fr(c, '#1a1010', px + 2, py + hgt * 0.5, w - 4, hgt * 0.4); c.globalAlpha = 1;
+    for (let i = 0; i < 3; i++) { const fx0 = px + 8 + ((i * 17 + b.id * 5) % Math.max(8, w - 16)), fy = py + hgt * 0.35; const fl = (t >> 2) + i; fr(c, fl % 2 ? '#ff8a30' : '#ffc040', fx0, fy - 3 - (fl % 3), 3, 4 + (fl % 3)); fr(c, '#fff0a0', fx0 + 1, fy - 1, 1, 2); }
+    for (let i = 0; i < 4; i++) { const p = ((t + i * 20 + b.id * 7) % 80) / 80; c.globalAlpha = (1 - p) * 0.6; const s = 3 + p * 5; fr(c, '#3a3440', Math.round(px + w / 2 + Math.sin(p * 4 + i) * 6 - s / 2), Math.round(py + hgt * 0.3 - p * 30), s, s); } c.globalAlpha = 1;
+    if (G.ruins[id] < 100) { fr(c, '#8a6a3a', px + w - 10, py + 10, 2, hgt - 16); fr(c, '#8a6a3a', px + w - 18, py + 10, 2, hgt - 16); for (let y = 14; y < hgt - 8; y += 6) fr(c, '#a07a40', px + w - 19, py + y, 12, 1); } }
+  const o = G.chain && G.chain.dragonOutcome; if (o === 'lost' || o === 'pact') { const wx = o === 'lost' ? 30 * TS : 50 * TS, wy = o === 'lost' ? 1 * TS : 21 * TS; const sx = wx - cx, sy = wy - cy; if (sx > -60 && sx < 700 && sy > -60 && sy < 420) { if (o === 'pact') { c.globalAlpha = 0.25 + 0.1 * Math.sin(t / 20); ell(c, '#ffe080', sx + 24, sy + 36, 26, 8); c.globalAlpha = 1; } c.drawImage(dragonSprite((t >> 5) & 1), sx, sy); } }
+};

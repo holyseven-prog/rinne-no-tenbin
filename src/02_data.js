@@ -38,6 +38,7 @@ const MONS = {
   turtle: { n: ['岩殻ガメ', '岩殼龜'], hp: 44, atk: 7, def: 7, spd: 0.7, tier: 2, exp: 11, gold: 4, range: 1.5 },
   goblin: { n: ['小鬼の斥候', '小鬼斥候'], hp: 36, atk: 10, def: 3, spd: 1.0, tier: 2, exp: 12, gold: 5, range: 1.5 },
   skel: { n: ['骸骨剣士', '骷髏劍士'], hp: 58, atk: 13, def: 5, spd: 1.0, tier: 3, exp: 18, gold: 7, range: 1.5 },
+  dragon: { n: ['巨竜ヴァルグ', '巨龍瓦爾格'], hp: 900, atk: 40, def: 20, spd: 0.8, tier: 6, exp: 200, gold: 100, range: 2 },
   wolf: { n: ['魔狼', '魔狼'], hp: 52, atk: 15, def: 3, spd: 1.4, tier: 3, exp: 20, gold: 8, range: 1.5 },
 };
 const MON_BY_TIER = { 1: ['mush', 'bat'], 2: ['turtle', 'goblin'], 3: ['skel', 'wolf'] };

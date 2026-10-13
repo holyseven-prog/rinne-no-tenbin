@@ -24,3 +24,11 @@ Single-file HTML god-sim prototype (ja / zh-TW). Open `index.html` in a browser.
 - Recognisable roles: warrior (helm+shield), hero (cape+circlet, swordsman Lv6+), priest (halo), sage (white beard), smith (bare arms), farmer (straw hat), elder, child, women (hair/dress/bow). Jobs added: weaponer (武器商人), armorer (防具商人); armor shop built at (37,27).
 - Buildings: per-kind roof colours + plaque icons + name labels (houses on hover), big animated fountain. Job badge next to names is text again.
 - Spec sheet: docs/輪廻の天秤_仕様書_規格書_v0.5.xlsx
+
+## V4 (gameplay: assaults / councils)
+- One era = 10 years with 5 assaults (wave 1 yr 2-3, wave 2 yr 4-5, dragon yr 5.5, wave 3 yr 7-8, Demon King yr 10). Top bar shows the next assault, time left and predicted win %. `B` opens the defense screen (defense index = combat 35 / works 20 / morale 20 / supply 15 / divine 10 vs threat; 11 prep actions with +% and advisor stars).
+- Battles stop time and run in 3 phases (outpost / main / decisive) with one intervention each; 5 grades (crush/win/pyrrhic/loss/rout) with consequences (deaths, ruins + repair, walls, dev level, morale, faith/awe, migrants, festivals) and chains (waves -> dragon battle type, dragon outcome -> king threat, wave 3 -> cadres).
+- Councils (year 0, after the dragon): choose 2 of 3 decrees + optional edict. God level 1-10 unlocks skills. Era cards (push / stop / leave). Feed tiers S/A/B (routine events summarised every 2 days).
+- Code: `src/07b_assault.js`, `src/07c_council.js` (sim), `src/14e_war_ui.js` (UI). NPC facing fixed (`test/facing.js`).
+- Tests: `test/v4_sim.js [N]` (balance + calibration), `test/v4_ui.js [ja|zh]` (council -> prep -> 3-phase battle -> report -> ending), `test/v4_one.js <seed>`.
+- Spec sheet: docs/輪廻の天秤_仕様書_規格書_v0.6.xlsx (sheet 16 = V4).

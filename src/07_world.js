@@ -53,7 +53,7 @@ function birthNatural(mother) {
 /* ---------- day update ---------- */
 function aliveHumans() { return G.humans.filter(h => h.alive); }
 function awaken() {
-  G.awakened = true; G.boss.dormant = false; G.raidDay = dayIdx(G.tick) + 5; G.awakenAt = G.tick;
+  G.awakened = true; if (!G.assaults) G.boss.dormant = false; G.raidDay = dayIdx(G.tick) + 5; G.awakenAt = G.tick;
   logEvent('boss_awaken', [], {}, ['boss'], 1, 1, BOSS.home);
   G.balance = clamp(G.balance - 12, -100, 100);
   G.pendingCutscene = 'awaken';
@@ -89,8 +89,9 @@ function dayUpdate() {
   if (rchance(0.12)) { const th = alive.filter(h => h.job === 'thief' && h.alive && h.age >= 16); if (th.length) { const t = rpick(th), v = rpick(alive.filter(h => h !== t && h.gold > 10 && h.age >= 14) || [t]); if (v && v !== t) { const amt = Math.min(v.gold, rint(8, 25)); v.gold -= amt; t.gold += amt; soulOf(t).k.evil += 1.5; t.guilt = 1; v.rel[t.id] = (v.rel[t.id] || 0) - 40; G.dayEvil += 0.5; logEvent('betrayal', [t.id, v.id], { amt }, ['crime'], 0.65, 0.8, t); } } }
   dailyQuests();
   if (d % 6 === 0 && G.humans.some(x => !x.alive && G.tick - (x.diedAt || 0) > TICK_YEAR)) { G.humans = G.humans.filter(x => x.alive || G.tick - (x.diedAt || 0) <= TICK_YEAR); rebuildIdx(); }
-  // monster raids
-  if (!G.awakened) {
+  dailyDefense(); periodDaily();
+  // monster raids (replaced by the assault timeline in V4)
+  if (G.assaults) { } else if (!G.awakened) {
     if (yr >= 4 && d >= G.raidDay && rchance(0.5 + (0.5 - G.balance / 200) * 0.5)) { spawnRaid(2 + (yr >> 2), yr <= 5 ? 1 : 2, false); G.raidDay = d + rint(9, 15); }
     else if (d >= G.raidDay) G.raidDay = d + 3;
   } else {
@@ -105,7 +106,7 @@ function dayUpdate() {
 }
 function yearlyUpdate() {
   const yr = yearOf(G.tick); yearEndFores();
-  if (!G.awakened) {
+  if (!G.awakened && !G.assaults) {
     const avg = G.balYear[G.balYear.length - 1] || 0;
     G.awakenOff = clamp((G.awakenOff || 0) + (avg - 10) / 100 * 0.6, -2, 2);
     G.awakenTick = BOSS_BASE_TICK + Math.round(G.awakenOff * TICK_YEAR);
@@ -125,15 +126,20 @@ function endGame(kind) {
 function checkEndings() {
   if (G.ending) return;
   const alive = G.stats.alive;
-  if (G.awakened && (G.town.hp <= 0 || alive < 6)) return endGame('doom');
+  if (!G.assaults && G.awakened && (G.town.hp <= 0 || alive < 6)) return endGame('doom');
+  if (G.assaults && alive < 4) return endGame('doom');
   if (G.faith <= 0.5) G.faithZero++; else G.faithZero = Math.max(0, G.faithZero - 3);
   if (G.faithZero > 18 * TICK_DAY && G.tick - (G.lastAnswer || 0) > 12 * TICK_DAY) return endGame('godleft');
-  if (G.stag >= 36) return endGame('stagnant');
+  if (!G.assaults && G.stag >= 36) return endGame('stagnant');
   if (G.tick > START_TICK + 22 * TICK_YEAR) return endGame(G.awakened ? 'doom' : 'stagnant');
 }
 
 /* ---------- main tick ---------- */
 function tick() {
+  if (G.ending) return;
+  if (G.battle && !G.battle.done) { if (G.uiAttached && !G.forceAuto) return; autoBattle(); }
+  if (G.battle && G.battle.done && (!G.uiAttached || G.forceAuto)) G.battle = null;
+  if (G.council && !G.council.done) { if (G.uiAttached && !G.forceAuto) return; autoCouncil(); }
   if (G.ending) return;
   G.tick++;
   const tk = G.tick;
@@ -149,9 +155,10 @@ function tick() {
   // town pressure
   const pr = townPressure();
   if (pr > 0) G.town.hp = Math.max(G.awakened ? -1 : 25, G.town.hp - pr * TUNE.townDrain); else G.town.hp = Math.min(100, G.town.hp + 0.012);
-  if (G.town.hp < 70 && !G.sieged && G.awakened) { G.sieged = true; logEvent('siege', [], {}, ['raid'], 0.85, 0.8, PLAZA); } else if (G.town.hp > 95) G.sieged = false;
+  if (!G.assaults && G.town.hp < 70 && !G.sieged && G.awakened) { G.sieged = true; logEvent('siege', [], {}, ['raid'], 0.85, 0.8, PLAZA); } else if (G.town.hp > 95) G.sieged = false;
   if (G.raidAlive === 0) G.townAlert = 0; else G.townAlert = Math.max(G.townAlert, 12);
-  if (tk % 6 === 0) { expirePrayers(); if (G.bossFight && !G.parties.some(p => p.boss && p.state !== 'done')) G.bossFight = false; if (G.awakened) tryBossExpedition(); scripted(); }
+  if (tk % 6 === 0) { expirePrayers(); if (G.bossFight && !G.parties.some(p => p.boss && p.state !== 'done')) G.bossFight = false; if (G.awakened && !G.assaults) tryBossExpedition(); scripted(); }
+  assaultTick(); councilTick(); cardTick();
   if (tk % TICK_DAY === 0) dayUpdate();
   if (G.policy === 'basic') policyBasic();
   chronTick();
