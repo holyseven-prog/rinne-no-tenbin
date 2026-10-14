@@ -1,0 +1,1344 @@
+{
+  "status": "PASS",
+  "delivery_bytes_excluding_src": 2286086,
+  "file_count": 78,
+  "errors": [],
+  "png_checks": [
+    {
+      "file": "god/god_bg.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "god/god_card_normal.png",
+      "size": [
+        96,
+        128
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_card_selected.png",
+      "size": [
+        96,
+        128
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_chaos_128.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "colors": 9,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_chaos_32.png",
+      "size": [
+        32,
+        32
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_chaos_64.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 9,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_mercy_128.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "colors": 10,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_mercy_32.png",
+      "size": [
+        32,
+        32
+      ],
+      "mode": "RGBA",
+      "colors": 6,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_mercy_64.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 10,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_order_128.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "colors": 9,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_order_32.png",
+      "size": [
+        32,
+        32
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "god/god_emblem_order_64.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 9,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "mockup/boot.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/god.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/mode.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/opening_01_balance.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/opening_02_village.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/opening_03_river.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/opening_04_throne.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/opening_05_overlook.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/overview.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/save.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/settings.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 63,
+      "alpha": null
+    },
+    {
+      "file": "mockup/title_ja.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mockup/title_zh.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mode/mode_badge_recommended.png",
+      "size": [
+        56,
+        24
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "mode/mode_bg.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "mode/mode_card_easy_normal.png",
+      "size": [
+        128,
+        160
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "mode/mode_card_easy_selected.png",
+      "size": [
+        128,
+        160
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "mode/mode_card_normal_normal.png",
+      "size": [
+        128,
+        160
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "mode/mode_card_normal_selected.png",
+      "size": [
+        128,
+        160
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "mode/mode_icon_easy.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "mode/mode_icon_normal.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "opening/opening_01_balance.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "opening/opening_02_village.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "opening/opening_03_river.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "opening/opening_04_throne.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 63,
+      "alpha": null
+    },
+    {
+      "file": "opening/opening_05_overlook.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "save/save_bg.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "save/save_slot_disabled.png",
+      "size": [
+        160,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "save/save_slot_empty.png",
+      "size": [
+        160,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "save/save_slot_normal.png",
+      "size": [
+        160,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "save/save_slot_selected.png",
+      "size": [
+        160,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "settings/settings_bg.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "settings/settings_slider_thumb.png",
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA",
+      "colors": 4,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "settings/settings_slider_track.png",
+      "size": [
+        96,
+        12
+      ],
+      "mode": "RGBA",
+      "colors": 3,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "settings/settings_tab_normal.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "settings/settings_tab_selected.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "settings/settings_toggle_off.png",
+      "size": [
+        48,
+        24
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "settings/settings_toggle_on.png",
+      "size": [
+        48,
+        24
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "title/title_bg_0_scene.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "P",
+      "colors": 64,
+      "alpha": null
+    },
+    {
+      "file": "title/title_bg_1_sparkles.png",
+      "size": [
+        640,
+        360
+      ],
+      "mode": "RGBA",
+      "colors": 2,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "title/title_frame_menu.png",
+      "size": [
+        96,
+        96
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "title/title_logo_ja.png",
+      "size": [
+        480,
+        112
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "title/title_logo_ja_plain.png",
+      "size": [
+        480,
+        112
+      ],
+      "mode": "RGBA",
+      "colors": 4,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "title/title_logo_zh.png",
+      "size": [
+        480,
+        112
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "title/title_logo_zh_plain.png",
+      "size": [
+        480,
+        112
+      ],
+      "mode": "RGBA",
+      "colors": 4,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_back_disabled.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_back_hover.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 6,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_back_normal.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_back_press.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_menu_disabled.png",
+      "size": [
+        160,
+        32
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_menu_hover.png",
+      "size": [
+        160,
+        32
+      ],
+      "mode": "RGBA",
+      "colors": 6,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_menu_normal.png",
+      "size": [
+        160,
+        32
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_menu_press.png",
+      "size": [
+        160,
+        32
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_small_disabled.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_small_hover.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 6,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_small_normal.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_btn_small_press.png",
+      "size": [
+        80,
+        28
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_frame_dialog.png",
+      "size": [
+        96,
+        48
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_frame_dialog_dark.png",
+      "size": [
+        96,
+        48
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "ui/ui_frame_window.png",
+      "size": [
+        96,
+        64
+      ],
+      "mode": "RGBA",
+      "colors": 5,
+      "alpha": [
+        0,
+        255
+      ]
+    }
+  ],
+  "version": "v2",
+  "v2_checks": [
+    {
+      "check": "title/title_logo_ja native 480x112 RGBA",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja binary alpha",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja 2px transparent padding",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja SVG paths native size",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja manifest size and placement",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja_plain native 480x112 RGBA",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja_plain binary alpha",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja_plain 2px transparent padding",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja_plain SVG paths native size",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_ja_plain manifest size and placement",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh native 480x112 RGBA",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh binary alpha",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh 2px transparent padding",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh SVG paths native size",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh manifest size and placement",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh_plain native 480x112 RGBA",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh_plain binary alpha",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh_plain 2px transparent padding",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh_plain SVG paths native size",
+      "pass": true
+    },
+    {
+      "check": "title/title_logo_zh_plain manifest size and placement",
+      "pass": true
+    },
+    {
+      "check": "god/god_card_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "god/god_card_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "god/god_card_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "god/god_card_selected.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "god/god_card_selected.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "god/god_card_selected.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_badge_recommended.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_badge_recommended.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_badge_recommended.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_easy_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_easy_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_easy_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_easy_selected.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_easy_selected.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_easy_selected.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_normal_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_normal_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_normal_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_normal_selected.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_normal_selected.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "mode/mode_card_normal_selected.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_disabled.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_disabled.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_disabled.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_empty.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_empty.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_empty.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_selected.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_selected.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "save/save_slot_selected.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_slider_track.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_slider_track.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_slider_track.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_tab_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_tab_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_tab_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_tab_selected.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_tab_selected.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "settings/settings_tab_selected.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "title/title_frame_menu.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "title/title_frame_menu.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "title/title_frame_menu.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_disabled.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_disabled.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_disabled.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_hover.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_hover.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_hover.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_press.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_press.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_back_press.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_disabled.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_disabled.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_disabled.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_hover.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_hover.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_hover.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_press.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_press.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_menu_press.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_disabled.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_disabled.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_disabled.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_hover.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_hover.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_hover.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_normal.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_normal.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_normal.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_press.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_press.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_btn_small_press.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_dialog.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_dialog.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_dialog.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_dialog_dark.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_dialog_dark.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_dialog_dark.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_window.png exact specified slice",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_window.png original UI pixels unchanged",
+      "pass": true
+    },
+    {
+      "check": "ui/ui_frame_window.png fixed corner/side pixels after stretch",
+      "pass": true
+    },
+    {
+      "check": "all 30 required nine-slice files verified",
+      "pass": true
+    },
+    {
+      "check": "no obsolete logo dimensions in manifest",
+      "pass": true
+    },
+    {
+      "check": "manifest contains every runtime and source file",
+      "pass": true
+    },
+    {
+      "check": "source originals and builder included",
+      "pass": true
+    },
+    {
+      "check": "ZIP CRC integrity",
+      "pass": true
+    },
+    {
+      "check": "ZIP includes every source file",
+      "pass": true
+    }
+  ],
+  "source_file_count": 8,
+  "nine_slice_files_verified": 30
+}
