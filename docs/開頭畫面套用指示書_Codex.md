@@ -1,5 +1,7 @@
 # 開頭畫面素材 套用指示書（Codex 專用）
 
+> 📦 **已合併到 `視覺_總指示書_Codex.md`（2026-10-14），請以視覺總指示書為準。**
+
 > 版本：2026-10-14　撰寫：Claude（SEVEN 指示）
 > 素材：`rinne_title_sfc_v2.zip`（已由 Claude 驗收通過）。repo 內的備份在 `assets/design/title/`。
 > 前提：以 V4.1（commit d9d7913）為基礎實作。
