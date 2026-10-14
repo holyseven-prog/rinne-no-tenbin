@@ -3,6 +3,7 @@
 > 版本：2026-10-14　對象：Codex　併入 V4.1＋V4.2 合併規格的 **A13**（本文件取代 A13 的職業規格表）
 > 依據：SEVEN 提供的設計圖「RPG 職業ドット絵一覧（11 職業 × 男女 × 4 方向）」。
 > **SEVEN 的指示：100% 照做。**
+> 總入口：`點陣素材總指示書_Codex.md`（本文件是其中的 Part A）。**開工前請先打開設計圖與各職業放大圖，照圖畫，不可只讀文字。**
 > 設計圖：`docs/figures/npc/npc_design_sheet.png`（全圖）；各職業放大圖：`docs/figures/npc/01_hero.png`～`11_armorer.png`。
 
 ![設計圖](figures/npc/npc_design_sheet.png)
