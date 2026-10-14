@@ -68,7 +68,7 @@
 
 ## Part A　NPC（設計圖 1）
 
-![NPC 設計圖](figures/npc/npc_design_sheet.png)
+![NPC 設計圖](https://raw.githubusercontent.com/holyseven-prog/rinne-no-tenbin/main/docs/figures/npc/npc_design_sheet.png)
 
 **完整規格見 `docs/NPC點陣指示書_Codex.md`。** 重點：
 - 11 職業 × 男女 × 前後左右；畫布 16×24。
@@ -81,7 +81,7 @@
 
 ## Part B　村莊（設計圖 2：拡張版）
 
-![村莊設計圖](figures/village/village_design_sheet.png)
+![村莊設計圖](https://raw.githubusercontent.com/holyseven-prog/rinne-no-tenbin/main/docs/figures/village/village_design_sheet.png)
 
 ### B1. 建築（既有 12 種＋新增 7 種；共 27 棟）
 
@@ -158,7 +158,7 @@
 
 ## Part C　村外平原與野外（設計圖 3 左半、下半）
 
-![野外與魔王城內設計圖](figures/field/field_castle_design_sheet.png)
+![野外與魔王城內設計圖](https://raw.githubusercontent.com/holyseven-prog/rinne-no-tenbin/main/docs/figures/field/field_castle_design_sheet.png)
 
 用在 V4.2 W0 的連續大地圖，以及 W1 的 5 區。各區用哪些素材：
 
@@ -259,7 +259,7 @@
 
 ## Part E　敵人（設計圖 4）
 
-![敵人設計圖](figures/enemy/enemy_design_sheet.png)
+![敵人設計圖](https://raw.githubusercontent.com/holyseven-prog/rinne-no-tenbin/main/docs/figures/enemy/enemy_design_sheet.png)
 
 ### E1. 規格
 - **前、後、左、右 4 方向都要做**（目前只有正面，要補齊）。左右可以用鏡像，但武器、盾的位置要和設計圖一致。

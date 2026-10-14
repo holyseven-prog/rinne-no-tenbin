@@ -6,7 +6,7 @@
 > 總入口：`點陣素材總指示書_Codex.md`（本文件是其中的 Part A）。**開工前請先打開設計圖與各職業放大圖，照圖畫，不可只讀文字。**
 > 設計圖：`docs/figures/npc/npc_design_sheet.png`（全圖）；各職業放大圖：`docs/figures/npc/01_hero.png`～`11_armorer.png`。
 
-![設計圖](figures/npc/npc_design_sheet.png)
+![設計圖](https://raw.githubusercontent.com/holyseven-prog/rinne-no-tenbin/main/docs/figures/npc/npc_design_sheet.png)
 
 ---
 

@@ -10,7 +10,7 @@
 > 設計圖全圖：`docs/figures/bld/bld_design_sheet.png`
 > 各區放大圖：`01_buildings_a`、`02_buildings_b`、`03_ground`、`04_trees`、`05_props`、`06_plaza`、`07_rules`（.png）
 
-![設計圖](figures/bld/bld_design_sheet.png)
+![設計圖](https://raw.githubusercontent.com/holyseven-prog/rinne-no-tenbin/main/docs/figures/bld/bld_design_sheet.png)
 
 ---
 
