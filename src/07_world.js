@@ -80,8 +80,11 @@ function dayUpdate() {
   G.dayGood = 0; G.dayEvil = 0; G.dayKills = 0; G.killBal = 0;
   // faith
   let dis = 0; for (const h of aliveHumans()) { dis += h.disappoint || 0; if (h.disappoint > 0) h.disappoint = Math.max(0, h.disappoint - 0.012); } dis /= Math.max(1, pop);
-  G.faith = Math.min(G.faithMax, G.faith + pop * 0.16 * clamp(1 - dis * TUNE.disMul, 0.1, 1));
-  if (G.faith > 100) { const ex = (G.faith - 100) * 0.3; G.faith -= ex; G.town.food += ex * 0.8; G.town.hp = Math.min(100, G.town.hp + ex * 0.15); G.stats.overflow = (G.stats.overflow || 0) + ex; if (G.onOverflow && ex > 1.2) G.onOverflow(ex); }
+  if (G.assaults) { const r = (G.ansN || 0) / Math.max(1, (G.ansN || 0) + (G.expN || 0)); const tgt = (G.ansN || 0) + (G.expN || 0) < 3 ? 0.8 : 0.15 + 0.95 * r; G.devotion = (G.devotion === undefined ? 0.8 : G.devotion) + (tgt - (G.devotion === undefined ? 0.8 : G.devotion)) * 0.12; G.ansN = (G.ansN || 0) * 0.94; G.expN = (G.expN || 0) * 0.94; } // V4.1-A14: devotion follows how often the god answers
+  const devo = clamp(1 - dis * TUNE.disMul, 0.1, 1) * (G.assaults ? G.devotion : 1); const church = G.assaults ? [0.9, 1, 1.2, 1.4][devLevel()] : 1; const inc = pop * 0.16 * devo * church; G.faith = Math.min(G.faithMax, G.faith + inc); faithLog('inc', inc); G.faithDayInc = inc; G.listenLeft = 3;
+  if (G.assaults && d % 3 === 0) { const att = aliveHumans().filter(h => h.age >= 10).length; const g = Math.round(att * 0.45 * devo * 10) / 10; if (g > 0) { G.faith = Math.min(G.faithMax, G.faith + g); faithLog('sab', g); logEvent('sabbath', [], { n: att, g }, ['faith'], 0.3, 0.6, (W.bk.church && W.bk.church[0]) ? W.bk.church[0].appr : PLAZA); } } // V4.1-A14: sabbath every 3 days
+  if (G.assaults) faithDay(); heroDaily();
+  const ovT = G.assaults ? G.faithMax * 0.62 : 100; if (G.faith > ovT) { const ex = (G.faith - ovT) * (G.assaults ? 0.45 : 0.3); G.faith -= ex; faithLog("over", -ex); G.town.food += ex * 0.8; G.town.hp = Math.min(100, G.town.hp + ex * 0.15); G.stats.overflow = (G.stats.overflow || 0) + ex; if (G.onOverflow && ex > 1.2) G.onOverflow(ex); }
   G.eye = Math.min(3, G.eye + 1);
   // town economy
   G.town.food = Math.max(0, Math.min(400, G.town.food)); G.town.potions = Math.min(30, G.town.potions); G.town.gearStock = Math.min(10, G.town.gearStock);
@@ -160,7 +163,8 @@ function tick() {
   if (tk % 6 === 0) { expirePrayers(); if (G.bossFight && !G.parties.some(p => p.boss && p.state !== 'done')) G.bossFight = false; if (G.awakened && !G.assaults) tryBossExpedition(); scripted(); }
   assaultTick(); councilTick(); cardTick();
   if (tk % TICK_DAY === 0) dayUpdate();
-  if (G.policy === 'basic') policyBasic();
+  if (G.easy && tk % 12 === 0) easyAuto();
+  if (G.policy === 'basic') policyBasic(); else if (G.policy === 'engaged') policyEngaged();
   chronTick();
   checkEndings();
 }

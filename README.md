@@ -38,3 +38,15 @@ Single-file HTML god-sim prototype (ja / zh-TW). Open `index.html` in a browser.
 - `src/11d_world.js` rewritten: 5-step material ramps (Appendix A), clustered grass + tufts, irregular roads with ruts, irregular flagstones, tiled roofs, stone / plank / half-timber walls, framed windows, multiply shadows (x0.6), conifer / broadleaf / shrub trees, 32 props, >=4 objects per 8x8 town block, and an overhang layer (tree tops, chimneys, spires drawn over characters).
 - Characters (`src/11a_spritedata3.js`, `11c_char.js`): 2.5-head proportions (head+hair = 11/24 rows), 1x2 eyes, 10 hair silhouettes, 3 looks per job, slimmer female torso, #181020 outline, <=16 colours per sprite.
 - Shots / self-review: `node test/v34_shots.js v33|v34` -> `test/out/visual/v34/`; copies in `docs/figures/v34/`, table in `docs/V3.4_自我評分表.md`. Spec sheet v0.7.
+
+## V4.1 (play feel) + art from SEVEN's design sheets
+- Forecast: the bar shows "now X% → then Y%" (`winForecast()`: help-aware now, trend-projected then); battle options show their +%; Lv1 has a human-side option in every phase.
+- Difficulty: the enemy adapts to village strength until the half-year scout report (`adaptT`), then late preparation counts (65%). Advised play ≈ 85/80/80/80/55-60%, passive ≈ 45% first wave / 0% Demon King (`test/v4_sim.js`, `test/v4_margin.js`).
+- Faith economy: answers refund cost ×1.3 (crit ×2, twist ×0.6), devotion follows the answer rate, sabbath every 3 days, church level boosts income, free "listen" (3/day), only urgent prayers cost faith when ignored, fatigue window 6 days; ledger tooltip on the faith bar; `engaged` test policy.
+- One hero title (Lv8 + title or 3 graces); crown + label + double ring on the map, silver stars for candidates, hero card in the goal panel, born / fall / inherit events.
+- Speed ×4 by default, auto-slow restores after 5 s, ⏭ skips to the next important event. The world starts at 9:00.
+- Council shows decree rewards / difficulty / judging / progress, last-period events, forces and both forecasts; the war report lists what the god did.
+- Tutorial (`src/16b_tutorial41.js`): 3 lessons in a small practice world (prayer → preparation → battle), graduation via the council, easy mode, duties list ("いまやること"), first-use hints, "What's this?" mode, 4-page picture guide, retake lessons from the help menu, Japanese ruby. Tests: `test/tut_v41.js`, `test/readability_check.js` (tutorial text rules).
+- NPC art (Part A, `src/11c2_npc41.js`): 11 jobs × M/F × front/back/side drawn after the NPC sheet (hair/skin variants only, `NPC_VARIANTS`), plus historian, children, elders. `test/npc_compare.js`, `test/facing.js`.
+- Enemy art (Part E, `src/11f2_enemyart.js`, built by `tools/enemy_extract.js` + `tools/enemy_build.js` from the enemy sheet): 4 directions with walk frames on the map, left-facing battle poses. `test/enemy_compare.js`.
+- Village restyle (Part B, existing buildings): roof colours per the expanded sheet, steeper roofs, INN lettering, thatched huts, stone windmill, red castle banners, sandy roads, 36 prop kinds (`test/props_density.js`).

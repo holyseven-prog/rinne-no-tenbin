@@ -93,3 +93,14 @@ function monsterSprite(m, frame) {
   else { cv = bakeGrid(monsterGrid(m.type, frame), 16, 16, monRamps(MON_RAMPS[m.type] ? m.type : 'mush')); }
   spriteCache[key] = cv; return cv;
 }
+/* ---------- Part E: design-sheet enemy art (src/11f2_enemyart.js): 4 directions on the map, left-facing battle poses ---------- */
+const ENEMY_KEY = { mush: 'mush', bat: 'bat', turtle: 'turtle', goblin: 'goblin', skel: 'skel', wolf: 'wolf', cad0: 'verna', cad1: 'garum', cad2: 'serene', boss: 'king' };
+function artCanvas(s, key) { if (spriteCache[key]) return spriteCache[key]; const cv = mkCanvas(s.w, s.h), c = cv.getContext('2d'); const CH = '0123456789abcdefghij'; s.r.forEach((r, y) => { for (let x = 0; x < r.length; x++) { const ch = r[x]; if (ch === '.') continue; c.fillStyle = s.p[CH.indexOf(ch)]; c.fillRect(x, y, 1, 1); } }); return (spriteCache[key] = cv); }
+function enemyKeyOf(m) { return m.boss ? 'king' : m.cad >= 0 ? ENEMY_KEY['cad' + m.cad] : ENEMY_KEY[m.type]; }
+const _monSprite0 = monsterSprite;
+monsterSprite = function (m, frame, dir) {
+  const k = enemyKeyOf(m); const A = typeof ENEMYART !== 'undefined' && ENEMYART[k]; if (!A) return _monSprite0(m, frame);
+  const d = dir === undefined ? (m.dir === undefined ? 2 : m.dir) : dir; const v = d === 0 ? 'F' : d === 1 ? 'B' : d === 2 ? 'L' : 'R'; const fr = A.map[v]; const f = frame === 2 ? fr.length - 1 : (frame | 0) % fr.length;
+  return artCanvas(fr[f], 'ea.' + k + '.' + v + '.' + f);
+};
+function enemyBattleSprite(k, frame) { const A = typeof ENEMYART !== 'undefined' && ENEMYART[k]; if (!A) return null; const fr = A.bat.L; const f = (frame | 0) % fr.length; return artCanvas(fr[f], 'eb.' + k + '.' + f); }

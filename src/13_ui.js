@@ -92,7 +92,7 @@ const Store = {
   set(k, v) { try { localStorage.setItem(k, v); delete this.mem[k]; return true; } catch (e) { this.mem[k] = v; if (!this.warned) { this.warned = 1; if (typeof UI !== 'undefined' && UI.toast) UI.toast(t('storage_warn'), '#ffb060'); } return false; } },
 };
 const Game = {
-  scene: 'boot', speedIdx: 1, paused: false, modals: [], power: null, acc: 0, settings: { bgm: 0.6, se: 0.7, speed: 0, text: 2, lang: 'ja', names: 'key', theme: 'black', autoSlow: true, advisor: true, tutDone: false }, selId: 0, follow: 0, hover: null, mouse: { x: 640, y: 360 }, keys: {},
+  scene: 'boot', speedIdx: 1, paused: false, modals: [], power: null, acc: 0, settings: { bgm: 0.6, se: 0.7, speed: 1, text: 2, lang: 'ja', names: 'key', theme: 'black', autoSlow: true, advisor: true, tutDone: false }, selId: 0, follow: 0, hover: null, mouse: { x: 640, y: 360 }, keys: {},
   setSpeed(n) { const i = SPEEDS.indexOf(n); if (i >= 0) { this.speedIdx = i; this.paused = false; UI.refresh(true); } },
   get timeStopped() { return this.paused || this.modals.length > 0 || this.scene !== 'play' || !!(this.tut && this.tut.on && this.tut.freeze); },
 };
@@ -114,7 +114,7 @@ const UI = {
         E.spBtns = ['⏸', '×1', '×4', '×16', '×64'].map((s, i) => h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => { Snd.se('ok'); if (i === 0) Game.paused = !Game.paused; else { Game.speedIdx = i - 1; Game.paused = false; } UI.refresh(true); } }, s)),
         h('span', { style: 'flex:1' }), E.weatherTxt = h('span', { class: 'sm' }),
         E.namesBtn = h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Game.cycleNames() }, t('names_btn')),
-        h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Screens.help() }, '?'),
+        h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Screens.helpMenu() }, '?'),
         h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Screens.pause() }, '☰')));
     // --- left: minimap + tutorial
     E.miniWin = h('div', { class: 'win', style: 'left:8px;top:64px;width:214px;height:146px;padding:3px' }, E.miniCv = h('canvas', { width: 192, height: 120, style: 'display:block;margin:4px auto 0;cursor:pointer' }));

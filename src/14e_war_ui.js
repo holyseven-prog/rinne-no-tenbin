@@ -79,7 +79,7 @@ Screens.defense = function () {
   this.push('defense', () => {
     const a = nextAssault(); const parts = defenseParts(); const D = defenseScore(parts);
     const bar = (lab, v, col, tip) => { const r = h('div', { style: 'display:flex;align-items:center;gap:6px;margin:2px 0' }, h('span', { style: 'width:78px' }, lab), h('div', { class: 'gauge', style: 'flex:1;height:10px;border-width:1px' }, h('i', { style: `width:${clamp(v, 0, 100)}%;background:${col}` })), h('span', { style: 'width:30px;text-align:right' }, Math.round(v))); if (tip) Tip.attach(r, () => tip); return r; };
-    const head = a ? h('div', { style: 'display:flex;justify-content:space-between;align-items:center' }, h('div', null, h('div', { class: 'gold', style: 'font-size:20px;font-weight:bold' }, assaultName(a, L)), h('div', null, fmtLeft(a.t - G.tick))), h('div', { style: 'text-align:right' }, h('div', { class: 'sm' }, t('war_pred')), h('div', { style: 'font-size:30px;font-weight:bold;color:' + (winProb(a) >= 0.6 ? '#9affb0' : winProb(a) >= 0.4 ? '#ffe9a0' : '#ff9a9a') }, pct(winProb(a)) + '%'))) : h('div', null, t('war_none'));
+    const head = a ? h('div', { style: 'display:flex;justify-content:space-between;align-items:center' }, h('div', null, h('div', { class: 'gold', style: 'font-size:20px;font-weight:bold' }, assaultName(a, L)), h('div', null, fmtLeft(a.t - G.tick))), (() => { const f = winForecast(a); const col = v => v >= 0.6 ? '#9affb0' : v >= 0.3 ? '#ffe9a0' : '#ff9a9a'; return h('div', { style: 'text-align:right' }, h('div', { class: 'sm' }, t('war_pred')), h('div', { style: 'font-size:26px;font-weight:bold' }, h('span', { style: 'color:' + col(f.now) }, t('fc_now') + ' ' + pct(f.now) + '%'), h('span', { style: 'font-size:16px' }, ' → '), h('span', { style: 'font-size:20px;color:' + col(f.then) }, t('fc_then') + ' ' + pct(f.then) + '%'))); })()) : h('div', null, t('war_none'));
     // timeline
     const tl = h('div', { style: 'display:flex;gap:6px;margin:6px 0' }, G.assaults.map(x => { const done = x.state === 'done'; const gn = x.grade ? (x.grade === 'pact' ? S.dragon_out.pact[L] : GRADE_N[x.grade][L]) : ''; const col = !done ? '#cfcfe6' : ['crush', 'win', 'pyrrhic', 'pact'].indexOf(x.grade) >= 0 ? '#9affb0' : '#ff9a9a';
       return h('div', { class: 'card', style: 'flex:1;cursor:default;' + (x === a ? 'border-color:#ffe060' : '') }, h('div', { style: 'font-size:12px;font-weight:bold' }, ASSAULT_DEF[x.id].short[L]), h('div', { class: 'sm' }, fmt(t('war_y'), { n: ((x.t - START_TICK) / TICK_YEAR).toFixed(1) })), h('div', { style: 'font-size:12px;color:' + col }, done ? gn : t('st_wait'))); }));
@@ -114,9 +114,9 @@ function battleSceneCanvas(B) {
   if (lost) { for (let i = 0; i < 4; i++) { const fx = 20 + i * 15, fy = 80; c.fillStyle = '#ff8a2a'; c.fillRect(fx, fy - (i % 2) * 6, 6, 10); c.fillStyle = '#ffd24a'; c.fillRect(fx + 1, fy + 3 - (i % 2) * 6, 3, 5); } c.fillStyle = 'rgba(60,50,50,0.45)'; for (let i = 0; i < 6; i++) { c.beginPath(); c.arc(24 + i * 9, 70 - i * 7, 7 + i * 1.5, 0, 7); c.fill(); } }
   // enemy side
   const mon = ASSAULT_DEF[B.a].mon;
-  if (mon === 'dragon') { const s = dragonSprite(B.phase % 2); c.save(); c.translate(560 + (win ? 30 : 0) - (B.done ? 0 : adv), 0); c.scale(-1, 1); c.drawImage(s, 0, 20, 144, 120); c.restore(); }
-  else if (mon === 'boss') { c.drawImage(monsterSprite({ boss: true, cad: -1, type: 'boss' }, B.phase % 2), 470, 22, 96, 115); for (let i = 0; i < Math.min(3, G.chain.cadres || 2); i++) c.drawImage(monsterSprite({ cad: i, type: 'cad' + i }, 0), 380 + i * 30, 66, 42, 54); }
-  else { const n = win ? 2 : 7; for (let i = 0; i < n; i++) { const s = monsterSprite({ type: [mon, mon, 'goblin', 'wolf', 'skel', mon, 'bat'][i], cad: -1 }, (B.phase + i) % 2); c.save(); c.translate(600 - 60 - i * 34 + (win ? 40 : lost ? -150 : -adv), 0); if (!win) c.scale(-1, 1); c.drawImage(s, 0, 80 + (i % 3) * 8, 32, 32); c.restore(); } }
+  if (mon === 'dragon') { const s = enemyBattleSprite('dragon', B.phase % 2) || dragonSprite(B.phase % 2); c.drawImage(s, 420 + (win ? 30 : 0) - (B.done ? 0 : adv), 22, 96, 96); }
+  else if (mon === 'boss') { for (let i = 0; i < Math.min(3, G.chain.cadres || 2); i++) { const s = enemyBattleSprite(['verna', 'garum', 'serene'][i], B.phase % 2); if (s) c.drawImage(s, 330 + i * 46, 112 - s.height * 0.75, s.width * 0.75, s.height * 0.75); } const ks = enemyBattleSprite('king', B.phase % 2); if (ks) c.drawImage(ks, 486, 112 - ks.height, ks.width, ks.height); }
+  else { const n = win ? 2 : 7; for (let i = 0; i < n; i++) { const tk = [mon, mon, 'goblin', 'wolf', 'skel', mon, 'bat'][i]; const s = enemyBattleSprite(ENEMY_KEY[tk] || tk, B.phase + i); if (!s) continue; const x = 600 - 70 - i * 38 + (win ? 40 : lost ? -150 : -adv); if (win) { c.save(); c.translate(x + s.width, 0); c.scale(-1, 1); c.drawImage(s, 0, 112 - s.height + (i % 3) * 4); c.restore(); } else c.drawImage(s, x, 112 - s.height + (i % 3) * 4); } }
   // clash flash
   if (B.phase > 0 && !B.done) { c.fillStyle = 'rgba(255,240,180,0.35)'; c.beginPath(); c.arc(300, 95, 24 + B.phase * 6, 0, 7); c.fill(); }
   return cv;
@@ -135,7 +135,7 @@ Screens.battle = function () {
       if (B.pact) kids.push(h('div', { style: 'text-align:center;margin-top:8px' }, h('p', { class: 'gold' }, t('bt_pact')), h('span', { class: 'btn big', onclick: () => { battleStep('none'); Screens.rerender(); } }, t('bt_next'))));
       else {
         const opts = battleOptions(B.phase); const row = h('div', { style: 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px' }, h('div', { style: 'width:100%;text-align:center', class: 'gold' }, fmt(t('bt_phase'), { n: B.phase + 1, p: PHASE_N[B.phase][L] })));
-        opts.forEach(o => { const ok = canIntervene(o); row.append(h('span', { class: 'btn big' + (ok ? '' : ' dis'), onclick: () => { if (!ok) return; battleStep(o.id); Snd.se('divine'); Render.flash = 0.4; Screens.rerender(); } }, o.n[L] + '（' + (o.cost ? fmt(t('act_cost'), { n: o.cost }) : fmt(t('act_awe'), { n: o.awe })) + '・+' + o.b + '）')); });
+        opts.forEach(o => { const ok = canIntervene(o); row.append(h('span', { class: 'btn big' + (ok ? '' : ' dis'), style: 'color:#c8ffd0', onclick: () => { if (!ok) return; battleStep(o.id); Snd.se('divine'); Render.flash = 0.4; Screens.rerender(); } }, o.n[L] + '（' + (o.cost ? fmt(t('act_cost'), { n: o.cost }) : fmt(t('act_awe'), { n: o.awe })) + '）　' + t('war_pred') + ' +' + Math.max(1, Math.round(optEffect(o) * 100)) + '%')); });
         (INTERVENE[B.phase] || []).filter(o => (G.godLv || 1) < o.lv).forEach(o => row.append(h('span', { class: 'btn big dis' }, o.n[L] + '（' + fmt(t('act_lock_lv'), { n: o.lv }) + '）')));
         row.append(h('span', { class: 'btn big', onclick: () => { battleStep('none'); Snd.se('ok'); Screens.rerender(); } }, t('bt_watch')), h('span', { class: 'btn big', style: 'border-color:#c080ff', onclick: () => { battleStep('monsters'); Snd.se('fail'); Screens.rerender(); } }, t('bt_help')));
         kids.push(row);
@@ -158,7 +158,7 @@ function warReport(B, a) {
   const ch = []; if (a.id === 'wave2' && G.chain.dragonType) ch.push(S.ch_dragon[G.chain.dragonType][L]); if (a.id === 'dragon' && G.chain.dragonOutcome) ch.push(S.ch_king[G.chain.dragonOutcome][L]); if (a.id === 'wave3') ch.push(fmt(t('ch_cad'), { n: G.chain.cadres }));
   const nx = nextAssault();
   return h('div', null, h('div', { style: 'text-align:center;font-size:38px;font-weight:bold;color:' + (win ? '#ffe060' : '#ff8080') }, t('rp_title') + '：' + g),
-    h('div', { class: 'par', style: 'padding:8px 16px;font-size:15px;line-height:1.6;max-height:200px;overflow-y:auto' }, (B.pact ? [t('bt_pact')] : lines).map(l => h('p', null, '・' + l)), ch.length ? h('p', null, '▸ ' + t('rp_chain') + '：' + ch.join('／')) : null, nx && !G.ending ? h('p', null, '▸ ' + fmt(t('rp_next'), { n: ASSAULT_DEF[nx.id].short[L], p: pct(winProb(nx)) })) : null),
+    h('div', { class: 'par', style: 'padding:8px 16px;font-size:15px;line-height:1.6;max-height:230px;overflow-y:auto' }, (B.pact ? [t('bt_pact')] : lines).map(l => h('p', null, '・' + l)), h('p', { style: 'color:#7a4a00;font-weight:bold;margin-top:4px' }, '◆ ' + t('rp_god')), ...godDidLines(B, a).map(l => h('p', { style: 'color:#4a3000' }, '　' + l)), ch.length ? h('p', null, '▸ ' + t('rp_chain') + '：' + ch.join('／')) : null, nx && !G.ending ? h('p', null, '▸ ' + fmt(t('rp_next'), { n: ASSAULT_DEF[nx.id].short[L], p: pct(winProb(nx)) })) : null),
     h('div', { style: 'text-align:center;margin-top:10px' }, h('span', { class: 'btn big', onclick: () => { G.battle = null; Screens.closeAll(); UI.refresh(true); if (G.ending && G.onEnd) G.onEnd(G.ending); } }, t('rp_close'))));
 }
 /* ---------- council ---------- */
@@ -212,6 +212,7 @@ function attachWarHooks() {
   G.onBattleEnd = B => { Screens.rerender(); };
   G.onCouncil = C => { setTimeout(() => { if (Game.tut && Game.tut.on) return; Screens.council(); }, 50); }; // during the tutorial the council waits (opened when it ends)
   G.onCard = id => { UI.cardSig = ''; Snd.se('pray'); };
+  if (typeof attachV41Hooks === 'function') setTimeout(attachV41Hooks, 0);
 }
 /* ---------- dragon sprite (48x40) ---------- */
 function dragonGrid(f) {

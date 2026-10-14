@@ -10,7 +10,7 @@ const ROBE_JOBS = { mage: 1, priest: 1, historian: 1 };
 const SKIRT_JOBS = { farmer: 1, merchant: 1, herbalist: 1, weaponer: 1, armorer: 1 };
 function darkHex(hex, k) { const [r, g, b] = hexRgb(hex); return rgbHex(r * k, g * k, b * k); }
 function mixHex(a, b, k) { const A = hexRgb(a), B = hexRgb(b); return rgbHex(A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k); }
-function roleOf(h) { if (h.age < ADULT_AGE) return 'child'; if (h.job === 'swordsman') return (h.age < 56 && (h.lvl || 1) >= 6) ? 'hero' : 'warrior'; return h.job; }
+function roleOf(h) { if (h.age < ADULT_AGE) return 'child'; if (h.job === 'swordsman') return (typeof G !== 'undefined' && G && G.heroId === h.id) ? 'hero' : 'warrior'; return h.job; } // V4.1-A11: only the one title-holder looks like the hero
 function humanRamps(h) {
   const L = h.look, role = roleOf(h), child = role === 'child', elder = h.age >= 56, female = h.sex === 'F';
   const VAR = !child && ROLE_VARIANT[role] ? ROLE_VARIANT[role][lookVariant(h)] : null;

@@ -23,7 +23,7 @@ const REG = { town: [17, 11], church: [18, 2], farm: [0, 8], plaza: [19, 13], cl
     const rows = []; jobs.forEach((j, ji) => ['M', 'F'].forEach(sx => rows.push({ job: j, sex: sx, lvl: ji === 1 ? 8 : 1, age: 24 })));
     ['M', 'F'].forEach(sx => { rows.push({ job: 'farmer', sex: sx, lvl: 1, age: 9 }); rows.push({ job: 'farmer', sex: sx, lvl: 1, age: 64 }); });
     const cs = document.createElement('canvas'); const cw = 3 * 4 * 18 + 8, chh = rows.length * 26 + 4; cs.width = cw; cs.height = chh; const cc = cs.getContext('2d'); cc.fillStyle = '#6a8a4a'; cc.fillRect(0, 0, cw, chh);
-    rows.forEach((r, ri) => { for (let v = 0; v < 3; v++) for (let d = 0; d < 4; d++) { const h = { id: 7000 + ri * 10 + v, alive: true, job: r.job, sex: r.sex, age: r.age, lvl: r.lvl, look: { hair: (ri * 3 + v * 2) % 8, style: v, skin: (ri + v) % 4, cloth: (ri + v * 3) % 8 } }; cc.drawImage(humanSprite(h, d, 0), 4 + (v * 4 + d) * 18, 2 + ri * 26); } });
+    rows.forEach((r, ri) => { for (let v = 0; v < 3; v++) for (let d = 0; d < 4; d++) { const h = { forceRole: ri < 2 ? 'hero' : undefined, id: 7000 + ri * 10 + v, alive: true, job: r.job, sex: r.sex, age: r.age, lvl: r.lvl, look: { hair: (ri * 3 + v * 2) % 8, style: v, skin: (ri + v) % 4, cloth: (ri + v * 3) % 8 } }; cc.drawImage(humanSprite(h, d, 0), 4 + (v * 4 + d) * 18, 2 + ri * 26); } });
     out.chars = up(cs, 4);
     // building sheet (day / night): crop each building from the baked world canvas
     const wc = getWorldCanvas(0); const bs = document.createElement('canvas'); bs.width = 900; bs.height = 300; const bc = bs.getContext('2d'); bc.fillStyle = '#4a6a3a'; bc.fillRect(0, 0, 900, 300);

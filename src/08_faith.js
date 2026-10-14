@@ -1,10 +1,10 @@
 /* ================= faith / divine powers / counsel / policy ================= */
-const FATIGUE_WIN = 30 * TICK_DAY;
+const FATIGUE_WIN = 6 * TICK_DAY; // V4.1-A14: fatigue only remembers the last half year
 function godOf() { return GODS.find(g => g.id === G.god) || GODS[0]; }
 function fatigueStage(pid) {
   G.hist = G.hist.filter(x => G.tick - x.t < FATIGUE_WIN);
   const n = G.hist.filter(x => x.p === pid).length;
-  return Math.floor(n / 3);
+  return Math.floor(n / 4);
 }
 function powerCost(pid) {
   const base = POWER_BY_ID[pid].cost; const gm = godOf().cost[pid] || 1;
@@ -29,8 +29,8 @@ function rollOutcome(p) {
 function resolvePrayer(pr, outcome, pid, h) {
   if (!pr || pr.state !== 'open') return;
   pr.state = outcome === 'twist' ? 'twisted' : 'answered'; pr.by = pid; pr.out = outcome;
-  const gain = outcome === 'crit' ? 10 : outcome === 'success' ? 6 : 2.5;
-  G.faith = Math.min(G.faithMax, G.faith + gain); G.lastAnswer = G.tick; G.stats.answered++; G._gain = gain; G._pk = pr.kind;
+  const c0 = G._castCost || 10; const gain = Math.round(c0 * (outcome === 'crit' ? 2 : outcome === 'success' ? 1.3 : 0.6) * 10) / 10; // V4.1-A14: a good god earns faith back
+  G.faith = Math.min(G.faithMax, G.faith + gain); faithLog('ans', gain); G.lastAnswer = G.tick; G.stats.answered++; G.ansN = (G.ansN || 0) + 1; G._gain = gain; G._pk = pr.kind;
   h.needs.faith = Math.max(0, h.needs.faith - 40); h.disappoint = Math.max(0, (h.disappoint || 0) - 1);
   if (G.onPrayerEnd) G.onPrayerEnd(pr);
   if (!G.tut.prayer) G.tut.prayer = true;
@@ -54,7 +54,7 @@ function castPower(pid, tid, dir) {
   const p = successProb(pid, h || tgtH);
   const outcome = rollOutcome(p);
   const pk0 = h ? ((prayerOf(h) || {}).kind || '') : '';
-  G.faith -= cost; G.hist.push({ p: pid, t: G.tick }); G.stats.casts++;
+  G.faith -= cost; faithLog('cast', -cost); G._castCost = cost; G.hist.push({ p: pid, t: G.tick }); G.stats.casts++;
   if (h && !G.mainLocked) { G.mainLocked = true; if (!G.chapters.some(c => c.who && c.who[0] === G.main) && h.age >= 16 && h.alive) G.main = h.id; }
   const res = { ok: true, outcome, cost, pid, p, tid, name: h ? h.name : s ? s.name : null, dir }; const bal0 = G.balance; G._gain = 0; G._pk = '';
   if (pid === 'oracle') doOracle(h, outcome, dir || 'kind', res);
@@ -104,7 +104,7 @@ function doGrace(h, out, res) {
   if (out === 'fail') return;
   if (out === 'twist') { h.hp = Math.min(h.maxHp, h.hp + h.maxHp * 0.15); h.gold += 15; h.bias = { kind: 'brave', until: G.tick + 2 * TICK_DAY }; res.side = 'hubris'; }
   else {
-    const f = out === 'crit' ? 1 : 0.55; h.hp = Math.min(h.maxHp, h.hp + h.maxHp * f);
+    const f = out === 'crit' ? 1 : 0.55; h.hp = Math.min(h.maxHp, h.hp + h.maxHp * f); h.graces = (h.graces || 0) + 1;
     h.buffs.grace = G.tick + (out === 'crit' ? 4 : 2) * TICK_DAY;
     if (out === 'crit') { addExp(h, h.lvl * 22 * 0.35); }
     if (h.alive) { const st = hStats(h); h.maxHp = st.hp; }
@@ -232,3 +232,18 @@ function policyPrep() {
   if (left <= SEASON_T && prepAvailable('bless') && G.faith >= 15 + 25) { doPrep('bless'); return true; }
   return false;
 }
+/* V4.1-A14 test policy 'engaged': answer every prayer with the advised power, 2 preps before each assault, help in every battle phase */
+function policyEngaged() {
+  if (G.tick % 6 !== 0) return;
+  const a = G.assaults && nextAssault(); const soon = a && a.t - G.tick <= SEASON_T;
+  if (soon) { G.engPrep = G.engPrep || {}; if ((G.engPrep[a.id] || 0) < 2) { const ad = advisorPreps(1)[0]; if (ad && G.faith >= PREP[ad.id].cost + 20 && doPrep(ad.id)) { G.engPrep[a.id] = (G.engPrep[a.id] || 0) + 1; return; } } }
+  const reserve = soon ? 40 : 0;
+  for (const pr of openPrayers().sort((x, y) => y.urg - x.urg)) {
+    const h = hById(pr.hid); if (!h || !h.alive) continue; const pid = PRAYER_ANS[pr.kind][0];
+    if (G.faith >= powerCost(pid) + reserve) { castPower(pid, h.id, pr.kind === 'battle' ? 'brave' : 'kind'); continue; }
+    if (!pr.listened && pr.exp - G.tick < 12) listenPrayer(pr.id);
+  }
+}
+
+/* V4.1-A12-6 easy mode: ordinary prayers are answered automatically (the urgent ones stay with the player) */
+function easyAuto() { for (const pr of openPrayers()) { if (pr.urg >= 0.75) continue; const h = hById(pr.hid); if (!h || !h.alive) continue; const pid = PRAYER_ANS[pr.kind][0]; if (G.faith >= powerCost(pid) + 25 && pr.t + 12 <= G.tick) { castPower(pid, h.id, pr.kind === 'battle' ? 'brave' : 'kind'); return; } } }

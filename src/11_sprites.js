@@ -52,9 +52,11 @@ const Render = {
     const prayers = {}; G.prayers.forEach(p => { if (p.state === 'open') prayers[p.hid] = p; });
     // prayer pillars (behind)
     for (const it of list) { if (it.k === 0 && prayers[it.e.id]) { const p = prayers[it.e.id]; const sx = it.x * TS + 8 - cx, sy = it.y * TS + 12 - cy; const pul = 0.55 + 0.25 * Math.sin(this.time / 8 + it.e.id); const col = p.urg > 0.75 ? '255,120,80' : p.urg > 0.5 ? '255,200,80' : '255,240,160'; const gr = c.createLinearGradient(0, sy - 52, 0, sy); gr.addColorStop(0, `rgba(${col},0)`); gr.addColorStop(1, `rgba(${col},${pul})`); c.fillStyle = gr; c.fillRect(sx - 3, sy - 52, 6, 52); c.fillStyle = `rgba(255,255,255,${pul * .6})`; c.fillRect(sx - 1, sy - 48, 2, 48); } }
+    // all ground shadows in one multiply pass (x0.6)
+    c.globalCompositeOperation = 'multiply'; c.fillStyle = '#999999'; c.beginPath(); for (const it of list) { const e = it.e; const sx = Math.round(it.x * TS + 8 - cx), sy = Math.round(it.y * TS + 14 - cy); const rx = it.k && (e.boss || e.cad >= 0) ? 11 : 6; c.moveTo(sx + 2 + rx, sy); c.ellipse(sx + 2, sy, rx, 2.4, 0, 0, 7); } c.fill(); c.globalCompositeOperation = 'source-over';
     for (const it of list) {
       const e = it.e; const sx = Math.round(it.x * TS + 8 - cx), sy = Math.round(it.y * TS + 14 - cy);
-      c.globalCompositeOperation = 'multiply'; c.fillStyle = '#999999'; c.beginPath(); c.ellipse(sx + 2, sy, it.k && (e.boss || e.cad >= 0) ? 11 : 6, 2.4, 0, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over';
+      
       if (it.k === 0) { const sl = soulOf(e); if (sl && sl.fav) { c.strokeStyle = '#ffd860'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } else if (G.track.indexOf(e.id) >= 0) { c.strokeStyle = '#60d8ff'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(sx, sy, 8, 3.4, 0, 0, 7); c.stroke(); } if (e.id === Game.flashId) { const k = 8 + Math.sin(this.time / 4) * 3; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.ellipse(sx, sy - 6, k, k * 1.2, 0, 0, 7); c.stroke(); } }
       let spr, ox = 0, oy = 0;
       if (it.k === 0) {
@@ -76,10 +78,10 @@ const Render = {
         if (e.id === this.sel || e.hp < e.maxHp * 0.99 && (e.tgt || e.hurt > 0 || e.id === this.sel)) { const w = 14; fr(c, '#000a', sx - 7, sy - 29, w + 2, 4); fr(c, '#3a3a3a', sx - 6, sy - 28, w, 2); fr(c, e.hp / e.maxHp > 0.5 ? '#40e060' : e.hp / e.maxHp > 0.25 ? '#e0c040' : '#e04040', sx - 6, sy - 28, Math.max(1, Math.round(w * e.hp / e.maxHp)), 2); }
         if (e.id === this.sel) { const bob = Math.round(Math.sin(this.time / 6) * 1.5); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(sx - 4, sy - 36 + bob); c.lineTo(sx + 4, sy - 36 + bob); c.lineTo(sx, sy - 31 + bob); c.fill(); }
       } else {
-        const atk = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.4 && Math.sin(this.time / 2.5 + e.id) > 0.2; spr = monsterSprite(e, atk ? 2 : (this.time >> 4) & 1); const bw = spr.width, bh = spr.height;
+        const atk = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.4 && Math.sin(this.time / 2.5 + e.id) > 0.2; spr = monsterSprite(e, atk ? 2 : ((this.time >> 3) + e.id) % 3); const bw = spr.width, bh = spr.height;
         const bob = e.type === 'bat' ? Math.round(Math.sin(this.time / 5 + e.id) * 2) - 6 : 0;
         if (e.hurt > 0) c.filter = 'brightness(2.6)';
-        if (e.dir === 2 && !e.boss) { c.save(); c.translate(Math.round(sx), 0); c.scale(-1, 1); c.drawImage(spr, Math.round(-bw / 2), Math.round(sy - bh + 2 + bob)); c.restore(); } else c.drawImage(spr, Math.round(sx - bw / 2), Math.round(sy - bh + 2 + bob)); c.filter = 'none';
+        if (false && e.dir === 2 && !e.boss) { c.save(); c.translate(Math.round(sx), 0); c.scale(-1, 1); c.drawImage(spr, Math.round(-bw / 2), Math.round(sy - bh + 2 + bob)); c.restore(); } else c.drawImage(spr, Math.round(sx - bw / 2), Math.round(sy - bh + 2 + bob)); c.filter = 'none';
         if (e.hp < e.maxHp || e.boss || e.cad >= 0) { const w = e.boss ? 40 : e.cad >= 0 ? 26 : 14; fr(c, '#000a', sx - w / 2 - 1, sy - bh - 3 + bob, w + 2, 4); fr(c, '#3a3a3a', sx - w / 2, sy - bh - 2 + bob, w, 2); fr(c, e.boss ? '#c040ff' : '#e04040', sx - w / 2, sy - bh - 2 + bob, Math.max(1, Math.round(w * e.hp / e.maxHp)), 2); }
       }
     }

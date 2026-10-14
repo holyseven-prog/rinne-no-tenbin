@@ -34,4 +34,16 @@ for (const lang of ['ja', 'zh']) {
   console.log(lang, 'avg sentence len', (chars / sents).toFixed(1), 'long-sentence rate', (long / sents).toFixed(3), 'idioms/1k chars', (idioms / total * 1000).toFixed(2), 'render banned', bad);
 }
 const ok = hits === 0 && res.ja.bad === 0 && res.zh.bad === 0 && res.zh.avg <= 20 && res.ja.avg <= 30;
-console.log(ok ? 'PASS' : 'FAIL'); process.exit(ok ? 0 : 1);
+if (!ok) { console.log("FAIL"); process.exit(1); }
+/* V4.1-A12-1: tutorial / duty / hint text rules (ja ≤30 chars per sentence, zh ≤20, ≤2 sentences per screen; hard words explained on first use) */
+{
+  const grab = f => { const src = fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8'); const i = src.indexOf('Object.assign(S, {'); const j = src.indexOf('\n});', i); const S0 = {}; vm.runInNewContext('S = {}; Object.assign(S, {' + src.slice(i + 18, j) + '\n});', { S: S0 }); return vm.runInNewContext('S', { S: S0 }) || S0; };
+  let S2 = {}; try { const ctx = {}; const src = fs.readFileSync(path.join(__dirname, '..', 'src', '16b_tutorial41.js'), 'utf8'); const i = src.indexOf('Object.assign(S, {'), j = src.indexOf('\n});', i); S2 = vm.runInNewContext('(' + src.slice(i + 17, j + 2) + ')', ctx); } catch (e) { console.log('tut text parse error', e.message); }
+  let bad = 0; const keys = Object.keys(S2).filter(k => /^(l[123]_|gr_|du_|hi_|g_[1-4])/.test(k));
+  for (const k of keys) { const v = S2[k]; if (!Array.isArray(v) || typeof v[0] !== 'string') continue; [0, 1].forEach(L => { const sents = v[L].replace(/[「」]/g, '').split(/[。！？]/).map(x => x.trim()).filter(Boolean); const lim = L === 0 ? 30 : 20; const maxS = /^g_/.test(k) ? 3 : 2;
+    sents.forEach(z => { const z2 = z.replace(/（[^）]*）/g, '').replace(/\{[a-z]+\}/g, 'xx'); if (z2.length > lim) { bad++; console.log('TUT LONG', L ? 'zh' : 'ja', k, z2.length, z2); } }); if (sents.length > maxS) { bad++; console.log('TUT MANY', L ? 'zh' : 'ja', k, sents.length); } }); }
+  const order = ['l1_card', 'l1_a', 'l1_b', 'l1_c', 'l1_done', 'l2_card', 'l2_a', 'l2_b', 'l2_c', 'l2_d', 'l3_card', 'l3_a', 'l3_b', 'l3_c', 'gr_a', 'gr_card'];
+  [['信仰力', '神力', '攻防', '評定会'], ['信仰力', '神力', '攻防', '評定會']].forEach((terms, L) => terms.forEach(w => { const first = order.map(k => S2[k] && S2[k][L]).find(s => s && s.includes(w)); if (first && first[first.indexOf(w) + w.length] !== '（') { bad++; console.log('TUT TERM not explained', L ? 'zh' : 'ja', w); } }));
+  console.log('tutorial text checks:', keys.length, 'strings, problems', bad); if (bad) { console.log('FAIL'); process.exit(1); }
+}
+console.log('PASS');

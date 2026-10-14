@@ -49,6 +49,7 @@ Object.assign(Game, {
   last: 0, hudT: 0, bgmT: 0, saveT: 0, miniT: 0, noteIdx: 0, lastDay: 0,
   loadSettings() {
     try { const s = Store.get('rinne_tenbin_v1_settings'); if (s) Object.assign(this.settings, JSON.parse(s)); } catch (e) { }
+    if (!this.settings.v41) { if (this.settings.speed === 0) this.settings.speed = 1; this.settings.v41 = 1; } // V4.1-A5: default speed ×4
     LANG = this.settings.lang === 'zh' ? 'zh' : 'ja'; document.documentElement.lang = LANG === 'ja' ? 'ja' : 'zh-TW';
     Snd.vol.bgm = this.settings.bgm; Snd.vol.se = this.settings.se; this.speedIdx = clamp(this.settings.speed, 0, 3); this.applyTheme();
   },

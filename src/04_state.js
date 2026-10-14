@@ -18,7 +18,7 @@ function newGame(o) {
   const seed = (o.seed === undefined ? (Date.now() & 0xffffff) : o.seed) >>> 0;
   const god = GODS.find(g => g.id === (o.god || 'mercy')) || GODS[0];
   G = {
-    ver: 1, seed, god: god.id, gen: o.gen || 1, tick: START_TICK, rng: new RNG(seed), nid: 1,
+    ver: 1, tutMode: !!o.tut, easy: !!o.easy, learn: !!o.learn, seed, god: god.id, gen: o.gen || 1, tick: START_TICK, rng: new RNG(seed), nid: 1,
     humans: [], monsters: [], souls: [], quests: [], parties: [], prayers: [], events: [], chapters: [], log: [],
     faith: god.faith0, faithMax: 150, balance: 20, balAcc: 0, balYear: [], hist: [],
     eye: 3, eyeT: 0, town: { food: 140, gold: 200, hp: 100, potions: 8, gearStock: 4 },
@@ -101,7 +101,8 @@ function initWorldState() {
   for (let i = 0; i < 4; i++) R0.push([rpick(['farmer', 'merchant']), rint(4, 11), 1, { child: true }]);
   ['farmer', 'merchant', 'smith', 'herbalist'].forEach(j => R0.push([j, rint(56, 64), 2, { elder: true }]));
   const used = new Set();
-  R0.forEach((r, i) => {
+  const RR = G.tutMode ? R0.slice(0, 12).concat(R0.filter(r => r[0] === 'farmer' && !(r[3] || {}).child).slice(0, 3), R0.filter(r => r[0] === 'smith').slice(0, 1), R0.filter(r => r[0] === 'herbalist').slice(0, 1), R0.filter(r => (r[3] || {}).child).slice(0, 1)) : R0; // V4.1-A12: small practice world
+  RR.forEach((r, i) => {
     const o = r[3] || {};
     let sex = o.sex || (rchance(0.5) ? 'M' : 'F');
     const nm = o.nm || null;

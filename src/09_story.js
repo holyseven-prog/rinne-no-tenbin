@@ -121,7 +121,7 @@ function dramaScore(ev) {
   const pid = protOf(ev); const arc = pid ? activeArc(pid) : null;
   if (ev.actors.some(i => G.track.indexOf(i) >= 0)) rel += 0.3; else if (arc) rel += 0.25; else if (ev.actors.some(i => G.spot.indexOf(i) >= 0)) rel += 0.15;
   let sc0 = clamp(ev.tension * 0.35 + ev.emotion * 0.25 + Math.min(1, rel) * 0.2 + (TURNING[ev.type] || 0.3) * 0.1 + fresh * 0.1, 0, 1);
-  if (G.chapNo < 10 && G.main) { const mh = G.idx[G.main]; const grp = mh ? [G.main].concat(relatedList(mh)) : [G.main]; if (!ev.actors.some(i => grp.indexOf(i) >= 0)) sc0 -= 0.4; }
+  if (G.chapNo < 10 && G.main) { const mh = G.idx[G.main]; const grp = mh ? [G.main].concat(relatedList(mh)) : [G.main]; if (!ev.actors.some(i => grp.indexOf(i) >= 0)) sc0 -= (G.assaults ? 0.55 : 0.4); }
   if (arc && arc.parts < ARC_PARTS && G.tick - arc.last < 5 * TICK_DAY) sc0 += 0.22;     // continuity bonus
   const lastC = G.chapters[G.chapters.length - 1]; if (lastC && lastC.who && lastC.who[0] && lastC.who[0] !== pid && lastC.arc) { const la = G.arcs.find(a => a.id === lastC.arc); if (la && !la.done && la.parts < 3 && G.tick - la.last < 3 * TICK_DAY) sc0 -= 0.12; } // stay on one story
   return sc0;
@@ -139,8 +139,8 @@ function infoOf(id, otherId) { const h = G.idx[id]; if (!h) return null; const o
 function castOf(ev, sc, seed) {
   const rg = new RNG(seed); const meta = SMETA[sc] || {}; let ids = ev.actors.filter(i => G.idx[i] && G.idx[i].alive !== false || (ev.names && ev.names[i])).slice(0, 3);
   ids = ids.filter((i, k) => ids.indexOf(i) === k);
-  const hero = () => { const mh = G.idx[G.main]; if (mh && mh.alive && isAdv(mh)) return mh.id; const a = G.humans.filter(h => h.alive && isAdv(h)).sort((x, y) => advPower(y) - advPower(x)); return a[0] ? a[0].id : 0; };
-  if (meta.kind === 'war' && (!ids.length || sc === 'omen' || sc === 'siege' || sc === 'raid' || (ev.type === 'assault_end' && ids.indexOf(G.main) < 0))) { const hid = hero(); if (hid) ids = [hid].concat(ids.filter(i => i !== hid)); }
+  const hero = () => { const mh = G.idx[G.main]; if (mh && mh.alive && (isAdv(mh) || (ev.type === 'assault_end' && mh.age >= 16))) return mh.id; const a = G.humans.filter(h => h.alive && isAdv(h)).sort((x, y) => advPower(y) - advPower(x)); return a[0] ? a[0].id : 0; };
+  if (meta.kind === 'war' && (!ids.length || sc === 'omen' || sc === 'siege' || sc === 'raid' || (ev.type === 'assault_end' && ids[0] !== G.main))) { const hid = hero(); if (hid) ids = [hid].concat(ids.filter(i => i !== hid)); }
   if (!ids.length && !(sc === 'prologue')) { let a = G.humans.filter(h => h.alive && h.age >= 16); if (!a.length) a = G.humans.filter(h => h.alive); if (a.length) ids = [rg.pick(a).id]; }
   if (sc === 'funeral' && ids.length) { const d = G.idx[ids[0]]; let b = 0; if (d) { const rl = relatedList(d); b = rl[0] || 0; } if (b && ids.indexOf(b) < 0) ids.push(b); }
   else if (ids.length < 2 && ids.length) { const b = partnerOf(G.idx[ids[0]]); if (b && ids.indexOf(b) < 0) ids.push(b); }
@@ -298,7 +298,7 @@ function chronTick() {
     const s = dramaScore(ev); if (s > bs) { bs = s; best = ev; }
   }
   const since = (G.tick - (G.lastChapTick || 0)) / (G.assaults ? 1 + Math.max(0, G.chapNo - 32) / 10 : 1 + Math.max(0, G.chapNo - 55) / 40) * (G.tick < START_TICK + 3 * TICK_YEAR ? 0.14 : 1);
-  if (G.tick < START_TICK + 3 * TICK_YEAR && G.chapNo > (G.assaults ? 4 : 7)) return;
+  if (G.tick < START_TICK + 3 * TICK_YEAR && G.chapNo > (G.assaults ? 5 : 7)) return;
   if (best && ((bs >= 0.5 && since >= TUNE_STORY.gap) || (bs >= 0.3 && since >= TUNE_STORY.slow) || (bs >= 0.78 && since >= 36))) {
     const sc = sceneFor(best); const ch0 = makeChapter(sc, best); if (!ch0) return; G.lastChapTick = G.tick; G.lastScene = G.lastScene || {}; G.lastScene[sc] = G.tick;
     G.events.forEach(e => { if (!e.used && ((e.type === best.type && Math.abs(e.t - best.t) < 12) || (e.t < best.t && !FORCE_EV[e.type]))) { noteEvent(e); } });

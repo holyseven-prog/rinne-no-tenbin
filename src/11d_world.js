@@ -3,8 +3,8 @@
 const hsh = (x, y, s) => { let n = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul((s || 0) | 0, 1442695041)) | 0; n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
 /* material ramps: [outline/darkest, dark, mid, light, highlight] per season (spring, summer, autumn, winter). Dark = cooler, light = warmer. */
 const PAL5 = {
-  grass: [['#1d4520', '#2b6428', '#3c8030', '#529c38', '#78bc48'], ['#1a4020', '#275c26', '#34762c', '#4a9034', '#6cb042'], ['#3a3418', '#5c5524', '#7a6e30', '#9a8a3c', '#c0a850'], ['#5a6a7c', '#9eb0c2', '#c4d0de', '#e0e8f2', '#f8fbff']],
-  path: [['#4e3620', '#71502e', '#94703f', '#b58f58', '#d6b47c'], ['#4e3620', '#71502e', '#94703f', '#b58f58', '#d6b47c'], ['#4a321e', '#6c4a2a', '#8c683a', '#ac8852', '#ccac74'], ['#5a5048', '#8a8078', '#aaa29a', '#c6c0b8', '#e4e0dc']],
+  grass: [['#1d4a20', '#2f6e2a', '#46923a', '#5eae44', '#86c858'], ['#1a4420', '#2c6828', '#408a34', '#56a43e', '#7cbe4e'], ['#3a3418', '#5c5524', '#7a6e30', '#9a8a3c', '#c0a850'], ['#5a6a7c', '#9eb0c2', '#c4d0de', '#e0e8f2', '#f8fbff']],
+  path: [['#6a4626', '#a0703c', '#c89a5c', '#dcb478', '#ecd29c'], ['#6a4626', '#a0703c', '#c89a5c', '#dcb478', '#ecd29c'], ['#4a321e', '#6c4a2a', '#8c683a', '#ac8852', '#ccac74'], ['#5a5048', '#8a8078', '#aaa29a', '#c6c0b8', '#e4e0dc']],
   stone: [['#3a3230', '#6a5e52', '#8c7e6e', '#ad9f8b', '#d0c4ae'], ['#3a3230', '#6a5e52', '#8c7e6e', '#ad9f8b', '#d0c4ae'], ['#3a3230', '#665a4e', '#887a6a', '#a89a86', '#ccc0aa'], ['#4a4650', '#7a7884', '#9e9ca8', '#c4c4cc', '#eef0f4']],
   field: [['#2e1c10', '#4e3018', '#6c4424', '#8a5c32', '#a87a48'], ['#2e1c10', '#4e3018', '#6c4424', '#8a5c32', '#a87a48'], ['#2e1c10', '#4a2e18', '#664020', '#82562e', '#a07444'], ['#5a5a66', '#8c8c98', '#b4b4c0', '#d8dce4', '#f4f6fa']],
   sand: [['#6a5434', '#a88c5a', '#c8ac74', '#dcc490', '#f0dcb0'], ['#6a5434', '#a88c5a', '#c8ac74', '#dcc490', '#f0dcb0'], ['#64502e', '#a08454', '#c0a46c', '#d4bc88', '#e8d4a8'], ['#6a6a74', '#a8a8b4', '#cccdd6', '#e4e6ee', '#fafbff']],
@@ -226,17 +226,18 @@ Object.assign(PROPS, {
   crates2: (c, x, y) => { shadowPx(c, x + 9, y + 14, 7, 2); const R = mkRamp('#a8783c'); boxPx(c, R, x + 1, y + 8, 8, 6); boxPx(c, R, x + 8, y + 9, 7, 5); boxPx(c, R, x + 4, y + 3, 7, 5); fr(c, R.d, x + 1, y + 10, 8, 1); fr(c, R.d, x + 8, y + 11, 7, 1); },
   stoneSmall: (c, x, y, sea) => { const R = seaRamp('cliff', sea); shadowPx(c, x + 10, y + 13, 5, 2); ell(c, R.o, x + 8, y + 10, 5, 3); ell(c, R.b, x + 7, y + 9, 4, 2); fr(c, R.l, x + 5, y + 8, 3, 1); fr(c, R.h, x + 5, y + 8, 1, 1); },
   fenceH: (c, x, y, sea) => { const Wd = R5(PAL5.wood[0]); shadowRect(c, x, y + 12, 16, 2); fr(c, Wd.o, x, y + 5, 16, 3); fr(c, Wd.l, x, y + 5, 16, 1); fr(c, Wd.o, x, y + 9, 16, 3); fr(c, Wd.b, x, y + 10, 16, 1); [2, 13].forEach(p => { fr(c, Wd.o, x + p - 1, y + 2, 3, 11); fr(c, Wd.b, x + p, y + 3, 1, 9); }); if (sea === 3) fr(c, '#f4f8fc', x, y + 4, 16, 1); },
+  bones: (c, x, y) => { shadowPx(c, x + 9, y + 14, 5, 1); const W2 = '#ece4d0', D2 = '#a89c84'; fr(c, '#181020', x + 4, y + 8, 9, 6); fr(c, W2, x + 5, y + 9, 7, 4); fr(c, '#181020', x + 6, y + 10, 2, 2); fr(c, '#181020', x + 9, y + 10, 2, 2); fr(c, D2, x + 6, y + 12, 5, 1); fr(c, W2, x + 1, y + 13, 5, 1); fr(c, W2, x + 11, y + 12, 4, 1); fr(c, D2, x + 1, y + 14, 5, 1); },
   signboard: (c, x, y) => { shadowPx(c, x + 9, y + 15, 5, 1); const R = R5(PAL5.wood[0]); fr(c, R.o, x + 3, y + 8, 2, 8); fr(c, R.o, x + 11, y + 8, 2, 8); fr(c, R.o, x + 1, y + 2, 14, 8); fr(c, R.l, x + 2, y + 3, 12, 6); for (let i = 0; i < 3; i++) fr(c, '#f0e8d0', x + 3 + i * 4, y + 4 + (i % 2), 3, 2); },
 });
 const PROP_KEYS = Object.keys(PROPS);
 let LAMPS = [], FLAGS = [], CHIMS = [], WIN_RECTS_ = [], SPINNERS = [], SPRAYS = [];
 /* ---------- buildings (V3.4): tiled roofs, stone / plank / half-timber walls, framed windows, 2nd floor, right-side multiply shadow ---------- */
-const KIND_ROOF = { church: '#5a6688', guild: '#2f5fc0', tavern: '#8a4a2a', smithy: '#4e4e5c', shop: '#c04434', armor: '#2f8f9e', apothecary: '#3a8a40', inn: '#d0802c', mill: '#a05a30' };
-const HOUSE_ROOF = ['#962c28', '#7a5a3a', '#4a5a7a', '#5a6a3a'];
+const KIND_ROOF = { church: '#2a5ab1', guild: '#2a5ab1', tavern: '#ca3b3b', smithy: '#5a6a8a', shop: '#ca3b3b', armor: '#2a5ab1', apothecary: '#3e8a40', inn: '#3e8a40', mill: '#a05a30', itemshop: '#ca3b3b', market: '#ca3b3b', library: '#2a5ab1', manor: '#2a5ab1', barracks: '#4e5676', watchtower: '#2a5ab1' };
+const HOUSE_ROOF = ['#ca3b3b', '#2a5ab1', '#3e8a40', '#e0a828', '#8a5a34']; // red, blue, green, yellow, brown (5 colours, houses rotate)
 const PLAQUE = { guild: 'battle', shop: 'weaponer', armor: 'armorer', smithy: 'smith', tavern: 'mug', inn: 'bed', apothecary: 'potion' };
 const WALL_KIND = { church: 'stone', smithy: 'stone', guild: 'timber', tavern: 'timber', inn: 'timber', castle: 'stone', shop: 'plank', armor: 'plank', apothecary: 'plank', house: 'plank', hut: 'plank', mill: 'plank' };
 const WALL_HEX = { church: '#d8d4dc', smithy: '#8c8478', guild: '#e6d6b0', tavern: '#e0caa0', inn: '#ecdcb8', shop: '#c09060', armor: '#a8a8b8', apothecary: '#b89a6a', house: '#b88a58', hut: '#a07a50', mill: '#c8a878' };
-function roofGeom(b) { const k = b.kind; const h = b.h * TS; const roofH = k === 'church' ? 40 : b.h >= 5 ? 36 : b.h >= 4 ? 32 : 24; return { roofH, wallH: h - roofH }; }
+function roofGeom(b) { const k = b.kind; const h = b.h * TS; const roofH = k === 'church' ? 40 : b.h >= 5 ? 44 : b.h >= 4 ? 38 : 28; return { roofH, wallH: h - roofH }; } // the village sheet: steep roofs ~60% of the facade
 function drawRoof(c, px, py, w, roofH, RR, inset, sea) {
   const ov = 4, rt = py + 1, rb = py + roofH; const rows = rb - rt;
   const edge = r => { const t = r / rows; const ins = Math.round(inset * (1 - Math.min(1, t * 1.25))); return [px - ov + ins, px + w + ov - ins]; };
@@ -287,27 +288,28 @@ function drawChimney(c, cx0, cy0, h, big) { const BR = mkRamp('#9a5040'); fr(c, 
 function drawBuilding(c, b, sea) {
   const px = b.x * TS, py = b.y * TS, w = b.w * TS, h = b.h * TS; const k = b.kind;
   if (k === 'castle') { shadowRect(c, px + w, py + 14, 6, h - 10); drawCastle(c, b, sea, px, py, w, h); return; }
-  const RR = mkRamp(KIND_ROOF[k] || HOUSE_ROOF[b.roof % 4]); const WR = mkRamp(WALL_HEX[k] || '#b88a58'); const Wd = R5(PAL5.wood[0]);
+  const RR = mkRamp(KIND_ROOF[k] || HOUSE_ROOF[(b.id + b.roof) % 5]); const WR = mkRamp(WALL_HEX[k] || '#b88a58'); const Wd = R5(PAL5.wood[0]);
   const { roofH, wallH } = roofGeom(b); const wy0 = py + roofH;
   // right-side shadow (6px, multiply) and ground contact shadow
   mulDo(c, () => { for (let r = 0; r < h - 4; r++) fr(c, SHADOW_MUL, px + w + 4, py + 6 + r, Math.min(6, Math.floor(r / 1.5) + 1), 1); fr(c, SHADOW_MUL, px + 2, py + h, w + 4, 2); });
   if (k === 'church') { drawChurch(c, b, sea, px, py, w, h, RR, WR, Wd); return; }
+  if (k === 'mill') { drawMillTower(c, px, py, w, h, sea); SPINNERS.push({ x: px + w / 2, y: py + 10, r: 22 }); return; }
   drawWall(c, k, px + 1, wy0, w - 2, wallH - 4, WR, Wd);
   const FD = seaRamp('stone', 0); fr(c, FD.o, px, py + h - 4, w, 4); fr(c, FD.b, px + 1, py + h - 4, w - 2, 3); fr(c, FD.l, px + 1, py + h - 4, w - 2, 1); for (let xx = 4; xx < w - 2; xx += 7) fr(c, FD.d, px + xx, py + h - 3, 1, 2);
   mulDo(c, () => fr(c, SHADOW_MUL, px + 1, wy0, w - 2, 3)); // eave shadow on the wall
   // chimney (behind roof top) then roof
-  drawRoof(c, px, py, w, roofH, RR, b.w >= 7 ? 12 : 9, sea);
+  if (k === 'hut') drawThatch(c, px, py, w, roofH, sea, b.id % 2 ? '#d8b048' : '#a07844'); else if (k === 'mill') drawMillTower(c, px, py, w, h, sea); else drawRoof(c, px, py, w, roofH, RR, b.w >= 7 ? 12 : 9, sea);
   if (k === 'house' || k === 'hut' || k === 'smithy' || k === 'inn' || k === 'tavern' || k === 'shop' || k === 'apothecary') drawChimney(c, px + w - 24 - (k === 'smithy' ? 4 : 0), py - (k === 'smithy' ? 6 : 3), 15 + (k === 'smithy' ? 3 : 0), k === 'smithy');
   if (k === 'mill') { fr(c, '#5a3a22', px + w / 2 - 1, py + 6, 2, 2); SPINNERS.push({ x: px + w / 2, y: py + 8, r: 18 }); }
   // door + windows
   const dx = b.door.x * TS, dy = b.door.y * TS; drawDoor(c, dx, dy, k, Wd, k === 'guild' || k === 'inn');
-  const shut = k === 'house' || k === 'hut'; const shutCol = HOUSE_ROOF[(b.roof + 1) % 4];
+  const shut = k === 'house' || k === 'hut'; const shutCol = HOUSE_ROOF[(b.id + b.roof + 1) % 5];
   const twoFloor = b.h >= 5; const lowY = twoFloor ? wy0 + Math.floor((wallH - 4) * 0.48) + 8 : wy0 + 8; const upY = wy0 + 6;
   const slots = []; for (let xx = px + 10; xx + 10 < px + w - 6; xx += 22) slots.push(xx);
   slots.forEach(xx => { if (Math.abs(xx + 5 - (dx + 8)) < 14) return; drawWindow(c, xx, lowY, 10, 9, Wd, shut, shutCol); });
   if (twoFloor) slots.forEach(xx => drawWindow(c, xx, upY, 10, 8, Wd, false));
   // hanging sign board with the shop icon next to the door + plaque on the roof
-  if (PLAQUE[k]) { const ic = iconCanvas(PLAQUE[k]); const bx = Math.round(px + w / 2 - 13), by = py + Math.max(4, roofH - 30); fr(c, '#1c1626', bx - 1, by - 1, 28, 26); fr(c, '#f4e8c0', bx, by, 26, 24); fr(c, '#c8b078', bx, by + 21, 26, 3); fr(c, KIND_ROOF[k] || '#888', bx + 1, by + 1, 24, 2); if (ic) c.drawImage(ic, bx + 5, by + 4, 16, 16); fr(c, '#5a3a22', bx + 3, by - 4, 2, 3); fr(c, '#5a3a22', bx + 21, by - 4, 2, 3);
+  if (PLAQUE[k]) { const ic = iconCanvas(PLAQUE[k]); const bx = Math.round(px + w / 2 - 13), by = py + Math.max(4, roofH - 30); fr(c, '#1c1626', bx - 1, by - 1, 28, 26); fr(c, '#f4e8c0', bx, by, 26, 24); fr(c, '#c8b078', bx, by + 21, 26, 3); fr(c, KIND_ROOF[k] || '#888', bx + 1, by + 1, 24, 2); if (k === 'inn') drawPixText(c, 'INN', bx + 2, by + 7, '#2a3a20'); else if (ic) c.drawImage(ic, bx + 5, by + 4, 16, 16); fr(c, '#5a3a22', bx + 3, by - 4, 2, 3); fr(c, '#5a3a22', bx + 21, by - 4, 2, 3);
     const sx = dx + 16, sy = dy - 6; fr(c, Wd.o, sx - 1, sy - 2, 8, 2); fr(c, Wd.o, sx, sy, 1, 3); fr(c, Wd.o, sx + 5, sy, 1, 3); fr(c, Wd.o, sx - 2, sy + 3, 10, 8); fr(c, '#f0e0a8', sx - 1, sy + 4, 8, 6); if (ic) c.drawImage(ic, sx - 1, sy + 4, 8, 6); }
   if (k === 'guild') { fr(c, '#5a3a22', px + w - 8, py - 16, 2, 26); FLAGS.push({ x: px + w - 6, y: py - 15, col: '#c04040' }); }
   if (k === 'tavern') { const R = mkRamp('#e0a030'); fr(c, R.o, dx - 10, dy - 4, 7, 8); fr(c, R.b, dx - 9, dy - 3, 5, 6); fr(c, '#fff', dx - 9, dy - 3, 5, 2); }
@@ -338,7 +340,7 @@ function drawCastle(c, b, sea, px, py, w, h) {
   drawWall(c, 'castle', px + 2, py + 18, w - 4, h - 18, S, Wd);
   // battlements + corner towers
   for (let i = 0; i < w - 4; i += 8) { fr(c, S.o, px + 2 + i, py + 12, 6, 7); fr(c, S.b, px + 3 + i, py + 13, 4, 6); fr(c, S.l, px + 3 + i, py + 13, 4, 1); }
-  [px - 2, px + w - 22].forEach((x0, i) => { drawWall(c, 'castle', x0, py - 6, 24, h + 2, mkRamp('#5a5070'), Wd); for (let j = 0; j < 24; j += 6) { fr(c, S.o, x0 + j, py - 12, 5, 7); fr(c, S.l, x0 + j + 1, py - 11, 3, 1); } fr(c, '#14081c', x0 + 8, py + 4, 8, 14); fr(c, '#c040e0', x0 + 10, py + 6, 4, 10); WIN_RECTS.push({ x: x0 + 10, y: py + 6, w: 4, h: 10, purple: true }); const R2 = mkRamp('#6a3a8a'); for (let r = 0; r < 18; r++) { const half = Math.max(1, Math.round(14 * r / 18)); fr(c, R2.o, x0 + 12 - half - 1, py - 30 + r, half * 2 + 2, 1); fr(c, R2.b, x0 + 12 - half, py - 30 + r, half * 2, 1); fr(c, R2.l, x0 + 12 - half, py - 30 + r, Math.max(1, half - 3), 1); } FLAGS.push({ x: x0 + 13, y: py - 38, col: '#7a30a0' }); fr(c, '#14101e', x0 + 11, py - 40, 2, 10); });
+  [px - 2, px + w - 22].forEach((x0, i) => { drawWall(c, 'castle', x0, py - 6, 24, h + 2, mkRamp('#5a5070'), Wd); for (let j = 0; j < 24; j += 6) { fr(c, S.o, x0 + j, py - 12, 5, 7); fr(c, S.l, x0 + j + 1, py - 11, 3, 1); } fr(c, '#14081c', x0 + 8, py + 4, 8, 14); fr(c, '#c040e0', x0 + 10, py + 6, 4, 10); WIN_RECTS.push({ x: x0 + 10, y: py + 6, w: 4, h: 10, purple: true }); const R2 = mkRamp('#6a3a8a'); for (let r = 0; r < 18; r++) { const half = Math.max(1, Math.round(14 * r / 18)); fr(c, R2.o, x0 + 12 - half - 1, py - 30 + r, half * 2 + 2, 1); fr(c, R2.b, x0 + 12 - half, py - 30 + r, half * 2, 1); fr(c, R2.l, x0 + 12 - half, py - 30 + r, Math.max(1, half - 3), 1); } FLAGS.push({ x: x0 + 13, y: py - 38, col: '#ca3b3b' }); fr(c, '#14101e', x0 + 11, py - 40, 2, 10); });
   for (let i = 0; i < 3; i++) { fr(c, '#14081c', px + 34 + i * 14, py + 30, 6, 12); fr(c, '#c040e0', px + 35 + i * 14, py + 31, 4, 10); WIN_RECTS.push({ x: px + 35 + i * 14, y: py + 31, w: 4, h: 10, purple: true }); }
   const dx = b.door.x * TS, dy = b.door.y * TS; fr(c, '#14081c', dx - 6, dy - 20, 28, 36); fr(c, '#14081c', dx - 2, dy - 24, 20, 4); fr(c, '#2a1a34', dx - 4, dy - 18, 24, 34); for (let i = 0; i < 24; i += 4) fr(c, '#3a2448', dx - 4 + i, dy - 18, 2, 34); fr(c, '#8a60b0', dx + 14, dy, 2, 2);
   fr(c, '#d060ff', px + w / 2 - 4, py + 20, 8, 8); fr(c, '#fff', px + w / 2 - 1, py + 23, 2, 2);
@@ -407,3 +409,13 @@ function getWorldCanvas(sea) {
 }
 function getWorldOverlay(sea) { if (!overlayCache[sea]) getWorldCanvas(sea); return overlayCache[sea]; }
 const WIN_RECTS = [];
+
+/* ---------- Part B details: pixel lettering, thatch, windmill tower ---------- */
+const PIXFONT = { I: ['1', '1', '1', '1', '1'], N: ['1001', '1101', '1011', '1001', '1001'] };
+function drawPixText(c, s, x, y, col) { let cx = x; for (const ch of s) { const g = PIXFONT[ch]; if (!g) { cx += 3; continue; } g.forEach((r, j) => { for (let i = 0; i < r.length; i++) if (r[i] === '1') fr(c, col, cx + i * 2, y + j * 2, 2, 2); }); cx += g[0].length * 2 + 2; } }
+function drawThatch(c, px, py, w, roofH, sea, hex) { const R = mkRamp(hex); const ov = 4, rt = py + 2, rb = py + roofH; const rows = rb - rt;
+  for (let r = 0; r < rows; r++) { const ins = Math.round(10 * (1 - Math.min(1, r / rows * 1.3))); const x0 = px - ov + ins, x1 = px + w + ov - ins; fr(c, R.o, x0 - 1, rt + r, x1 - x0 + 2, 1); fr(c, r % 4 === 3 ? R.d : R.b, x0, rt + r, x1 - x0, 1); for (let x = x0 + (r % 3); x < x1; x += 3) fr(c, (x + r) % 2 ? R.l : R.d, x, rt + r, 1, 1); fr(c, R.l, x0, rt + r, 2, 1); fr(c, R.d, x1 - 2, rt + r, 2, 1); }
+  for (let x = px - ov; x < px + w + ov; x += 2) fr(c, R.d, x, rb, 1, 2 + (x % 3)); fr(c, R.o, px - ov - 1, rb + 2, w + ov * 2 + 2, 1); if (sea === 3) fr(c, '#f4f8fc', px - ov + 8, rt, w + ov * 2 - 16, 3); }
+function drawMillTower(c, px, py, w, h, sea) { const S = mkRamp('#a8a4a0'), cx = px + w / 2; for (let y = py + 10; y < py + h - 4; y++) { const hw = Math.round(w / 2 - 6 + (y - py) / h * 6); fr(c, S.o, cx - hw - 1, y, hw * 2 + 2, 1); fr(c, S.b, cx - hw, y, hw * 2, 1); fr(c, S.l, cx - hw, y, 3, 1); fr(c, S.d, cx + hw - 3, y, 3, 1); if ((y - py) % 5 === 0) fr(c, S.d, cx - hw, y, hw * 2, 1); }
+  const RR = mkRamp('#7a4a2a'); for (let r = 0; r < 14; r++) { const hw = Math.round(3 + r * 0.9); fr(c, RR.o, cx - hw - 1, py - 2 + r, hw * 2 + 2, 1); fr(c, r % 3 ? RR.b : RR.l, cx - hw, py - 2 + r, hw * 2, 1); }
+  fr(c, '#3a2a1a', cx - 3, py + h - 16, 6, 12); fr(c, '#7a4a24', cx - 2, py + h - 15, 4, 11); fr(c, '#2a4a7a', cx - 2, py + 18, 4, 5); if (sea === 3) fr(c, '#f4f8fc', cx - 6, py - 2, 12, 3); }

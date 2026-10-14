@@ -58,6 +58,7 @@ function settleDecrees(at, ctx) {
   return out;
 }
 function councilTick() {
+  if (G.tutMode) return; // practice world: the council is opened by the tutorial
   if (!G.assaults) return;
   if (!G.councilDone0 && G.tick >= START_TICK + 12 && !G.council) { G.councilDone0 = 1; openCouncil(0); }
   const dr = G.assaults.find(a => a.id === 'dragon'); if (dr && dr.state === 'done' && !G.councilDone1 && !G.battle) { G.councilDone1 = 1; G.council = null; openCouncil(1); }
@@ -81,6 +82,7 @@ const CARDS = {
 };
 const CARD_KEYS = Object.keys(CARDS);
 function cardTick() {
+  if (G.tutMode) return;
   if (!G.assaults || G.ending) return;
   if (G.tick % TICK_DAY === 0) {
     G.cards = (G.cards || []).filter(c => { if (G.tick - c.t >= 2 * TICK_DAY) { resolveCard(c, 'leave'); return false; } return true; });

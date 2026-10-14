@@ -266,7 +266,6 @@ function addExp(h, v) {
     if (G.fxOn) G.fx.push({ t: 'lvl', x: h.x, y: h.y });
     if (h.master && h.lvl === 8) { const ms = hById(h.master); if (ms && ms.alive) logEvent('mentor_parting', [ms.id, h.id], {}, ['relation'], 0.6, 0.8, h); h.master = 0; }
     if (h.lvl === 5 || h.lvl === 10 || h.lvl === 15) logEvent('promotion', [h.id], { lvl: h.lvl }, ['growth'], 0.5, 0.7, h);
-    if (h.lvl === 6 && h.job === 'swordsman' && h.age < 56) logEvent('hero_born', [h.id], {}, ['growth'], 0.9, 0.9, h);
   }
 }
 
@@ -277,7 +276,7 @@ function addPrayer(h, kind, urg) {
   if (h.prayCd > 0 || hasPrayer(h) || h.inside && false) return null;
   if (openPrayers().length >= 8) return null;
   const p = { id: G.nid++, hid: h.id, kind, urg: clamp(urg, 0.1, 1), t: G.tick, exp: G.tick + 2 * TICK_DAY, state: 'open', v: rint(0, 1) };
-  G.prayers.push(p); h.prayCd = rint(300, 620); G.stats.prayers++;
+  G.prayers.push(p); h.prayCd = rint(420, 880); // V4.1-A6: about 30% fewer prayers G.stats.prayers++;
   logEvent('prayer', [h.id], { kind }, ['prayer'], 0.3 + urg * 0.3, 0.5, h);
   if (G.fxOn) G.fx.push({ t: 'pray', x: h.x, y: h.y });
   if (G.onPrayer) G.onPrayer(p);
@@ -298,13 +297,15 @@ function maybePray(h) {
   if (isAdv(h) && h.party && hpf < 0.7 && rchance(0.04)) return addPrayer(h, 'battle', 0.7);
   if (rchance(0.0022 * fp)) return addPrayer(h, rpick(['love', 'fear', 'forgive', 'battle']), 0.35);
 }
+/* V4.1-A14: 'listen' — free, 3 per day: the prayer waits one more day and the person is not disappointed */
+function listenPrayer(pid) { const p = G.prayers.find(x => x.id === pid && x.state === 'open'); if (!p || (G.listenLeft || 0) <= 0 || p.listened) return false; G.listenLeft--; p.listened = 1; p.exp += TICK_DAY; const h = hById(p.hid); if (h) { h.needs.faith = Math.max(0, h.needs.faith - 10); } G.stats.listens = (G.stats.listens || 0) + 1; return true; }
 function expirePrayers() {
   for (const p of G.prayers) {
     if (p.state !== 'open') continue;
     if (G.tick >= p.exp) {
-      p.state = 'expired'; const h = hById(p.hid);
-      G.faith = Math.max(0, G.faith - TUNE.pen * 0.6 * (0.5 + p.urg));
-      if (h && h.alive) { h.needs.faith = Math.min(100, h.needs.faith + 10); h.disappoint = (h.disappoint || 0) + 1; }
+      p.state = 'expired'; const h = hById(p.hid); G.expN = (G.expN || 0) + (p.listened ? 0.5 : 1);
+      if (p.urg >= 0.75) { const pen = 2 + p.urg * 2; G.faith = Math.max(0, G.faith - pen); faithLog('exp', -pen); } // V4.1-A6: only urgent prayers cost faith when ignored
+      if (h && h.alive && !p.listened) { h.needs.faith = Math.min(100, h.needs.faith + 10); h.disappoint = (h.disappoint || 0) + (p.urg >= 0.75 ? 1 : 0.6); }
       if (h && h.alive) logEvent('prayer_expired', [h.id], { kind: p.kind }, [], 0.4, 0.4, h);
       if (G.onPrayerEnd) G.onPrayerEnd(p);
     } else { const h = hById(p.hid); if (!h || !h.alive) { p.state = 'void'; } }
