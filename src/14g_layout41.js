@@ -13,17 +13,17 @@ UI.layout41 = function () {
   // --- top row a little narrower / lower
   E.faithWin.style.height = E.balWin.style.height = E.timeWin.style.height = '48px';
   // --- right tabbed panel
-  E.rightWin = h('div', { class: 'win glass', style: 'left:1032px;top:62px;width:240px;padding:3px 6px;max-height:276px;overflow:hidden' });
+  E.rightWin = h('div', { class: 'win glass', style: 'left:1032px;top:62px;width:240px;padding:3px 6px;max-height:578px;display:flex;flex-direction:column' }); // V4.1b 2-1: up to the action bar
   const tabs = h('div', { style: 'display:flex;gap:3px;align-items:center;margin-bottom:3px' }); E.rTabs = {};
   ['pray', 'feed', 'fav'].forEach(k => { const b = h('span', { class: 'btn', style: 'font-size:12px;padding:0 7px;position:relative;line-height:18px', onclick: () => UI.rTab(k) }, t('tab_' + k)); b._dot = h('i', { style: 'position:absolute;right:-3px;top:-4px;width:8px;height:8px;border-radius:4px;background:#ff3a3a;display:none' }); b.appendChild(b._dot); E.rTabs[k] = b; tabs.appendChild(b); });
   E.rCol = colBtn('right'); E.rCol.style.marginLeft = 'auto'; tabs.appendChild(E.rCol); E.rTabsRow = tabs;
-  E.rBody = h('div'); E.rPages = {};
+  E.rBody = h('div', { class: 'rscroll', style: 'flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:2px' }); E.rPages = {};
   [E.cardWin, E.prayWin, E.feedWin, E.favWin].forEach(flat);
   E.cardWin.style.cssText += ';display:none;margin:0 0 4px;padding:2px 4px;border:1px solid #ffd86088;border-radius:3px;background:rgba(40,30,10,.35)';
   const ph = E.prayWin.querySelector('h3'); if (ph) ph.style.display = 'none'; const fh = E.favWin.querySelector('h3'); if (fh) fh.style.display = 'none';
   const fhd = E.feedWin.querySelector('h3'); if (fhd) { fhd.style.cssText = 'margin:0 0 2px;font-size:12px;display:flex;justify-content:flex-end'; fhd.firstChild.textContent = ''; }
   E.rPages = { pray: E.prayWin, feed: E.feedWin, fav: E.favWin };
-  E.rBody.append(E.cardWin, E.prayWin, E.feedWin, E.favWin); E.rightWin.append(tabs, E.rBody); root.appendChild(E.rightWin);
+  E.rBody.append(E.prayWin, E.feedWin, E.favWin); E.rightWin.append(E.cardWin, tabs, E.rBody); root.appendChild(E.rightWin); // the era card sits above the tabs, outside the scrolling list
   // --- bottom: smaller power bar and tool buttons
   E.powWin.style.cssText += ';top:664px;height:50px;padding:3px 5px;left:244px;width:740px'; E.powBtns.forEach(b => { b.style.width = '140px'; b.style.height = '42px'; b.style.lineHeight = '1.15'; });
   E.utilWin.style.cssText += ';left:1032px;top:676px;width:240px;height:38px;padding:3px 4px'; Array.from(E.utilWin.children).forEach(b => { b.style.fontSize = '11px'; b.style.lineHeight = '1.1'; b.style.padding = '1px 2px'; });
@@ -49,7 +49,7 @@ UI.applyCol = function () { const E = this.el, c = Game.settings.collapsed; if (
   // goal
   const R = this.goalR; if (R) { E.goalWin.classList.toggle('colgoal', !!c.goal); E.goalWin.style.width = c.goal ? '112px' : '214px'; E.goalWin.style.whiteSpace = c.goal ? 'nowrap' : ''; E.goalWin.style.top = c.mini ? '92px' : '210px'; const cb = R.head.querySelector('.colbtn'); if (cb) cb.textContent = c.goal ? '▸' : '▾'; }
   // right
-  E.rBody.style.display = c.right ? 'none' : ''; E.rightWin.style.width = c.right ? '124px' : '240px'; E.rightWin.style.left = c.right ? '1148px' : '1032px'; E.rCol.textContent = c.right ? '◂' : '▾'; Array.from(E.rTabsRow.children).forEach(ch => { if (ch !== E.rCol && E.rTabs) ch.style.fontSize = c.right ? '10px' : '12px'; ch.style.padding = c.right ? '0 3px' : ''; });
+  E.rBody.style.display = c.right ? 'none' : ''; E.cardWin.style.visibility = c.right ? 'hidden' : ''; if (c.right) E.cardWin.style.position = 'absolute'; else E.cardWin.style.position = 'static'; E.rightWin.style.width = c.right ? '124px' : '240px'; E.rightWin.style.left = c.right ? '1148px' : '1032px'; E.rCol.textContent = c.right ? '◂' : '▾'; Array.from(E.rTabsRow.children).forEach(ch => { if (ch !== E.rCol && E.rTabs) ch.style.fontSize = c.right ? '10px' : '12px'; ch.style.padding = c.right ? '0 3px' : ''; });
   // power bar -> 5 small key buttons
   E.powBtns.forEach((b, i) => { b.style.width = c.pow ? '28px' : '140px'; b.style.height = c.pow ? '20px' : '42px'; Array.from(b.children).forEach((ch, j) => { if (j > 0) ch.style.display = c.pow ? 'none' : ''; }); const n = b.firstChild && b.firstChild.lastChild; if (n) n.style.display = c.pow ? 'none' : ''; });
   E.powWin.style.width = c.pow ? '168px' : '740px'; E.powWin.style.height = c.pow ? '26px' : '50px'; E.powWin.style.top = c.pow ? '688px' : '664px'; E.powWin.style.left = c.pow ? '556px' : '244px'; E.powWin._colBtn.textContent = c.pow ? '▴' : '▾';
@@ -69,3 +69,11 @@ const _urL = UI.refreshWar; UI.refreshWar = function () { _urL.apply(this, argum
 /* toasts: the feed may sit in a closed tab now, so short messages also float above the power bar for 2.5 s */
 UI.toast = function (text, col) { this.pushFeed(text, col || '#fff'); const root = $('ui'); if (!root) return; if (!this.toastEl || !this.toastEl.isConnected) { this.toastEl = h('div', { class: 'win glass keepui', style: 'left:340px;top:612px;width:600px;text-align:center;padding:4px 10px;font-size:15px;z-index:25;pointer-events:none;display:none' }); root.appendChild(this.toastEl); }
   const el = this.toastEl; el.textContent = text; el.style.color = col || '#fff'; el.style.display = 'block'; clearTimeout(this._toastT); this._toastT = setTimeout(() => { el.style.display = 'none'; }, 2500); };
+
+/* V4.1b 2-1: compact prayer cards (name, kind, urgency) — the selected one opens up with the words and the advice; the list scrolls */
+(function () { if (typeof document === 'undefined') return; const css = document.createElement('style'); css.textContent = '#ui .prayc:not(.psel):not(.sel) .pc-x{display:none} #ui .prayc{cursor:pointer} .rscroll{pointer-events:auto;scrollbar-width:thin;scrollbar-color:#ffd86099 transparent} .rscroll::-webkit-scrollbar{width:7px} .rscroll::-webkit-scrollbar-thumb{background:#ffd86099;border-radius:3px}'; document.head.appendChild(css); })();
+const _rpL = UI.refreshPrayers; UI.refreshPrayers = function () { _rpL.apply(this, arguments); const E = this.el; if (E.prayList) Array.from(E.prayList.querySelectorAll('.card')).forEach(c => { c.classList.add('prayc'); Array.from(c.children).forEach(d => { if (d.tagName === 'DIV' && (d.style.height === '32px' || d.textContent.indexOf(t('rec_label')) === 0)) d.classList.add('pc-x'); }); }); };
+/* V4.1b 2-1 + B4: the era card stays compact above the tabs (one-line title, one row of buttons); the description opens on hover */
+if (typeof document !== 'undefined') (function () { const css = document.createElement('style'); css.textContent = '#ui .ecard>div:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px!important} #ui .ecard>div.sm{display:none} #ui .ecard .btn{font-size:11px!important;padding:0 5px} #ui .ecard>div:last-child{flex-wrap:nowrap!important;gap:4px!important}'; document.head.appendChild(css); })();
+const _ubE = UI.build; UI.build = function () { _ubE.apply(this, arguments); if (this.el.cardWin) this.el.cardWin.classList.add('ecard'); };
+const _rwE = UI.refreshWar; UI.refreshWar = function () { _rwE.apply(this, arguments); const E = this.el; if (!E.cardWin || !G) return; const c = (G.cards || [])[0]; const want = c && CARDS[c.id] ? CARDS[c.id].n[li()] + '\n' + CARDS[c.id].d[li()] : ''; if (E.cardWin.title !== want) E.cardWin.title = want; };

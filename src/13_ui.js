@@ -207,7 +207,7 @@ const UI = {
     pan(lx, ly, '#ffd860'); pan(rx, ry, '#8a50c8'); c.fillStyle = '#ffe9a0'; c.beginPath(); c.arc(lx, ly + 8, 4, 0, 7); c.fill(); c.fillStyle = '#b070f0'; c.beginPath(); c.arc(rx, ry + 8, 4, 0, 7); c.fill();
   },
   refreshPrayers() {
-    const E = this.el; const allP = openPrayers().sort((a, b) => b.urg - a.urg); const prs = allP.slice(0, 3); this.prayMore = allP.length - prs.length;
+    const E = this.el; const allP = openPrayers().sort((a, b) => b.urg - a.urg); const prs = allP.slice(0, 12); /* V4.1b 2-1: all of them (the panel scrolls) */ this.prayMore = allP.length - prs.length;
     const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0) + (UI.selPrayer === p.id ? 'p' : '')).join(',') + LANG + this.prayMore;
     if (sig !== this.lastPray) {
       this.lastPray = sig; E.prayList.innerHTML = '';

@@ -9,9 +9,9 @@ const out = []; const ck = (n, c, x) => out.push((c ? 'PASS ' : 'FAIL ') + n + (
   await pg.evaluateOnNewDocument(l => { try { localStorage.setItem('rinne_tenbin_v1_settings', JSON.stringify({ bgm: 0, se: 0, speed: 1, text: 3, lang: l, names: 'key', theme: 'black', autoSlow: false, advisor: false, tutDone: true })); } catch (e) { } }, lang);
   await pg.goto('file:///' + path.resolve(__dirname, '../index.html').split(path.sep).join('/')); await wait(700); await pg.mouse.click(640, 360); await wait(300);
   await pg.evaluate(() => { __RT.ui.Game.pendingGod = 'mercy'; __RT.ui.Screens.opEnd(); }); await wait(900);
-  await pg.evaluate(() => { __RT.ui.Game.speedIdx = 3; }); await wait(2500);
+  ck('no council on day one (V4.1b 2-2)', await pg.evaluate(() => !__RT.G().council)); await pg.evaluate(() => { const G = __RT.G(); G.tick = START_TICK + 2 * SEASON_T - 3; __RT.ui.Game.speedIdx = 1; }); await wait(2500);
   const st = () => pg.evaluate(() => ({ modals: __RT.ui.Game.modals.join(','), tick: __RT.G().tick, council: !!(__RT.G().council && !__RT.G().council.done), battle: __RT.G().battle ? { phase: __RT.G().battle.phase, done: __RT.G().battle.done } : null }));
-  let s = await st(); ck('council opens at start', s.modals === 'council', JSON.stringify(s)); await pg.screenshot({ path: path.join(OUT, 'v4_council_' + lang + '.png') });
+  let s = await st(); ck('council opens in the first autumn', s.modals === 'council', JSON.stringify(s)); await pg.screenshot({ path: path.join(OUT, 'v4_council_' + lang + '.png') });
   const t0 = s.tick; await wait(800); ck('time frozen during council', (await st()).tick === t0);
   // pick two decrees and confirm
   await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .card')); cs[0].click(); }); await wait(150); await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .card')); cs[2].click(); }); await wait(150);

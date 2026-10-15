@@ -37,7 +37,7 @@ Screens.modeSelect = function () { Game.scene = 'modesel'; const s = this.scr; s
   s.appendChild(aText(t('mode_title'), 0, 40, 1280, 0, 'text-align:center;font-size:36px;color:' + TXT.sel));
   [['normal', t('mode_normal'), t('mode_normal_d')], ['easy', t('easy_mode'), t('easy_d')]].forEach(([id, nm, d], n) => { const x = 208 + 480 * n, sel = Game.modeSel === n;
     const card = h('div', { style: `position:absolute;left:${x}px;top:130px;width:384px;height:500px;cursor:pointer`, onclick: () => { Game.modeSel = n; Snd.se('cursor'); Screens.modeSelect(); }, ondblclick: () => Screens.modeOk() });
-    card.append(nineEl('mode/mode_card_' + id + '_' + (sel ? 'selected' : 'normal'), 0, 0, 384, 500), assetEl('mode/mode_icon_' + id, 128, 40), aText(nm, 24, 200, 336, 0, 'text-align:center;font-size:30px;color:' + (sel ? TXT.normal : TXT.sel)), aText(d, 40, 260, 304, 0, 'font-size:20px;line-height:1.6'));
+    card.append(nineEl('mode/mode_card_' + id + '_' + (sel ? 'selected' : 'normal'), 0, 0, 384, 500), assetEl('mode/mode_icon_' + id, 128, 40), aText(nm, 24, 200, 336, 0, 'text-align:center;font-size:30px;color:' + (sel ? TXT.normal : TXT.sel)), aText(d, 40, 260, 304, 0, 'font-size:22px;line-height:1.6'));
     if (id === 'easy' && first) { const bw = 160; card.append(nineEl('mode/mode_badge_recommended', 384 - bw - 8, -10, bw, 48), aText(t('mode_rec'), 384 - bw - 8, -10, bw, 48, 'text-align:center;line-height:48px;font-size:20px')); }
     s.appendChild(card); });
   s.appendChild(aBtn('ui/ui_btn_back', t('back'), 76, 630, 160, 56, () => Screens.title(), { fs: 22 })); s.appendChild(aBtn('ui/ui_btn_menu', t('mode_ok'), 884, 624, 320, 64, () => Screens.modeOk(), { fs: 22 })); };
@@ -49,8 +49,8 @@ Screens.godSelect = function () { Game.scene = 'godsel'; const s = this.scr; s.i
   GODS.forEach((g, n) => { const x = 72 + 400 * n, sel = Game.godSel === g.id; const card = h('div', { style: `position:absolute;left:${x}px;top:100px;width:336px;height:488px;cursor:pointer`, onclick: () => { Game.godSel = g.id; Snd.se('cursor'); Screens.godSelect(); }, ondblclick: () => Screens.godOk() });
     card.append(nineEl('god/god_card_' + (sel ? 'selected' : 'normal'), 0, 0, 336, 488), assetEl('god/god_emblem_' + g.id + '_128', 104, 18, 1), aText(g.n[L], 16, 156, 304, 0, 'text-align:center;font-size:28px;color:' + (sel ? TXT.normal : TXT.sel)));
     const lines = [t('god_diff2') + '　' + stars[g.id], t('god_hint_' + g.id), fmt(t('god_faith0'), { f: g.faith0 })].concat(godLines(g).map(l => '・' + l));
-    const box = aText('', 36, 264, 264, 184, 'font-size:18px;line-height:1.45;overflow:hidden'); lines.forEach((l, i) => box.appendChild(h('div', { style: i === 0 ? 'color:' + TXT.sel : '' }, l))); card.appendChild(box);
-    for (let fs = 18; fs >= 16 && box.scrollHeight > 184; fs--) box.style.fontSize = fs + 'px'; s.appendChild(card); });
+    const box = aText('', 36, 264, 264, 184, 'font-size:20px;line-height:1.4;overflow:hidden'); lines.forEach((l, i) => box.appendChild(h('div', { style: i === 0 ? 'color:' + TXT.sel : '' }, l))); card.appendChild(box); s.appendChild(card);
+    for (let fs = 20; fs > 18 && box.scrollHeight > box.clientHeight; fs--) box.style.fontSize = (fs - 1) + 'px'; while (box.children.length > 3 && box.scrollHeight > box.clientHeight) box.lastChild.remove(); }); // V4.1b 2-2: 18-20px, drop trailing lines rather than shrink
   s.appendChild(aBtn('ui/ui_btn_back', t('back'), 76, 630, 160, 56, () => Screens.modeSelect(), { fs: 22 })); s.appendChild(aBtn('ui/ui_btn_menu', t('god_ok2'), 884, 624, 320, 64, () => Screens.godOk(), { fs: 22 })); };
 Screens.godOk = function () { Game.pendingGod = Game.godSel; this.opening(); };
 /* ---------- ⑦ opening: 5 delivered pictures, fade between pages, fade out into the game ---------- */

@@ -30,7 +30,7 @@ const out = [];
   await pg.mouse.click(640, 300); await wait(200); await pg.mouse.click(640, 300); await wait(300); await shot('03_opening');
   await key('Escape'); await wait(800); s = await state(); await ck('play after skip', s.scene === 'play');
   // V4: the opening council (time stops until decrees are chosen)
-  for (let i = 0; i < 20; i++) { await wait(300); s = await state(); if (s.modals === 'council') break; } await ck('V4 council opens', s.modals === 'council', s.modals); await shot('12_council'); await ev(() => { autoCouncil(); __RT.ui.Screens.closeAll(); }); await wait(200); s = await state(); await ck('council resolved', s.modals === '');
+  await ck('no council on day one', await ev(() => !__RT.G().council)); await ev(() => { __RT.G().tick = START_TICK + 2 * SEASON_T - 3; }); for (let i = 0; i < 20; i++) { await wait(300); s = await state(); if (s.modals === 'council') break; } await ck('V4 council opens', s.modals === 'council', s.modals); await shot('12_council'); await ev(() => { autoCouncil(); __RT.ui.Screens.closeAll(); }); await wait(200); s = await state(); await ck('council resolved', s.modals === '');
   // keys
   await key('h'); s = await state(); await ck('H opens chron', s.modals === 'chron'); await shot('05_chron'); await key('Escape');
   await key('r'); s = await state(); await ck('R opens residents', s.modals === 'residents'); await shot('06_res'); await key('Escape');

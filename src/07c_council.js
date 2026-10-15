@@ -60,7 +60,7 @@ function settleDecrees(at, ctx) {
 function councilTick() {
   if (G.tutMode) return; // practice world: the council is opened by the tutorial
   if (!G.assaults) return;
-  if (!G.councilDone0 && G.tick >= START_TICK + 12 && !G.council) { G.councilDone0 = 1; openCouncil(0); }
+  if (!G.councilDone0 && G.tick >= START_TICK + 2 * SEASON_T && !G.council) { /* V4.1b 2-2: first council in the first autumn, not on day one */ G.councilDone0 = 1; openCouncil(0); }
   const dr = G.assaults.find(a => a.id === 'dragon'); if (dr && dr.state === 'done' && !G.councilDone1 && !G.battle) { G.councilDone1 = 1; G.council = null; openCouncil(1); }
   if (G.council && !G.council.done && !G.uiAttached || G.council && !G.council.done && G.forceAuto) autoCouncil();
 }
