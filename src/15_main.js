@@ -145,7 +145,7 @@ function onKeyDown(e) {
   Game.keys[kl] = true; Game.keys[k] = true;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].indexOf(k) >= 0) e.preventDefault();
   switch (kl) {
-    case 'Escape': if (Game.power) { Game.power = null; UI.refresh(true); } else Screens.pause(); break;
+    case 'Escape': if (Game.power) { Game.power = null; UI.refresh(true); } else if (UI.selPrayer) { UI.selPrayer = 0; UI.lastPray = ''; UI.refresh(true); } else Screens.pause(); break;
     case ' ': Game.paused = !Game.paused; UI.refresh(true); break;
     case 'q': Game.speedIdx = Math.max(0, Game.speedIdx - 1); Game.paused = false; UI.refresh(true); break;
     case 'e': Game.speedIdx = Math.min(3, Game.speedIdx + 1); Game.paused = false; UI.refresh(true); break;
@@ -174,8 +174,8 @@ function canvasClick(p) {
   if (hh) {
     if (Game.power === 'eye') { Screens.eyeOn(hh.id); return; }
     if (Game.power) { Game.selId = hh.id; Render.sel = hh.id; castOn(Game.power, hh.id); return; }
-    Game.selId = hh.id; Render.sel = hh.id; Game.follow = 0; UI.lastPray = ''; UI.refresh(true); Snd.se('cursor');
-  } else if (!Game.power) { Game.selId = 0; Render.sel = 0; UI.refresh(true); }
+    Game.selId = hh.id; Render.sel = hh.id; Game.follow = 0; { const op = openPrayers().find(q => q.hid === hh.id); UI.selPrayer = op ? op.id : 0; } UI.lastPray = ''; UI.refresh(true); Snd.se('cursor');
+  } else if (!Game.power) { Game.selId = 0; Render.sel = 0; UI.selPrayer = 0; UI.lastPray = ''; UI.refresh(true); }
 }
 function dragMove(e) {
   const d = Game.drag; if (!d) return; if (Game.modals.length || Game.scene !== 'play') { endDrag(); return; }

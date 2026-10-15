@@ -54,18 +54,18 @@ UI.refreshWar = function () {
     E.warBar.style.borderImage = ''; E.warBar.style.outline = a.t - G.tick <= SEASON_T ? '2px solid #ff7050' : 'none';
   }
   // era card
-  const c = (G.cards || [])[0]; const sig = c ? c.n + LANG : '';
+  const c = (G.cards || [])[0]; const sig = c ? c.n + LANG + ['push', 'stop'].map(k => { const o = CARDS[c.id].opts[k]; return o && o.cost && G.faith < o.cost ? 0 : 1; }).join('') : ''; // re-draw when affordability changes
   if (sig !== this.cardSig) { this.cardSig = sig; E.cardWin.innerHTML = ''; E.cardWin.style.display = c ? 'block' : 'none';
     if (c) { const C = CARDS[c.id]; E.cardWin.append(h('div', { class: 'gold', style: 'font-weight:bold;font-size:14px' }, '◆ ' + t('card_title') + '：' + C.n[L]), h('div', { class: 'sm', style: 'margin:2px 0' }, C.d[L]));
-      const row = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }); ['push', 'stop'].forEach(k => { const o = C.opts[k]; if (!o) return; const dis = o.cost && G.faith < o.cost; row.append(h('span', { class: 'btn' + (dis ? ' dis' : ''), style: 'font-size:12px', onclick: () => { if (dis) return; decideCard(c.n, k); Snd.se('ok'); UI.cardSig = ''; UI.refreshWar(); } }, o.n[L])); });
-      row.append(h('span', { class: 'btn', style: 'font-size:12px', onclick: () => { decideCard(c.n, 'leave'); UI.cardSig = ''; UI.refreshWar(); } }, t('card_leave'))); E.cardWin.append(row); }
+      const row = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }); ['push', 'stop'].forEach(k => { const o = C.opts[k]; if (!o) return; const dis = o.cost && G.faith < o.cost; const b = h('span', { class: 'btn' + (dis ? ' dis' : ''), style: 'font-size:12px', title: dis ? fmt(t('card_short'), { n: Math.ceil(o.cost - G.faith) }) : '' }, o.n[L]); cardPress(b, () => { if (o.cost && G.faith < o.cost) { UI.toast(fmt(t('card_short'), { n: Math.ceil(o.cost - G.faith) }), '#ff8a8a'); Snd.se('fail'); return; } decideCard(c.n, k); Snd.se('ok'); UI.cardSig = ''; UI.refreshWar(); }); row.append(b); });
+      const lv = h('span', { class: 'btn', style: 'font-size:12px' }, t('card_leave')); cardPress(lv, () => { decideCard(c.n, 'leave'); UI.cardSig = ''; UI.refreshWar(); }); row.append(lv); E.cardWin.append(row); }
   }
   // awe + goal panel
   if (E.aweNum) UI.pxSet(E.aweNum, Math.floor(G.awe) + '/' + G.aweMax, '#e0b0ff', 3);
 };
 const _uiBuild0 = UI.build; UI.build = function () { _uiBuild0.apply(this, arguments); try { this.buildWar(); this.buildAwe(); } catch (e) { ERRS.push('war ui:' + e.message); } };
 const _uiRefresh0 = UI.refresh; UI.refresh = function (f) { _uiRefresh0.apply(this, arguments); try { this.refreshWar(); } catch (e) { } };
-UI.buildAwe = function () { const E = this.el; if (!E.faithWin) return; const row = h('div', { style: 'display:flex;align-items:center;gap:6px;position:absolute;right:10px;bottom:3px;font-size:12px;color:#e0b0ff' }, h('span', null, t('awe')), E.aweNum = h('span')); E.faithWin.style.position = 'absolute'; E.faithWin.appendChild(row); Tip.attach(row, () => [t('tip_awe'), t('tip_awe_d')]); };
+UI.buildAwe = function () { const E = this.el; if (!E.faithWin) return; const row = h('div', { style: 'display:flex;align-items:center;gap:6px;font-size:12px;color:#e0b0ff;margin-left:auto' }, h('span', null, t('awe')), E.aweNum = h('span')); E.faithWin.style.position = 'absolute'; const line = E.faithWin.children[1]; line.style.gap = '10px'; line.style.justifyContent = 'flex-start'; line.appendChild(row); /* A suggestion 2: in the flow, no overlap with the fatigue text */ Tip.attach(row, () => [t('tip_awe'), t('tip_awe_d')]); };
 /* goal panel: defense vs threat */
 const _goal0 = UI.refreshGoal; UI.refreshGoal = function () {
   _goal0.apply(this, arguments); const R = this.goalR; if (!R || !G || !G.assaults) return; const a = nextAssault();
@@ -135,7 +135,7 @@ Screens.battle = function () {
       if (B.pact) kids.push(h('div', { style: 'text-align:center;margin-top:8px' }, h('p', { class: 'gold' }, t('bt_pact')), h('span', { class: 'btn big', onclick: () => { battleStep('none'); Screens.rerender(); } }, t('bt_next'))));
       else {
         const opts = battleOptions(B.phase); const row = h('div', { style: 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px' }, h('div', { style: 'width:100%;text-align:center', class: 'gold' }, fmt(t('bt_phase'), { n: B.phase + 1, p: PHASE_N[B.phase][L] })));
-        opts.forEach(o => { const ok = canIntervene(o); row.append(h('span', { class: 'btn big' + (ok ? '' : ' dis'), style: 'color:#c8ffd0', onclick: () => { if (!ok) return; battleStep(o.id); Snd.se('divine'); Render.flash = 0.4; Screens.rerender(); } }, o.n[L] + '（' + (o.cost ? fmt(t('act_cost'), { n: o.cost }) : fmt(t('act_awe'), { n: o.awe })) + '）　' + t('war_pred') + ' +' + Math.max(1, Math.round(optEffect(o) * 100)) + '%')); });
+        opts.forEach(o => { const ok = canIntervene(o); row.append(h('span', { class: 'btn big' + (ok ? '' : ' dis'), style: 'color:#c8ffd0', onclick: () => { if (!ok) { UI.toast(o.cost ? fmt(t('card_short'), { n: Math.ceil(o.cost - G.faith) }) : fmt(t('awe_short'), { n: Math.ceil((o.awe || 0) - G.awe) }), '#ff8a8a'); Snd.se('fail'); return; } battleStep(o.id); Snd.se('divine'); Render.flash = 0.4; Screens.rerender(); } }, o.n[L] + '（' + (o.free ? t('free_once') : o.cost ? fmt(t('act_cost'), { n: o.cost }) : fmt(t('act_awe'), { n: o.awe })) + '）　' + t('war_pred') + ' +' + Math.max(1, Math.round(optEffect(o) * 100)) + '%')); });
         (INTERVENE[B.phase] || []).filter(o => (G.godLv || 1) < o.lv).forEach(o => row.append(h('span', { class: 'btn big dis' }, o.n[L] + '（' + fmt(t('act_lock_lv'), { n: o.lv }) + '）')));
         row.append(h('span', { class: 'btn big', onclick: () => { battleStep('none'); Snd.se('ok'); Screens.rerender(); } }, t('bt_watch')), h('span', { class: 'btn big', style: 'border-color:#c080ff', onclick: () => { battleStep('monsters'); Snd.se('fail'); Screens.rerender(); } }, t('bt_help')));
         kids.push(row);
@@ -177,6 +177,8 @@ Screens.council = function () {
   }, null, { noEsc: true });
 };
 /* ---------- event lines for the feed ---------- */
+/* B1: card buttons act on pointerdown (a re-render between press and release can no longer swallow the click); the what's-this mode keeps its own handling */
+function cardPress(el, f) { let done = 0; el.addEventListener('pointerdown', e => { if (e.button !== 0 || Game.whatMode) return; e.preventDefault(); e.stopPropagation(); done = performance.now(); f(); }); el.addEventListener('click', e => { if (Game.whatMode) return; if (performance.now() - done < 600) return; f(); }); }
 function evLineV4(ev) {
   const L = li(); const p = ev.payload || {}; const an = p.a && ASSAULT_DEF[p.a] ? ASSAULT_DEF[p.a].short[L] : '';
   switch (ev.type) {

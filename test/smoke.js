@@ -48,12 +48,12 @@ const out = [];
   console.log('dbg', JSON.stringify(await ev(() => ({np: __RT.G().prayers.filter(p=>p.state==='open').length, cards: document.querySelectorAll('#ui .card').length, scene: __RT.ui.Game.scene, tick: __RT.G().tick, modals: __RT.ui.Game.modals, paused: __RT.ui.Game.paused, speed: __RT.ui.Game.speedIdx})))); await ev(() => __RT.ui.UI.el.prayList.querySelector('.card').click()); await wait(300);
   const sel = await ev(() => __RT.ui.Game.selId); await ck('prayer card selects resident', sel > 0);
   await shot('04_play_sel');
-  await wait(1200); const f0 = (await state()).faith; await key('1'); const pw = await ev(() => __RT.ui.Game.power); await ck('key 1 selects oracle', pw === 'oracle');
-  // click on resident on canvas
-  const pos = await ev(() => { const h = __RT.G().idx[__RT.ui.Game.selId]; const R = __RT.ui.Render; return { x: (h.x * 16 + 8 - R.cam.x) * 2, y: (h.y * 16 - 2 - R.cam.y) * 2 }; });
-  if (pos.x > 0 && pos.x < 1270 && pos.y > 0 && pos.y < 710) { await pg.mouse.click(pos.x, pos.y); await wait(300); s = await state(); if (s.modals !== 'menu') console.log('dbg-click', JSON.stringify(pos), await ev(() => { const el = document.elementFromPoint(320, 180); return (el && (el.id + '.' + el.className)) + ' sel=' + __RT.ui.Game.selId + ' pw=' + __RT.ui.Game.power; }), await ev(() => { const e = document.elementsFromPoint(0, 0); return ''; })); await ck('oracle menu open', s.modals === 'menu'); await shot('08_menu');
-    await clickBtn(lang === 'ja' ? '勇気' : '勇氣'); await wait(300); s = await state(); await ck('oracle cast', s.casts === 1, 'faith ' + f0 + '->' + s.faith); await shot('10_cast'); }
-  else out.push('SKIP click (target offscreen ' + JSON.stringify(pos) + ')');
+  // B2: a prayer card is selected -> the power key answers it at once (oracle asks for a direction first; a power that cannot answer this prayer is refused)
+  await wait(1200); const f0 = (await state()).faith; const kind = await ev(() => { const p = openPrayers().find(q => q.id === __RT.ui.UI.selPrayer); return p ? p.kind : ''; });
+  const k1 = await ev(() => (PRAYER_ANS[openPrayers().find(q => q.id === __RT.ui.UI.selPrayer).kind] || []).indexOf('oracle') >= 0);
+  await key(k1 ? '1' : '2'); await wait(300); s = await state();
+  if (k1) { await ck('key 1 answers the selected prayer (direction menu)', s.modals === 'menu', s.modals + ' kind=' + kind); await clickBtn(lang === 'ja' ? '勇気' : '勇氣'); await wait(300); s = await state(); }
+  await ck('oracle cast', s.casts === 1, 'faith ' + f0 + '->' + s.faith + ' kind=' + kind); await shot('10_cast');
   // save/load roundtrip
   await key('Escape'); await clickBtn(lang === 'ja' ? 'セーブ' : '存檔'); await wait(200); await ev(() => Array.from(document.querySelectorAll('#modal .card'))[0].click()); await wait(300);
   const saved = await ev(() => !!localStorage.getItem('rinne_tenbin_v1_slot1')); await ck('manual save slot1', saved);

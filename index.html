@@ -25,7 +25,8 @@ body.theme-blue .win.glass{background:rgba(10,26,110,.9)}
 .btn{display:inline-block;padding:2px 10px;border:2px solid var(--edge);border-radius:2px;background:var(--bg2);color:#fff;cursor:pointer;font:inherit;font-size:14px;line-height:1.5;white-space:nowrap}
 body.theme-blue .btn{border-radius:5px}
 .btn:hover,.btn.sel{background:var(--bg3);box-shadow:0 0 0 1px var(--head)}
-.btn.dis{opacity:.42;cursor:default;box-shadow:none;background:var(--bg2)}
+.card.psel{outline:3px solid #ffe060;outline-offset:-1px;box-shadow:0 0 10px #ffe06099}
+.btn.dis{opacity:.42;cursor:not-allowed;box-shadow:none;background:var(--bg2);filter:grayscale(1);color:#a7aeb8;border-style:dashed}
 .btn.on{background:#c8960c;border-color:#ffe9a0;color:#000}
 .btn.big{font-size:20px;padding:6px 18px}
 .gauge{height:13px;border:2px solid var(--edge);background:var(--gbg);border-radius:2px;position:relative;overflow:hidden}
@@ -788,7 +789,7 @@ function addPrayer(h, kind, urg) {
   if (h.prayCd > 0 || hasPrayer(h) || h.inside && false) return null;
   if (openPrayers().length >= 8) return null;
   const p = { id: G.nid++, hid: h.id, kind, urg: clamp(urg, 0.1, 1), t: G.tick, exp: G.tick + 2 * TICK_DAY, state: 'open', v: rint(0, 1) };
-  G.prayers.push(p); h.prayCd = rint(420, 880); // V4.1-A6: about 30% fewer prayers G.stats.prayers++;
+  G.prayers.push(p); h.prayCd = rint(420, 880); G.stats.prayers++; // V4.1-A6: about 30% fewer prayers
   logEvent('prayer', [h.id], { kind }, ['prayer'], 0.3 + urg * 0.3, 0.5, h);
   if (G.fxOn) G.fx.push({ t: 'pray', x: h.x, y: h.y });
   if (G.onPrayer) G.onPrayer(p);
@@ -1265,7 +1266,7 @@ function dayUpdate() {
   // faith
   let dis = 0; for (const h of aliveHumans()) { dis += h.disappoint || 0; if (h.disappoint > 0) h.disappoint = Math.max(0, h.disappoint - 0.012); } dis /= Math.max(1, pop);
   if (G.assaults) { const r = (G.ansN || 0) / Math.max(1, (G.ansN || 0) + (G.expN || 0)); const tgt = (G.ansN || 0) + (G.expN || 0) < 3 ? 0.8 : 0.15 + 0.95 * r; G.devotion = (G.devotion === undefined ? 0.8 : G.devotion) + (tgt - (G.devotion === undefined ? 0.8 : G.devotion)) * 0.12; G.ansN = (G.ansN || 0) * 0.94; G.expN = (G.expN || 0) * 0.94; } // V4.1-A14: devotion follows how often the god answers
-  const devo = clamp(1 - dis * TUNE.disMul, 0.1, 1) * (G.assaults ? G.devotion : 1); const church = G.assaults ? [0.9, 1, 1.2, 1.4][devLevel()] : 1; const inc = pop * 0.16 * devo * church; G.faith = Math.min(G.faithMax, G.faith + inc); faithLog('inc', inc); G.faithDayInc = inc; G.listenLeft = 3;
+  const devo = clamp(1 - dis * TUNE.disMul, 0.1, 1) * (G.assaults ? G.devotion : 1); const church = G.assaults ? [0.9, 1, 1.2, 1.4][devLevel()] : 1; const inc = pop * 0.16 * devo * church * (G.ruins && typeof isRuined === 'function' && isRuined('church') ? 0.7 : 1); // V4.1 fix C: a ruined church collects 30% less G.faith = Math.min(G.faithMax, G.faith + inc); faithLog('inc', inc); G.faithDayInc = inc; G.listenLeft = 3;
   if (G.assaults && d % 3 === 0) { const att = aliveHumans().filter(h => h.age >= 10).length; const g = Math.round(att * 0.45 * devo * 10) / 10; if (g > 0) { G.faith = Math.min(G.faithMax, G.faith + g); faithLog('sab', g); logEvent('sabbath', [], { n: att, g }, ['faith'], 0.3, 0.6, (W.bk.church && W.bk.church[0]) ? W.bk.church[0].appr : PLAZA); } } // V4.1-A14: sabbath every 3 days
   if (G.assaults) faithDay(); heroDaily();
   const ovT = G.assaults ? G.faithMax * 0.62 : 100; if (G.faith > ovT) { const ex = (G.faith - ovT) * (G.assaults ? 0.45 : 0.3); G.faith -= ex; faithLog("over", -ex); G.town.food += ex * 0.8; G.town.hp = Math.min(100, G.town.hp + ex * 0.15); G.stats.overflow = (G.stats.overflow || 0) + ex; if (G.onOverflow && ex > 1.2) G.onOverflow(ex); }
@@ -1369,11 +1370,11 @@ function scripted() {
 /* ================= V4-A1: assault timeline, village defense, 3-phase battles, consequences, chains ================= */
 const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
-  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
-  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 47, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 49, kind: 'dragon', mon: 'dragon', scale: 1.3 },
-  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 40, kind: 'wave', mon: 'wolf', scale: 1.2 },
-  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 45, kind: 'king', mon: 'boss', scale: 1.6 },
+  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 49.5, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
+  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 48, kind: 'wave', mon: 'skel', scale: 1 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 53, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41.5, kind: 'wave', mon: 'wolf', scale: 1.2 },
+  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 44, kind: 'king', mon: 'boss', scale: 1.6 },
 };
 const ASSAULT_ORDER = ['wave1', 'wave2', 'dragon', 'wave3', 'king'];
 const GRADES = ['crush', 'win', 'pyrrhic', 'loss', 'rout']; // 大勝 勝利 慘勝 敗北 潰滅
@@ -1430,19 +1431,23 @@ function threatOf(a) {
   return t;
 }
 function adaptT(D, a) { if (a && a.adRef != null) return 0.8 * Math.max(0, a.adRef - 36) + 0.35 * Math.max(0, D - a.adRef); return 0.8 * Math.max(0, D - 36); } // V4.1-A3: the enemy answers a stronger village; it stops adapting at the half-year scout report, so late preparation counts fully
-function winProb(a, extra) { if (!a) return 0; const D = defenseScore(); return sigm((D - threatOf(a) - adaptT(D, a) + 3 + (extra || 0)) / WIN_K); }
+/* V4.1 fix A-1: 神眷 — every answered prayer adds favour (crit 1.5), 3%/day fades; the village fights for a god who listens: up to +3 battle margin (≈ +12pt) */
+const FAVOR_MAX = 8; function favorBonus() { return Math.min(3, (G.favor || 0) * 0.45); }
+function winProb(a, extra) { if (!a) return 0; const D = defenseScore(); return sigm((D - threatOf(a) - adaptT(D, a) + 3 + favorBonus() + (extra || 0)) / WIN_K); }
 /* V4.1-A1: expected help from the god in the 3 phases (best affordable option per phase, sequential budget) */
-function expHelp(faith) { let f = Math.max(60, faith === undefined ? G.faith : faith), aw = G.awe || 0, b = 0; for (let ph = 0; ph < 3; ph++) { const o = battleOptions(ph).filter(x => x.cost ? f >= x.cost : aw >= (x.awe || 0)).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.cost) f -= o.cost; else aw -= o.awe; } } return b; }
+function expHelp(faith) { const f0 = faith === undefined ? G.faith : faith; let f = G.tutMode ? Math.max(60, f0) : f0, /* A-2: the real faith (the practice world assumes 60) */ aw = G.awe || 0, b = 0; for (let ph = 0; ph < 3; ph++) { const o = battleOptions(ph).filter(x => x.cost ? f >= x.cost : aw >= (x.awe || 0)).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.cost) f -= o.cost; else aw -= o.awe; } } return b; }
 /* defense trend -> projected defense when the assault arrives */
 function defSample() { G.defHist = G.defHist || []; G.defHist.push([G.tick, defenseScore()]); if (G.defHist.length > 40) G.defHist.shift(); }
 function defSlope() { const h = (G.defHist || []).filter(x => G.tick - x[0] <= TICK_YEAR * 1.5); if (h.length < 4) return 0.012; let sx = 0, sy = 0, sxx = 0, sxy = 0; for (const [x, y] of h) { sx += x; sy += y; sxx += x * x; sxy += x * y; } const n = h.length, den = n * sxx - sx * sx; return den ? (n * sxy - sx * sy) / den : 0; }
 function winForecast(a) {
   a = a || nextAssault(); if (!a) return null; const D = defenseScore(), T = threatOf(a); const left = Math.max(0, a.t - G.tick);
-  const now = sigm((D - T - adaptT(D, a) + 3 + expHelp()) / WIN_K);
+  const fb = favorBonus(); const now = sigm((D - T - adaptT(D, a) + 3 + fb + expHelp()) / WIN_K);
   const Dp = clamp(D + clamp(defSlope(), -0.004, 0.03) * left * 0.8 + (left > SEASON_T ? 3 : 0), D - 5, D + 30);
   const faithThen = Math.min(G.faithMax, G.faith + left / TICK_DAY * 3);
-  const then = sigm((Dp - T - adaptT(a.adRef != null ? D : Dp, a) + 3 + expHelp(faithThen)) / WIN_K);
-  return { now, then, nowNoHelp: winProb(a), left };
+  const then = sigm((Dp - T - adaptT(a.adRef != null ? D : Dp, a) + 3 + fb + expHelp(faithThen)) / WIN_K);
+  // V4.1 fix A-2 (fit on basic + engaged runs): players prepare more when the outlook is poor, more so when they keep answering prayers -> the far forecast leans toward the usual outcome
+  const k = left > SEASON_T ? 0.15 : 0.05; const then2 = then < 0.75 ? then + (0.75 - then) * k : then;
+  return { now, then: then2, thenRaw: then, nowNoHelp: winProb(a), left };
 }
 /* ---------- timeline tick ---------- */
 function assaultTick() {
@@ -1460,7 +1465,7 @@ function assaultTick() {
 /* ---------- prep actions ---------- */
 const PREP = {
   walls: { n: ['村長に神託：防壁を築く', '向村長降神諭：修築防壁'], d: ['守備↑（2日かけて1段階。糧食30）', '守備↑（花 2 天升 1 級，糧食 30）'], cost: 10, lv: 1, ok: () => G.walls + (G.wallBuild > 0 ? 1 : 0) < wallCap() && G.town.food >= 30 && !(G.wallBuild > 0), run: () => { G.town.food -= 30; G.wallBuild = 2 * TICK_DAY; } },
-  weapons: { n: ['鍛冶に神託：武器を打つ', '向鐵匠降神諭：打造武器'], d: ['戦力↑（冒険者3人の装備+1）', '戰力↑（3 名冒險者裝備 +1）'], cost: 12, lv: 1, ok: () => !G.ruins[bldIdOf('smithy')] && G.humans.some(h => isAdv(h) && h.gear < 6), run: () => { G.humans.filter(h => isAdv(h) && h.gear < 6).sort((a, b) => b.lvl - a.lvl).slice(0, 3).forEach(h => { h.gear++; const st = hStats(h); h.maxHp = st.hp; }); } },
+  weapons: { n: ['鍛冶に神託：武器を打つ', '向鐵匠降神諭：打造武器'], d: ['戦力↑（冒険者3人の装備+1）', '戰力↑（3 名冒險者裝備 +1）'], cost: 12, lv: 1, ok: () => !G.ruins[bldIdOf('smithy')] && !G.ruins[bldIdOf('shop')] && G.humans.some(h => isAdv(h) && h.gear < 6), run: () => { G.humans.filter(h => isAdv(h) && h.gear < 6).sort((a, b) => b.lvl - a.lvl).slice(0, 3).forEach(h => { h.gear++; const st = hStats(h); h.maxHp = st.hp; }); } },
   train: { n: ['試煉：冒険者に修行させる', '試煉：讓冒險者修行'], d: ['戦力↑（多くがLv+1、けがの危険あり）', '戰力↑（多數 Lv+1，有受傷風險）'], cost: 25, lv: 1, ok: () => G.humans.some(isAdv), run: () => { G.humans.filter(isAdv).forEach(h => { const r = rnd(); if (r < 0.72) addExp(h, 30 * h.lvl); else if (r < 0.9) h.hp = Math.max(1, h.hp * 0.5); }); } },
   harvest: { n: ['豊穣の恩寵', '豐收恩寵'], d: ['補給↑（糧食+80）', '補給↑（糧食 +80）'], cost: 18, lv: 1, ok: () => G.town.food < 380, run: () => { G.town.food = Math.min(400, G.town.food + 80); } },
   potions: { n: ['薬師に神託：薬を作る', '向藥師降神諭：製藥'], d: ['補給↑（薬+6）', '補給↑（藥 +6）'], cost: 8, lv: 1, ok: () => G.town.potions < 28, run: () => { G.town.potions = Math.min(30, G.town.potions + 6); } },
@@ -1494,10 +1499,10 @@ function prepDelta(id) { // effect on the shown win chance ("now", with the god'
 }
 function advisorPreps(n) { return PREP_ORDER.filter(prepAvailable).filter(id => id !== 'provoke' && id !== 'evac' && !(G.tutMode && id === 'walls')).map(id => ({ id, d: prepDelta(id), c: Math.max(5, PREP[id].cost) })).sort((x, y) => y.d / y.c - x.d / x.c).slice(0, n || 3); }
 function dailyDefense() {
-  if (!G.assaults) return;
+  if (!G.assaults) return; G.favor = (G.favor || 0) * 0.9;
   if (G.wallBuild > 0) { G.wallBuild -= TICK_DAY; if (G.wallBuild <= 0) { G.wallBuild = 0; G.walls = Math.min(wallCap(), G.walls + 1); G.wallHp = 100; logEvent('walls_up', [], { lv: G.walls }, ['assault'], 0.3, 0.4, PLAZA); } }
   if (G.wallHp < 100 && G.town.food >= 5) { G.wallHp = Math.min(100, G.wallHp + 6); G.town.food -= 1; }
-  for (const id in G.ruins) { if (G.town.food >= 8) { G.ruins[id] -= 25; G.town.food -= 2; if (G.ruins[id] <= 0) { delete G.ruins[id]; logEvent('rebuilt', [], { b: +id }, ['assault'], 0.3, 0.4, PLAZA); } } }
+  repairDaily(); // V4.1 fix C
   G.prep = Math.max(0, (G.prep || 0) - 4);
   G.moraleMod = (G.moraleMod || 0) * 0.97;
   G.awe = clamp(G.awe + Math.max(0, -G.balance) / 40 + 0.3 * (G.balance < 70 ? 1 : 0.3), 0, G.aweMax);
@@ -1512,17 +1517,19 @@ const PHASE_N = [['前哨戦', '前哨戰'], ['本戦', '主戰'], ['決戦', '�
 function startBattle(a) {
   a.state = 'battle'; const D0 = defenseScore(); const D = D0 - adaptT(D0, a), T = threatOf(a); const L = WIN_K * Math.log(1 / Math.max(1e-6, rnd()) - 1) * -1; // logistic noise
   a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
-  G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: 0, choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
+  G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: favorBonus(), favor: favorBonus(), choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
   if (a.id === 'dragon' && G.dragonPact) { G.battle.pact = true; }
   logEvent('assault_start', [], { a: a.id, p: a.pred, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 1, 0.9, a.id === 'king' ? PLAZA : { x: FIELD_X0, y: 23 });
   if (G.onBattle) G.onBattle(G.battle);
 }
-function battleOptions(phase) { return (INTERVENE[phase] || []).filter(o => (G.godLv || 1) >= o.lv); }
+/* V4.1 fix A-1: when the god's faith has run dry, the villagers' own prayers can help once per battle (free) */
+const VPRAYER = { id: 'vprayer', n: ['村人の祈り（信仰が尽きたとき1回）', '村民的祈禱（信仰耗盡時 1 次）'], b: 2, lv: 1, free: 1 };
+function battleOptions(phase) { const l = (INTERVENE[phase] || []).filter(o => (G.godLv || 1) >= o.lv); if (G.faith < 15 && G.battle && !G.battle.vpUsed) l.push(VPRAYER); return l; }
 function canIntervene(o) { return o.cost ? G.faith >= o.cost : G.awe >= (o.awe || 0); }
 function battleStep(choice) { // choice: option id | 'none' | 'monsters'
   const B = G.battle; if (!B || B.done) return null;
   if (B.pact) { finishBattle(); return B; }
-  let bonus = 0; const opt = (INTERVENE[B.phase] || []).find(o => o.id === choice);
+  let bonus = 0; const opt = battleOptions(B.phase).find(o => o.id === choice); if (opt && opt.free) B.vpUsed = 1;
   if (opt && (G.godLv || 1) >= opt.lv && canIntervene(opt)) { if (opt.cost) G.faith -= opt.cost; if (opt.awe) G.awe -= opt.awe; bonus = opt.b; G.stats.interventions = (G.stats.interventions || 0) + 1; }
   else if (choice === 'monsters') { bonus = -[6, 8, 10][B.phase]; G.awe = clamp(G.awe + [12, 18, 28][B.phase], 0, G.aweMax); B.helpMon++; }
   B.choices.push(opt || choice === 'monsters' ? (opt ? opt.id : 'monsters') : 'none'); B.bonus += bonus;
@@ -1533,7 +1540,7 @@ function battleStep(choice) { // choice: option id | 'none' | 'monsters'
 function gradeOf(m) { return m >= 14 ? 'crush' : m >= 4 ? 'win' : m >= -3 ? 'pyrrhic' : m >= -14 ? 'loss' : 'rout'; }
 function finishBattle() {
   const B = G.battle, a = G.assaults.find(x => x.id === B.a); B.done = true;
-  let m = B.D - B.T + B.bonus + B.L; if (G.tutMode && B.a === 'wave1' && B.bonus > 0) m = Math.max(m, 5); // practice world: helping always wins
+  let m = B.D - B.T + B.bonus + B.L; if (G.tutMode && B.a === 'wave1' && B.bonus > (B.favor || 0)) m = Math.max(m, 5); // practice world: helping always wins
   let grade = B.pact ? 'pact' : gradeOf(m); B.m = m; B.grade = grade; a.predFinal = Math.round(sigm((B.D - B.T + B.bonus + 3) / WIN_K) * 100); a.grade = grade; a.state = 'done';
   const res = applyConsequences(a, grade); B.res = res; a.res = res; G.battleLog.push({ id: a.id, grade, pred: a.pred, m: Math.round(m), deaths: res.deaths.length, t: G.tick });
   G.flags.aid = 0; G.flags.evac = 0; G.prep = 0; G.flags.talked = 0; if (G.period && !isWin(grade)) G.period.losses++;
@@ -1552,12 +1559,12 @@ function applyConsequences(a, grade) {
   // casualties
   const nd = { crush: [0, 1], win: [1, 2], pyrrhic: [2, 4], loss: [4, 7], rout: [7, 11] }[grade]; let dn = Math.round(rint(nd[0], nd[1]) * (k.kind === 'wave' ? 1 : 1.25));
   const pool = G.humans.filter(h => h.alive && h.age >= 6); const w = h => (isAdv(h) ? 4 : 1) * ((h.child || h.age >= 56) ? (G.flags.evac ? 0.15 : 1) : 1) * (h.job === 'historian' ? 0.2 : 1);
-  for (let i = 0; i < dn && pool.length > 6; i++) { let tot = 0; pool.forEach(h => tot += w(h)); let r = rnd() * tot; let pick = pool[0]; for (const h of pool) { r -= w(h); if (r <= 0) { pick = h; break; } } pool.splice(pool.indexOf(pick), 1); killHuman(pick, 'battle', null); res.deaths.push(pick.id); G.humans.forEach(o => { if (o.alive && o.parent === pick.id && o.age < 16) o.vengeful = 1; }); }
+  for (let i = 0; i < dn && pool.length > 6; i++) { let tot = 0; pool.forEach(h => tot += w(h)); let r = rnd() * tot; let pick = pool[0]; for (const h of pool) { r -= w(h); if (r <= 0) { pick = h; break; } } pool.splice(pool.indexOf(pick), 1); killHuman(pick, 'battle', null); addGrave(pick); res.deaths.push(pick.id); G.humans.forEach(o => { if (o.alive && o.parent === pick.id && o.age < 16) o.vengeful = 1; }); }
   res.levels = res.levels.filter(l => !res.deaths.includes(l[0]));
   // buildings & walls
   const nr = { crush: 0, win: 0, pyrrhic: 1, loss: 2, rout: 4 }[grade] + (a.id === 'dragon' && G.chain.dragonType === 'village' && !win ? 2 : 0);
-  const cand = W.blds.filter(b => b.kind !== 'castle' && b.kind !== 'mill' && !G.ruins[b.id]); for (let i = 0; i < nr && cand.length; i++) { const b = cand.splice(rint(0, cand.length - 1), 1)[0]; G.ruins[b.id] = 100; res.ruined.push(b.id); }
-  G.wallHp = Math.max(0, G.wallHp - { crush: 5, win: 15, pyrrhic: 35, loss: 60, rout: 90 }[grade]); if (grade === 'rout' && G.walls > 0) G.walls--;
+  const cand = W.blds.filter(b => b.kind !== 'castle' && b.kind !== 'mill' && !G.ruins[b.id]); for (let i = 0; i < nr && cand.length; i++) { const b = cand.splice(rint(0, cand.length - 1), 1)[0]; ruinBuilding(b, win && grade !== 'pyrrhic' ? 'pyrrhic' : grade); res.ruined.push(b.id); }
+  G.wallHp = Math.max(0, G.wallHp - { crush: 5, win: 15, pyrrhic: 35, loss: 60, rout: 90 }[grade]); if (grade === 'rout' && G.walls > 0) { G.walls--; res.wallDown = 1; }
   // supplies, morale, balance, faith / awe
   G.town.food = Math.max(0, G.town.food * (win ? 0.85 : 0.6) - (G.flags.aid ? 60 : 0)); G.town.potions = Math.floor(G.town.potions * 0.5); G.town.gearStock = Math.max(0, G.town.gearStock - (win ? 0 : 2));
   G.moraleMod += { crush: 15, win: 10, pyrrhic: 0, loss: -12, rout: -20 }[grade];
@@ -1668,7 +1675,7 @@ function councilTick() {
   const dr = G.assaults.find(a => a.id === 'dragon'); if (dr && dr.state === 'done' && !G.councilDone1 && !G.battle) { G.councilDone1 = 1; G.council = null; openCouncil(1); }
   if (G.council && !G.council.done && !G.uiAttached || G.council && !G.council.done && G.forceAuto) autoCouncil();
 }
-function autoCouncil() { const C = G.council; const pol = G.policy || 'none'; const prefer = C.offer.filter(id => DECREES[id].side !== 'm'); const picked = (pol === 'basic' ? prefer.concat(C.offer) : C.offer).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2); closeCouncil(picked, pol === 'basic' && G.faith > 90 ? 'unity' : null); }
+function autoCouncil() { const C = G.council; const pol = G.policy || 'none'; const prefer = C.offer.filter(id => DECREES[id].side !== 'm'); const picked = (pol === 'basic' || pol === 'engaged' ? prefer.concat(C.offer) : C.offer).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2); closeCouncil(picked, (pol === 'basic' || pol === 'engaged') && G.faith > 90 ? 'unity' : null); }
 function periodDaily() {
   if (!G.period) return; G.period.balDays++; if (Math.abs(G.balance) <= 25) G.period.balIn++;
 }
@@ -1694,7 +1701,7 @@ function cardTick() {
       const n = 1; for (let i = 0; i < n; i++) { const pool = CARD_KEYS.filter(k => (!CARDS[k].need || CARDS[k].need()) && !(G.cards || []).some(c => c.id === k) && G.tick - ((G.cardSeen || {})[k] || -1e9) > 4 * SEASON_T); if (!pool.length) break; const id = rpick(pool); (G.cardSeen = G.cardSeen || {})[id] = G.tick; G.cards.push({ id, t: G.tick, n: G.nid++ }); if (G.onCard) G.onCard(id); }
     }
   }
-  if ((G.cards || []).length && (!G.uiAttached || G.forceAuto)) { const pol = G.policy || 'none'; G.cards.slice().forEach(c => { if (pol === 'basic') { const C = CARDS[c.id]; const o = C.opts[C.rec]; decideCard(c.n, o && (!o.cost || G.faith >= o.cost + 30) ? C.rec : 'leave'); } else decideCard(c.n, 'leave'); }); }
+  if ((G.cards || []).length && (!G.uiAttached || G.forceAuto)) { const pol = G.policy || 'none'; G.cards.slice().forEach(c => { if (pol === 'basic' || pol === 'engaged') { const C = CARDS[c.id]; const o = C.opts[C.rec]; decideCard(c.n, o && (!o.cost || G.faith >= o.cost + 30) ? C.rec : 'leave'); } else decideCard(c.n, 'leave'); }); }
 }
 function resolveCard(c, opt) {
   const C = CARDS[c.id]; if (!C) return; if (opt === 'leave') { if (C.leave) C.leave(); } else { const o = C.opts[opt]; if (!o) return; if (o.cost && G.faith < o.cost) { if (C.leave) C.leave(); return; } if (o.cost) G.faith -= o.cost; o.run(); }
@@ -1706,6 +1713,50 @@ const FEED_S = { assault_start: 1, assault_end: 1, hero_born: 1, boss_awaken: 1,
 const FEED_A = { death: 1, marriage: 1, betrayal: 1, birth: 1, love_start: 1, dev_change: 1, festival: 1, promotion: 1, god_lv: 1, decree_settle: 1, master_farewell: 1, destined_reunion: 1, miracle: 1, reincarnation: 1 };
 const FEED_B = { party_formed: 1, quest_clear: 1, quest_fail: 1, first_battle: 1, prep: 1, walls_up: 1, rebuilt: 1, coming_of_age: 1, migrant: 1, gear: 1, quarrel: 1, reconcile: 1, love_notice: 1, divine_act: 1, prayer_expired: 1, monster_raid: 1 };
 function feedClass(ev) { if (ev.type === 'assault_omen') return ev.payload && ev.payload.step === 3 ? 'S' : 'A'; if (FEED_S[ev.type]) return 'S'; if (FEED_A[ev.type]) return 'A'; if (FEED_B[ev.type]) return 'B'; return ev.tension >= 0.6 ? 'A' : null; }
+
+/* ---- 07f_ruins.js ---- */
+/* ================= V4.1 fix C: defeat damage that matters — ruins by grade, repair time 2/4/6 days (food + wood), lost functions,
+   graves for the fallen, villagers clearing rubble, "重建の祝福" (grace, faith 15) finishes one building at once ================= */
+const REPAIR_DAYS = { pyrrhic: 2, loss: 4, rout: 6 };
+const REPAIR_COST = { food: 3, wood: 4 }; // per building per day
+function ruinBuilding(b, grade) {
+  G.ruins[b.id] = 100; G.ruinInfo = G.ruinInfo || {}; G.ruinInfo[b.id] = { t0: G.tick, grade: grade, days: REPAIR_DAYS[grade] || 4, burn: G.tick + TICK_DAY };
+  G.humans.forEach(h => { if (h.alive && (h.inside === b.id + 1 || (h.act && h.act.bld === b.id))) { h.inside = 0; h.act = null; h.path = []; h.thinkCd = 0; } }); /* nobody stays inside a ruin */ G.ruinWorkUntil = G.tick + TICK_DAY; G.scorchUntil = Math.max(G.scorchUntil || 0, G.tick + (REPAIR_DAYS[grade] || 4) * TICK_DAY);
+}
+function isRuined(kind) { const b = W.blds.find(x => x.kind === kind); return !!(b && G.ruins && G.ruins[b.id]); }
+function bldRuined(b) { return !!(b && G.ruins && G.ruins[b.id]); }
+function repairPct(id) { return Math.round(100 - (G.ruins[id] || 0)); }
+function repairDaily() { // once a day: pay food + wood for every ruin; a ruin that cannot be paid for slips by a day
+  G.town.wood = Math.min(240, (G.town.wood === undefined ? 80 : G.town.wood) + 4 + G.humans.filter(h => h.alive && h.age >= ADULT_AGE).length * 0.2);
+  let stalled = false;
+  for (const id in G.ruins) { const I = (G.ruinInfo = G.ruinInfo || {})[id] || (G.ruinInfo[id] = { days: 4, t0: G.tick, burn: 0 }); I.stall = I.stall || 0;
+    if (G.town.food < REPAIR_COST.food && (G.town.gold || 0) >= REPAIR_COST.food * 8) { G.town.gold -= REPAIR_COST.food * 8; G.town.food += REPAIR_COST.food; } /* short of food: the crew buys it */
+    if (G.town.food >= REPAIR_COST.food && G.town.wood >= REPAIR_COST.wood) { G.town.food -= REPAIR_COST.food; G.town.wood -= REPAIR_COST.wood; }
+    else { stalled = true; I.stall += TICK_DAY; } }
+  G.repairStalled = stalled ? G.tick : 0;
+}
+function repairTick() { // every tick: progress for the label, finish exactly after 2 / 4 / 6 days of work
+  for (const id in G.ruins) { const I = (G.ruinInfo || {})[id]; if (!I) continue; const span = I.days * TICK_DAY; const done = clamp((G.tick - I.t0 - (I.stall || 0)) / span, 0, 1); G.ruins[id] = Math.max(0.01, 100 * (1 - done)); if (done >= 1) finishRepair(+id, false); } }
+const _assaultTickR = assaultTick; assaultTick = function () { _assaultTickR.apply(this, arguments); if (G.assaults && G.ruins) repairTick(); };
+function finishRepair(id, blessed) { const I = (G.ruinInfo || {})[id]; delete G.ruins[id]; if (I) { (G.repairLog = G.repairLog || []).push({ grade: I.grade, days: (G.tick - I.t0) / TICK_DAY, blessed: !!blessed }); delete G.ruinInfo[id]; } logEvent('rebuilt', [], { b: id, blessed: !!blessed }, ['assault'], 0.3, 0.4, PLAZA); }
+function rebuildBless(id) { if (!G.ruins || !G.ruins[id] || G.faith < 15) return false; G.faith -= 15; faithLog('rebuild', -15); finishRepair(+id, true); G.stats.casts = (G.stats.casts || 0) + 1; return true; }
+/* the fallen get a grave in the churchyard (west of the church) */
+const GRAVE_SLOTS = []; for (let y = 8; y <= 12; y += 2) for (let x = 19; x <= 23; x += 2) GRAVE_SLOTS.push([x, y]);
+function addGrave(h) { G.graves = G.graves || []; const used = G.graves.length; const s = GRAVE_SLOTS[used % GRAVE_SLOTS.length]; G.graves.push({ x: s[0] + (used >= GRAVE_SLOTS.length ? 1 : 0), y: s[1], id: h.id, name: h.name, t: G.tick }); if (G.graves.length > 24) G.graves.shift(); }
+/* AI: homeless sleep at the church (or inn), the ruined inn / church / shop do not serve; for a day after a defeat people clear rubble */
+const _actTarget0 = actTarget; actTarget = function (h, k) {
+  const alt = kind => { const b = pickBld(kind); return b && !bldRuined(b) ? b : null; };
+  if ((k === 'sleep' || k === 'hide_home') && G.ruins && W.blds[h.home] && bldRuined(W.blds[h.home])) { const b = alt('church') || alt('inn'); if (b) return bldDoor(b); const p = randWalkableIn(25, 17, 31, 22); return { tx: p.x, ty: p.y, range: 0 }; }
+  if (k === 'rest' && isRuined('inn')) { const b = W.blds[h.home]; return bldDoor(b && !bldRuined(b) ? b : (alt('church') || pickBld('house'))); }
+  if (k === 'shopG' && isRuined(h.gear % 2 ? 'armor' : 'shop')) return null;
+  if (k === 'repair') { const ids = Object.keys(G.ruins || {}); if (!ids.length) return null; const b = W.blds[ids[(h.id + G.tick) % ids.length]]; const p = randWalkableIn(b.x - 1, b.y + b.h, b.x + b.w, b.y + b.h + 1); return { tx: p.x, ty: p.y, range: 0 }; }
+  return _actTarget0(h, k);
+};
+ACT_DUR.repair = 14;
+const _updRuin = updateHuman; updateHuman = function (h) {
+  if (G.ruinWorkUntil > G.tick && !h.act && !h.party && h.alive && h.age >= ADULT_AGE && !isAdv(h) && h.needs.energy < 75 && h.needs.hunger < 70 && (G.tick + h.id) % 5 === 0 && hourOf(G.tick) >= 6 && hourOf(G.tick) < 20 && rchance(0.5)) startAct(h, 'repair');
+  return _updRuin(h);
+};
 
 /* ---- 08_faith.js ---- */
 /* ================= faith / divine powers / counsel / policy ================= */
@@ -1741,6 +1792,7 @@ function resolvePrayer(pr, outcome, pid, h) {
   pr.state = outcome === 'twist' ? 'twisted' : 'answered'; pr.by = pid; pr.out = outcome;
   const c0 = G._castCost || 10; const gain = Math.round(c0 * (outcome === 'crit' ? 2 : outcome === 'success' ? 1.3 : 0.6) * 10) / 10; // V4.1-A14: a good god earns faith back
   G.faith = Math.min(G.faithMax, G.faith + gain); faithLog('ans', gain); G.lastAnswer = G.tick; G.stats.answered++; G.ansN = (G.ansN || 0) + 1; G._gain = gain; G._pk = pr.kind;
+  if (outcome !== 'twist') { G.favor = Math.min(FAVOR_MAX, (G.favor || 0) + (outcome === 'crit' ? 1.5 : 1)); const ph = hById(pr.hid); if (ph) ph.favored = G.tick; } // V4.1 fix A-1: answered prayers build divine favour (神眷) -> battle bonus
   h.needs.faith = Math.max(0, h.needs.faith - 40); h.disappoint = Math.max(0, (h.disappoint || 0) - 1);
   if (G.onPrayerEnd) G.onPrayerEnd(pr);
   if (!G.tut.prayer) G.tut.prayer = true;
@@ -4258,6 +4310,49 @@ function drawMillTower(c, px, py, w, h, sea) { const S = mkRamp('#a8a4a0'), cx =
   const RR = mkRamp('#7a4a2a'); for (let r = 0; r < 14; r++) { const hw = Math.round(3 + r * 0.9); fr(c, RR.o, cx - hw - 1, py - 2 + r, hw * 2 + 2, 1); fr(c, r % 3 ? RR.b : RR.l, cx - hw, py - 2 + r, hw * 2, 1); }
   fr(c, '#3a2a1a', cx - 3, py + h - 16, 6, 12); fr(c, '#7a4a24', cx - 2, py + h - 15, 4, 11); fr(c, '#2a4a7a', cx - 2, py + 18, 4, 5); if (sea === 3) fr(c, '#f4f8fc', cx - 6, py - 2, 12, 3); }
 
+/* ---- 11e3_ruins.js ---- */
+/* ================= V4.1 fix C: visible defeat damage (placeholder effects until the visual team's ruin / scaffold / rubble art arrives):
+   ruined buildings darkened with a broken roof, big fire on the first day then a tall smoke column, rubble, scaffolding + "🔨 修復中 n%",
+   scorch marks on the invasion road (east gate -> plaza), fresh graves ================= */
+Object.assign(S, { repairing: ['🔨 修復中 {n}%', '🔨 修復中 {n}%'] });
+function drawRuins(c, cx, cy) {
+  const tm = Render.time; const ws = getWorldCanvas(seasonOf(G.tick));
+  // scorch & trampled flowers along the road from the east gate to the plaza
+  if ((G.scorchUntil || 0) > G.tick) { for (let x = 29; x <= 44; x++) for (let k = 0; k < 2; k++) { const r = hsh(x, k, 77); const wx = x * TS + Math.floor(r * 12), wy = (21 + Math.floor(hsh(k, x, 78) * 3)) * TS + Math.floor(hsh(x, x, 79) * 10); const sx = wx - cx, sy = wy - cy; if (sx < -20 || sx > 660 || sy < -20 || sy > 380) continue;
+    c.globalAlpha = 0.55; ell(c, '#1c140e', sx, sy, 6 + Math.floor(r * 5), 3); c.globalAlpha = 0.35; ell(c, '#2c2018', sx + 3, sy - 1, 3, 2); c.globalAlpha = 1; if (r > 0.6) { fr(c, '#7a5a3a', sx - 4, sy - 1, 2, 1); fr(c, '#a04a5a', sx + 5, sy, 1, 1); } } }
+  for (const id in (G.ruins || {})) { const b = W.blds[id]; if (!b) continue; const I = (G.ruinInfo || {})[id] || { burn: 0 }; const px = b.x * TS - cx, py = b.y * TS - cy, w = b.w * TS, hgt = b.h * TS;
+    if (px < -120 || px > 760 || py < -160 || py > 460) continue; const burning = I.burn > G.tick; const left = G.ruins[id];
+    // 1) the building itself, darkened (charred), from the cached world picture
+    c.save(); c.filter = 'brightness(0.42) sepia(0.35)'; c.drawImage(ws, b.x * TS, b.y * TS - 6, w, hgt + 6, px, py - 6, w, hgt + 6); c.restore();
+    // 2) roof caved in: a jagged black hole with charred beams
+    const rx = px + Math.round(w * 0.16), rw = Math.round(w * 0.68), ry = py + 1, rh = Math.round(hgt * 0.5);
+    c.fillStyle = '#0c0808'; c.beginPath(); c.moveTo(rx, ry + rh * 0.55); for (let i = 0; i <= 8; i++) c.lineTo(rx + rw * i / 8, ry + ((i * 7 + +id) % 3) * 3); c.lineTo(rx + rw, ry + rh * 0.7); for (let i = 8; i >= 0; i--) c.lineTo(rx + rw * i / 8, ry + rh - ((i * 5 + +id) % 4) * 3); c.closePath(); c.fill();
+    c.strokeStyle = burning ? '#ff8030' : '#8a3a18'; c.lineWidth = 1; c.stroke(); for (let i = 0; i < 3; i++) pxLine(c, '#3a2414', rx + 4 + i * rw / 3, ry + rh - 2, rx + 10 + i * rw / 3, ry + 4, 2);
+    // 3) rubble around the base
+    for (let i = 0; i < 9; i++) { const r = hsh(+id, i, 501); const ox = px - 6 + Math.floor(r * (w + 12)), oy = py + hgt - 4 + Math.floor(hsh(i, +id, 502) * 9); const s = 2 + Math.floor(hsh(+id, i, 503) * 3); fr(c, '#181020', ox - 1, oy - 1, s + 2, s + 1); fr(c, i % 3 ? '#6a6a72' : '#5a3c22', ox, oy, s, s - 1); fr(c, '#9a9aa2', ox, oy, Math.max(1, s - 2), 1); }
+    // 4) fire on the first day (about a third of the width), then smoke
+    if (burning) { const fw = Math.max(16, Math.round(w / 3)); for (let i = 0; i < fw; i += 3) { const fl = (tm >> 2) + i; const hh = 10 + ((i * 7 + fl) % 9) + Math.round(Math.sin((tm + i * 5) / 6) * 3); const fx0 = rx + Math.round((rw - fw) / 2) + i, fy = ry + rh * 0.7; fr(c, '#c03010', fx0, fy - hh, 3, hh); fr(c, '#ff8a30', fx0, fy - hh + 3, 3, hh - 4); fr(c, '#ffd060', fx0 + 1, fy - hh * 0.5, 1, hh * 0.4); }
+      c.globalAlpha = 0.25 + 0.1 * Math.sin(tm / 7); ell(c, '#ff7030', rx + rw / 2, ry + rh * 0.5, rw * 0.7, rh * 0.8); c.globalAlpha = 1; }
+    const n = burning ? 9 : 6; for (let i = 0; i < n; i++) { const p = ((tm + i * (160 / n) + +id * 13) % 160) / 160; c.globalAlpha = (1 - p) * (burning ? 0.75 : 0.5); const s = 4 + p * 14; fr(c, burning ? '#28222c' : '#4a4450', Math.round(rx + rw / 2 + Math.sin(p * 5 + i) * (4 + p * 10) - s / 2), Math.round(ry - p * 110), s, s); } c.globalAlpha = 1;
+    // 5) scaffolding + progress once the repair has started
+    if (left < 100 && !burning) { const sxs = [px + 3, px + w - 6]; sxs.forEach(sx => { fr(c, '#5a3a1c', sx, py + 4, 2, hgt - 6); }); for (let y = 8; y < hgt - 4; y += 8) { fr(c, '#8a6a3a', px + 2, py + y, w - 4, 2); fr(c, '#a07a40', px + 2, py + y, w - 4, 1); } pxLine(c, '#6a4a24', px + 3, py + hgt - 4, px + w - 5, py + 6, 1); }
+  }
+  // fresh graves for the fallen (flowers for 2 seasons)
+  for (const gv of (G.graves || [])) { const sx = gv.x * TS - cx + 4, sy = gv.y * TS - cy + 2; if (sx < -16 || sx > 656 || sy < -20 || sy > 380) continue; fr(c, '#181020', sx - 1, sy - 1, 9, 12); fr(c, '#9a9aa8', sx, sy, 7, 10); fr(c, '#c8c8d4', sx, sy, 7, 2); fr(c, '#6a6a78', sx + 3, sy + 2, 1, 5); fr(c, '#5a3a22', sx - 2, sy + 10, 11, 3);
+    if (G.tick - gv.t < 2 * SEASON_T) { fr(c, '#ff7090', sx - 2, sy + 9, 2, 2); fr(c, '#ffe060', sx + 7, sy + 9, 2, 2); fr(c, '#60c060', sx + 1, sy + 11, 4, 1); } }
+}
+/* windows of a ruin stay dark; repair labels are drawn after the night tint so they stay readable */
+function winRuined(r) { if (!G || !G.ruins) return false; for (const id in G.ruins) { const b = W.blds[id]; if (b && r.x >= b.x * TS - 2 && r.x <= (b.x + b.w) * TS + 2 && r.y >= b.y * TS - 8 && r.y <= (b.y + b.h) * TS + 2) return true; } return false; }
+const _rdRuin = Render.draw; Render.draw = function (alpha, opts) { _rdRuin.apply(this, arguments); if (!G || !G.ruins || Game.view === 'castle') return; const c = this.c; const cx = Math.round(this.cam.x), cy = Math.round(this.cam.y); c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.font = 'bold 9px sans-serif'; c.textAlign = 'center';
+  for (const id in G.ruins) { const b = W.blds[id]; if (!b) continue; const px = b.x * TS - cx + b.w * TS / 2, py = b.y * TS - cy - 7; if (px < -60 || px > 700 || py < -20 || py > 380) continue; const lab = fmt(t('repairing'), { n: repairPct(id) }); const lw = c.measureText(lab).width + 6; c.fillStyle = 'rgba(16,10,24,.85)'; c.fillRect(Math.round(px - lw / 2), py - 9, lw, 11); c.fillStyle = G.repairStalled ? '#ff9a9a' : '#ffe9a0'; c.fillText(lab, px, py); }
+  c.restore(); };
+/* a gap in the palisade / wall: a broken stump and splinters (placeholder until the "broken fence / wall gap" art arrives) */
+function brokenStake(c, sx, sy, stone) { if (sx < -16 || sx > 656 || sy < -20 || sy > 380) return; if (stone) { fr(c, '#2a2a38', sx - 1, sy - 5, 8, 7); fr(c, '#7a7a88', sx, sy - 4, 6, 5); fr(c, '#5a5a66', sx + 7, sy + 1, 3, 2); } else { fr(c, '#2a1a10', sx - 1, sy - 6, 5, 8); fr(c, '#6a4a28', sx, sy - 5, 3, 6); fr(c, '#2a1a10', sx + 0, sy - 7, 1, 1); fr(c, '#2a1a10', sx + 2, sy - 8, 1, 2); fr(c, '#8a6a3a', sx + 4, sy + 1, 4, 1); fr(c, '#8a6a3a', sx - 4, sy, 3, 1); } }
+/* repair crews carry planks */
+const _rdCarry = Render.draw; Render.draw = function (alpha, opts) { _rdCarry.apply(this, arguments); if (!G || Game.view === 'castle' || !(G.ruinWorkUntil > G.tick - TICK_DAY)) return; const c = this.c; const cx = Math.round(this.cam.x), cy = Math.round(this.cam.y); c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
+  for (const h of G.humans) { if (!h.alive || h.inside || !h.act || h.act.k !== 'repair') continue; const x = lerp(h.px, h.x, alpha || 0) * TS - cx, y = lerp(h.py, h.y, alpha || 0) * TS - cy; if (x < -20 || x > 660 || y < -30 || y > 380) continue; fr(c, '#181020', x - 3, y - 18, 22, 4); fr(c, '#a07a40', x - 2, y - 17, 20, 2); fr(c, '#c89a58', x - 2, y - 17, 20, 1); }
+  c.restore(); };
+
 /* ---- 11e_fx.js ---- */
 /* ================= animation, lighting, weather, divine effects (V3.3 S3/S4/S6) ================= */
 function pxLine(c, col, x0, y0, x1, y1, th) { x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1); const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let err = dx + dy; c.fillStyle = col; for (let i = 0; i < 400; i++) { c.fillRect(x0, y0, th || 1, th || 1); if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } } }
@@ -4287,9 +4382,9 @@ Render.applyLight = function (c, hf, opts, cx, cy, sea) {
   // window / lamp glow after the grade so they stay bright
   if (dk > 0.12 || rain) {
     const a = clamp(Math.max(dk, rain ? 0.3 : 0) * 1.5, 0, 1);
-    c.globalAlpha = a; for (const r of WIN_RECTS) { const sx = r.x - cx, sy = r.y - cy; if (sx < -10 || sx > 650 || sy < -10 || sy > 370) continue; fr(c, r.purple ? '#e060ff' : '#ffd860', sx, sy, r.w, r.h); fr(c, r.purple ? '#fff0ff' : '#fff4c0', sx, sy, r.w, 1); } c.globalAlpha = 1;
+    c.globalAlpha = a; for (const r of WIN_RECTS) { if (winRuined(r)) continue; const sx = r.x - cx, sy = r.y - cy; if (sx < -10 || sx > 650 || sy < -10 || sy > 370) continue; fr(c, r.purple ? '#e060ff' : '#ffd860', sx, sy, r.w, r.h); fr(c, r.purple ? '#fff0ff' : '#fff4c0', sx, sy, r.w, 1); } c.globalAlpha = 1;
     c.globalCompositeOperation = 'lighter';
-    for (const r of WIN_RECTS) { const sx = r.x - cx + r.w / 2, sy = r.y - cy + r.h / 2; if (sx < -20 || sx > 660 || sy < -20 || sy > 380) continue; const gr = c.createRadialGradient(sx, sy + 2, 1, sx, sy + 2, 12); gr.addColorStop(0, r.purple ? `rgba(180,60,220,${0.28 * a})` : `rgba(255,190,90,${0.3 * a})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(sx - 12, sy - 10, 24, 26); }
+    for (const r of WIN_RECTS) { if (winRuined(r)) continue; const sx = r.x - cx + r.w / 2, sy = r.y - cy + r.h / 2; if (sx < -20 || sx > 660 || sy < -20 || sy > 380) continue; const gr = c.createRadialGradient(sx, sy + 2, 1, sx, sy + 2, 12); gr.addColorStop(0, r.purple ? `rgba(180,60,220,${0.28 * a})` : `rgba(255,190,90,${0.3 * a})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(sx - 12, sy - 10, 24, 26); }
     for (const l of LAMPS) { const sx = l.x - cx, sy = l.y - cy; if (sx < -30 || sx > 670 || sy < -30 || sy > 390) continue; const fl = 0.9 + Math.sin(this.time / 5 + l.x) * 0.1; const gr = c.createRadialGradient(sx, sy, 1, sx, sy, 34); gr.addColorStop(0, `rgba(255,200,110,${0.6 * a * fl})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(sx - 34, sy - 34, 68, 68); }
     c.globalCompositeOperation = 'source-over';
   }
@@ -4337,14 +4432,10 @@ Render.drawDivine = function (c, cx, cy) {
 Render.drawDefense = function (c, cx, cy, sea) {
   const t = this.time; const lv = G.walls || 0; const hpf = (G.wallHp === undefined ? 100 : G.wallHp) / 100;
   const stake = (wx, wy, stone) => { const sx = wx - cx, sy = wy - cy; if (sx < -16 || sx > 656 || sy < -20 || sy > 380) return; if (stone) { fr(c, '#3a3a48', sx - 1, sy - 9, 10, 12); fr(c, '#8a8a9a', sx, sy - 8, 8, 10); fr(c, '#b0b0c0', sx, sy - 8, 8, 2); fr(c, '#5a5a6a', sx + 3, sy - 6, 1, 8); } else { fr(c, '#2a1c14', sx - 1, sy - 11, 5, 14); fr(c, '#8a5a30', sx, sy - 10, 3, 12); fr(c, '#b0804a', sx, sy - 12, 3, 2); } };
-  if (lv >= 1) { const x = 43 * TS + 4; for (let y = 6 * TS; y < 37 * TS; y += 7) { if (Math.abs(y - 23 * TS - 4) < 12) continue; if (hpf < 1 && ((y * 13) % 100) / 100 > hpf) continue; stake(x, y, lv >= 3); } }
-  if (lv >= 2) { for (let x = 16 * TS; x < 43 * TS; x += 7) { if (Math.abs(x - 28 * TS - 4) < 12) continue; if (hpf < 1 && ((x * 7) % 100) / 100 > hpf) continue; stake(x, 5 * TS + 8, lv >= 4); stake(x, 37 * TS + 4, lv >= 4); } }
+  if (lv >= 1) { const x = 43 * TS + 4; for (let y = 6 * TS; y < 37 * TS; y += 7) { if (Math.abs(y - 23 * TS - 4) < 12) continue; if (hpf < 1 && ((y * 13) % 100) / 100 > hpf) { brokenStake(c, x - cx, y - cy, lv >= 3); continue; } stake(x, y, lv >= 3); } }
+  if (lv >= 2) { for (let x = 16 * TS; x < 43 * TS; x += 7) { if (Math.abs(x - 28 * TS - 4) < 12) continue; if (hpf < 1 && ((x * 7) % 100) / 100 > hpf) { brokenStake(c, x - cx, 5 * TS + 8 - cy, lv >= 4); brokenStake(c, x - cx, 37 * TS + 4 - cy, lv >= 4); continue; } stake(x, 5 * TS + 8, lv >= 4); stake(x, 37 * TS + 4, lv >= 4); } }
   if (lv >= 4) [[43, 5], [43, 37], [16, 5], [16, 37]].forEach(p => { const sx = p[0] * TS - cx, sy = p[1] * TS - cy; if (sx < -30 || sx > 670 || sy < -40 || sy > 400) return; fr(c, '#2a2a38', sx - 2, sy - 22, 16, 26); fr(c, '#9a9aaa', sx - 1, sy - 21, 14, 24); fr(c, '#c0c0d0', sx - 1, sy - 21, 14, 3); for (let i = 0; i < 3; i++) fr(c, '#2a2a38', sx + i * 5, sy - 25, 3, 4); fr(c, '#1a1a24', sx + 4, sy - 12, 4, 6); });
-  for (const id in (G.ruins || {})) { const b = W.blds[id]; if (!b) continue; const px = b.x * TS - cx, py = b.y * TS - cy, w = b.w * TS, hgt = b.h * TS; if (px < -80 || px > 700 || py < -80 || py > 420) continue;
-    c.globalAlpha = 0.55; fr(c, '#1a1010', px + 4, py + 6, w - 8, hgt * 0.5); c.globalAlpha = 0.35; fr(c, '#1a1010', px + 2, py + hgt * 0.5, w - 4, hgt * 0.4); c.globalAlpha = 1;
-    for (let i = 0; i < 3; i++) { const fx0 = px + 8 + ((i * 17 + b.id * 5) % Math.max(8, w - 16)), fy = py + hgt * 0.35; const fl = (t >> 2) + i; fr(c, fl % 2 ? '#ff8a30' : '#ffc040', fx0, fy - 3 - (fl % 3), 3, 4 + (fl % 3)); fr(c, '#fff0a0', fx0 + 1, fy - 1, 1, 2); }
-    for (let i = 0; i < 4; i++) { const p = ((t + i * 20 + b.id * 7) % 80) / 80; c.globalAlpha = (1 - p) * 0.6; const s = 3 + p * 5; fr(c, '#3a3440', Math.round(px + w / 2 + Math.sin(p * 4 + i) * 6 - s / 2), Math.round(py + hgt * 0.3 - p * 30), s, s); } c.globalAlpha = 1;
-    if (G.ruins[id] < 100) { fr(c, '#8a6a3a', px + w - 10, py + 10, 2, hgt - 16); fr(c, '#8a6a3a', px + w - 18, py + 10, 2, hgt - 16); for (let y = 14; y < hgt - 8; y += 6) fr(c, '#a07a40', px + w - 19, py + y, 12, 1); } }
+  drawRuins(c, cx, cy); // V4.1 fix C (src/11e3_ruins.js)
   const o = G.chain && G.chain.dragonOutcome; if (o === 'lost' || o === 'pact') { const wx = o === 'lost' ? 30 * TS : 50 * TS, wy = o === 'lost' ? 1 * TS : 21 * TS; const sx = wx - cx, sy = wy - cy; if (sx > -60 && sx < 700 && sy > -60 && sy < 420) { if (o === 'pact') { c.globalAlpha = 0.25 + 0.1 * Math.sin(t / 20); ell(c, '#ffe080', sx + 24, sy + 36, 26, 8); c.globalAlpha = 1; } c.drawImage(typeof ENEMYART !== 'undefined' ? artCanvas(ENEMYART.dragon.map.F[(t >> 5) & 1], 'ea.dragon.F.' + ((t >> 5) & 1)) : dragonSprite((t >> 5) & 1), sx, sy); } }
 };
 
@@ -4757,7 +4848,7 @@ Object.assign(S, {
   faith: ['信仰力', '信仰力'], eye: ['神眼', '神眼'], counsel: ['顧問', '顧問'], chronicle: ['史官の書庫', '史官書庫'], prayers: ['祈り', '祈禱'], favored: ['眷顧者', '眷顧者'],
   no_prayers: ['（いまは祈りがありません）', '（目前沒有祈禱）'], no_fav: ['（★で眷顧者を指定）', '（以★指定眷顧者）'], minimap: ['地図', '地圖'],
   light: ['光', '光'], dark: ['闇', '暗'], pause: ['一時停止', '暫停'], speed: ['速度', '速度'], menu: ['メニュー', '選單'],
-  cost: ['消費', '消耗'], faith_short: ['信仰力が足りません', '信仰力不足'], pick_target: ['{p}：対象を選んでください（Esc／右クリックで解除）', '{p}：請選擇對象（Esc／右鍵取消）'],
+  cost: ['消費', '消耗'], faith_short: ['信仰力が足りません', '信仰力不足'], card_short: ['信仰力が足りない（あと{n}）', '信仰力不足（還差 {n}）'], not_for_prayer: ['この祈りには使えない', '這個祈禱用不了這個神力'], pick_target: ['{p}：対象を選んでください（Esc／右クリックで解除）', '{p}：請選擇對象（Esc／右鍵取消）'],
   fatigue: ['干渉疲労', '干涉疲勞'], succ: ['成功率', '成功率'], key_hint: ['H 書庫　R 住人　S 魂の河　G 顧問　N 注目　Space 停止　Q/E 速度　M 消音　Esc メニュー', 'H 書庫　R 居民　S 靈魂之河　G 顧問　N 關注　Space 暫停　Q/E 速度　M 靜音　Esc 選單'],
   out_crit: ['大成功！', '大成功！'], out_success: ['成功', '成功'], out_twist: ['曲解…', '曲解…'], out_fail: ['失敗', '失敗'],
   side_lostgold: ['お告げは取り違えられ、金貨が失われた。', '神諭被誤解，金幣遺失了。'], side_hubris: ['恩寵は慢心を生み、無謀な気を起こさせた。', '恩寵招來傲慢，讓對方衝動起來。'], side_famine: ['試煉は飢饉となって町を襲った。', '試煉化為飢荒襲向小鎮。'],
@@ -4921,7 +5012,7 @@ const UI = {
     this.drawBalance();
     { const b = Math.round(G.balance); E.balNum.textContent = b === 0 ? t('bal_even') : (b > 0 ? t('light') : t('dark')) + t('bal_lead') + ' ' + Math.abs(b); E.balNum.style.color = b >= 0 ? '#ffd860' : '#d0a0ff'; }
     // power buttons
-    POWERS.forEach((p, i) => { const b = E.powBtns[i]; const c = powerCost(p.id); const ok = G.faith >= c; b._cost.textContent = t('cost') + ' ' + c + (fs[i] ? ' ▼' + fs[i] : ''); b.classList.toggle('dis', !ok); b.classList.toggle('on', Game.power === p.id); b.firstChild.lastChild.textContent = p.n[li()]; });
+    POWERS.forEach((p, i) => { const b = E.powBtns[i]; const c = powerCost(p.id); const ok = G.faith >= c; b._cost.textContent = t('cost') + ' ' + c + (fs[i] ? ' ▼' + fs[i] : ''); const sp = selPrayerObj(); const na = !!sp && (PRAYER_ANS[sp.kind] || []).indexOf(p.id) < 0; b.classList.toggle('dis', !ok || na); b.classList.toggle('on', Game.power === p.id || (!!sp && !na && ok)); b.title = na ? t('not_for_prayer') : ''; b.firstChild.lastChild.textContent = p.n[li()]; });
     E.eyeBtn.classList.toggle('on', Game.power === 'eye'); E.eyeBtn.classList.toggle('dis', G.eye < 1);
     E.targetBar.style.display = Game.power ? 'block' : 'none';
     if (Game.power) E.targetBar.textContent = fmt(t('pick_target'), { p: Game.power === 'eye' ? t('eye') : POWER_BY_ID[Game.power].n[li()] });
@@ -4945,13 +5036,13 @@ const UI = {
   },
   refreshPrayers() {
     const E = this.el; const allP = openPrayers().sort((a, b) => b.urg - a.urg); const prs = allP.slice(0, 3); this.prayMore = allP.length - prs.length;
-    const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0)).join(',') + LANG + this.prayMore;
+    const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0) + (UI.selPrayer === p.id ? 'p' : '')).join(',') + LANG + this.prayMore;
     if (sig !== this.lastPray) {
       this.lastPray = sig; E.prayList.innerHTML = '';
       if (!prs.length) E.prayList.appendChild(h('div', { class: 'sm dim', style: 'padding:6px 0' }, t('no_prayers')));
       prs.forEach(p => {
         const hh = hById(p.hid); if (!hh) return;
-        const rc = recommendFor(p); const fresh = !(this.seenP || (this.seenP = {}))[p.id]; this.seenP[p.id] = 1; const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : '') + (fresh && G.tick > START_TICK + 30 ? ' fresh' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
+        const rc = recommendFor(p); const fresh = !(this.seenP || (this.seenP = {}))[p.id]; this.seenP[p.id] = 1; const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : '') + (UI.selPrayer === p.id ? ' psel' : '') + (fresh && G.tick > START_TICK + 30 ? ' fresh' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
           h('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, h('b', null, hh.name[li()] + ' ', h('span', { class: 'sm' }, JOBS[hh.job].n[li()])), h('span', { class: 'gold sm', style: 'display:flex;align-items:center;gap:3px' }, Ico(p.kind, 14), t('pk_' + p.kind))),
           h('div', { class: 'sm', style: 'line-height:1.22;height:32px;overflow:hidden;font-size:13px' }, pr(S['pray_' + p.kind][p.v % S['pray_' + p.kind].length])),
           h('div', { style: 'font-size:12px;color:#9affb0;margin-top:1px' }, t('rec_label') + '：' + POWER_BY_ID[rc.pid].n[li()] + ' ' + rc.mark + ' ' + Math.round(rc.p * 100) + '%'),
@@ -5023,7 +5114,9 @@ S.f_full = ['眷顧者は最大5人です', '眷顧者最多5人'];
 function selectPower(i) {
   if (!G || G.ending || Game.scene !== 'play') return;
   const p = POWERS[i]; const cost = powerCost(p.id);
+  const sp = selPrayerObj(); if (sp) { if ((PRAYER_ANS[sp.kind] || []).indexOf(p.id) < 0) { UI.toast(t('not_for_prayer'), '#ffb060'); Snd.se('fail'); return; } }
   if (G.faith < cost) { UI.toast(t('faith_short'), '#ff8a8a'); Snd.se('fail'); return; }
+  if (sp) { castOn(p.id, sp.hid); return; } // B2: prayer selected first -> cast at once
   if (p.id === 'force') { Screens.menu([[t('force_light'), () => doCast('force', 0, 'light')], [t('force_dark'), () => doCast('force', 0, 'dark')]], p.n[li()]); return; }
   Game.power = Game.power === p.id ? null : p.id; Snd.se('cursor'); UI.refresh(true);
 }
@@ -5032,8 +5125,9 @@ function castOn(pid, tid) {
   else if (pid === 'soul') Screens.menu(['good', 'evil', 'deed', 'attach'].map(k => [t('dir_' + k), () => doCast('soul', tid, k)]), POWER_BY_ID.soul.n[li()]);
   else doCast(pid, tid);
 }
+function selPrayerObj() { if (!UI.selPrayer || !G) return null; const p = openPrayers().find(q => q.id === UI.selPrayer); if (!p) UI.selPrayer = 0; return p || null; }
 function doCast(pid, tid, dir) {
-  Game.power = null;
+  Game.power = null; UI.selPrayer = 0; UI.lastPray = '';
   const res = castPower(pid, tid, dir);
   UI.lastPray = ''; UI.lastFav = ''; Screens.closeMenu();
   if (!res.ok) { UI.toast(res.err === 'faith' ? t('faith_short') : '…', '#ff8a8a'); Snd.se('fail'); UI.refresh(true); return; }
@@ -5240,7 +5334,7 @@ Object.assign(S, {
   fullui_label: ['最初から全部のUIを出す', '從一開始就顯示全部 UI'], locked_tip: ['まだ使いません。チュートリアルの後で使えるようになります。', '現在還用不到，教學結束後就會開放。'],
   tip_boss: ['魔王の目覚め', '魔王覺醒'], tip_boss_d: ['この線が満ちると魔王が目覚め、戦いの時代が始まります。天秤が闇に傾くと早まり、光に傾くと遅くなります。', '這條滿了，魔王就會醒來，進入戰鬥的時代。天秤偏向暗側會變快，偏向光側會變慢。'], tip_boss_st: ['いまの進み具合：{p}%（目覚めまで約{y}年）', '目前進度：{p}%（約 {y} 年後覺醒）'], tip_boss_on: ['魔王はすでに目覚めています。討伐隊を支えましょう。', '魔王已經覺醒。請支援討伐隊。'],
   tip_hero: ['勇者の成長', '勇者成長'], tip_hero_d: ['冒険者の強さの目安（上位3人の平均レベル）です。魔王を倒せる強さに近づくほど満ちます。依頼をこなす、装備を買う、「恩寵」や「試煉」で助けると上がります。', '冒險者強度的指標（前 3 名的平均等級）。越接近能打倒魔王的強度就越滿。完成委託、購買裝備、用「恩寵」「試煉」幫忙都會提升。'], tip_hero_st: ['上位3人の平均Lv {l}（目標Lv12／{p}%）', '前 3 名平均 Lv {l}（目標 Lv12／{p}%）'],
-  feed_none: ['（まだ何もありません）', '（還沒有事件）'], goal: ['もくひょう', '目標'],
+  feed_none: ['（まだ何もありません）', '（還沒有事件）'], goal: ['目標', '目標'],
   goal_text: ['魔王が目覚める前に、勇者を育てて魔王を倒そう。', '在魔王覺醒之前，培育勇者並打倒魔王。'],
   goal_text2: ['魔王が目覚めた！討伐隊を守り、魔王を倒そう。', '魔王覺醒了！守護討伐隊，打倒魔王。'],
   gb_balance: ['天秤', '天秤'], gb_boss: ['魔王の目覚め', '魔王覺醒'], gb_hero: ['勇者の成長', '勇者成長'], gb_awake: ['目覚めた！', '覺醒了！'],
@@ -5287,7 +5381,7 @@ Object.assign(S, {
   tip_counsel: ['顧問ミルラ', '顧問米菈'], tip_counsel_d: ['いまの状況・危険・おすすめの行動を、成功率つきで教えてくれます。決めるのはあなたです。（G）', '會告訴你目前狀況、風險與建議行動，並附上成功率。決定的是你。（G）'],
   tip_chron: ['史官の書庫', '史官書庫'], tip_chron_d: ['あなたの世界で起きたことが、物語として書かれています。人物を追いかけることもできます。（H）', '你的世界發生的事會被寫成故事，也可以追蹤特定人物。（H）'],
   tip_fav: ['眷顧者', '眷顧者'], tip_fav_d: ['神が特にみまもる最大5人。死んだあとも魂の河で追いかけられ、転生先にも干渉しやすくなります。住人の詳細窓の「★」で指定。', '神特別守護的最多 5 人。死後也能在靈魂之河追蹤，轉生時更容易干涉。可在居民詳細視窗按「★」指定。'],
-  tip_goal: ['もくひょう', '目標'], tip_goal_d: ['ゲームの目標と進み具合です。魔王が目覚めるまでに、勇者になれる人を育てましょう。', '遊戲目標與進度。請在魔王覺醒前，培育能成為勇者的人。'],
+  tip_goal: ['目標', '目標'], tip_goal_d: ['ゲームの目標と進み具合です。魔王が目覚めるまでに、勇者になれる人を育てましょう。', '遊戲目標與進度。請在魔王覺醒前，培育能成為勇者的人。'],
   tip_feed: ['できごと', '事件'], tip_feed_d: ['世界で起きたことの一覧です。クリックすると、その場所にカメラが動きます。', '世界上發生的事件列表。點擊會把鏡頭移到事件發生的地方。'],
   tip_pray: ['祈りカード', '祈禱卡片'], tip_pray_d: ['住人があなたに願っていることです。色の線が赤いほど急ぎ。放っておくと2日で消え、信仰力が少し減ります。', '居民向你許的願望。邊框越紅越緊急，放著不管 2 天就會消失，並讓信仰力小幅下降。'],
   tip_urg: ['下の線は残り時間です。', '下方的線條代表剩餘時間。'],
@@ -5464,7 +5558,9 @@ const Screens = {
     const m = $('modal'); Game.modals = this.stack.map(s => s.name);
     if (!this.stack.length) { m.style.display = 'none'; m.innerHTML = ''; Snd.setPaused(false); return; }
     const top = this.stack[this.stack.length - 1]; m.style.display = 'block'; m.innerHTML = ''; m.style.background = top.opts.clear ? 'transparent' : 'rgba(0,0,0,.55)';
-    m.appendChild(top.build()); if (this._anim) { const el = m.lastChild; if (el && el.classList && !top.opts.clear) el.classList.add('winopen'); this._anim = false; } Snd.setPaused(this.stack.some(s => s.name === 'pause'));
+    let el; try { el = top.build(); } catch (e) { ERRS.push('screen ' + top.name + ': ' + e.message); el = null; } // A suggestion 3: a screen that fails must not leave an empty dark backdrop
+    if (!el) { this.stack.pop(); if (top.opts.onClose) try { top.opts.onClose(); } catch (e) { } this.render(); return; }
+    m.appendChild(el); if (this._anim) { const el = m.lastChild; if (el && el.classList && !top.opts.clear) el.classList.add('winopen'); this._anim = false; } Snd.setPaused(this.stack.some(s => s.name === 'pause'));
   },
   rerender() { if (this.stack.length) this.render(); },
   key(e) { if (!this.stack.length) return false; const top = this.stack[this.stack.length - 1]; if (top.onKey && top.onKey(e) === true) return true; if (e.key === 'Escape' && !top.opts.noEsc) { Snd.se('cancel'); this.pop(); return true; } return true; },
@@ -5565,7 +5661,7 @@ const Screens = {
   prayerClick(pid) {
     const p = G.prayers.find(x => x.id === pid); if (!p) return; const hh = hById(p.hid);
     if (Game.power && Game.power !== 'eye') { castOn(Game.power, p.hid); return; }
-    this.focusHuman(p.hid);
+    UI.selPrayer = UI.selPrayer === pid ? 0 : pid; this.focusHuman(p.hid); // B2: the selected prayer is answered by the next power press
   },
   eyeOn(id) {
     const r = useEye(hById(id)); if (!r) { UI.toast(t('faith_short'), '#ff8a8a'); return; }
@@ -5859,7 +5955,7 @@ Screens.settings = function () {
       opts(t('advisor_label'), [[true, t('on')], [false, t('off')]], st.advisor !== false, v => { st.advisor = v; }),
       opts(t('mute') + ' (M)', [[true, t('on')], [false, t('off')]], !!Snd.muted, v => { Snd.setMuted(v); }),
       opts(t('easy_mode'), [[true, t('on')], [false, t('off')]], !!(G && G.easy), v => { st.easy = v; if (G) G.easy = v; }),
-      LANG === 'ja' ? opts('ふりがな', [[true, t('on')], [false, t('off')]], st.ruby !== false, v => { st.ruby = v; UI.dutySig = ''; }) : null,
+      LANG === 'ja' ? opts('ふりがな', [[true, t('on')], [false, t('off')]], st.ruby === true, v => { st.ruby = v; UI.dutySig = ''; }) : null,
       h('div', { style: 'margin:6px 0' }, h('span', { class: 'btn', onclick: () => { st.hintsSeen = {}; Game.saveSettings(); UI.toast(t('hint_reset')); } }, t('hint_reset'))),
       h('div', { style: 'text-align:center;margin-top:12px' }, h('span', { class: 'btn big', onclick: () => Screens.pop() }, t('close')))], 'glass');
   });
@@ -6110,18 +6206,18 @@ UI.refreshWar = function () {
     E.warBar.style.borderImage = ''; E.warBar.style.outline = a.t - G.tick <= SEASON_T ? '2px solid #ff7050' : 'none';
   }
   // era card
-  const c = (G.cards || [])[0]; const sig = c ? c.n + LANG : '';
+  const c = (G.cards || [])[0]; const sig = c ? c.n + LANG + ['push', 'stop'].map(k => { const o = CARDS[c.id].opts[k]; return o && o.cost && G.faith < o.cost ? 0 : 1; }).join('') : ''; // re-draw when affordability changes
   if (sig !== this.cardSig) { this.cardSig = sig; E.cardWin.innerHTML = ''; E.cardWin.style.display = c ? 'block' : 'none';
     if (c) { const C = CARDS[c.id]; E.cardWin.append(h('div', { class: 'gold', style: 'font-weight:bold;font-size:14px' }, '◆ ' + t('card_title') + '：' + C.n[L]), h('div', { class: 'sm', style: 'margin:2px 0' }, C.d[L]));
-      const row = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }); ['push', 'stop'].forEach(k => { const o = C.opts[k]; if (!o) return; const dis = o.cost && G.faith < o.cost; row.append(h('span', { class: 'btn' + (dis ? ' dis' : ''), style: 'font-size:12px', onclick: () => { if (dis) return; decideCard(c.n, k); Snd.se('ok'); UI.cardSig = ''; UI.refreshWar(); } }, o.n[L])); });
-      row.append(h('span', { class: 'btn', style: 'font-size:12px', onclick: () => { decideCard(c.n, 'leave'); UI.cardSig = ''; UI.refreshWar(); } }, t('card_leave'))); E.cardWin.append(row); }
+      const row = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap' }); ['push', 'stop'].forEach(k => { const o = C.opts[k]; if (!o) return; const dis = o.cost && G.faith < o.cost; const b = h('span', { class: 'btn' + (dis ? ' dis' : ''), style: 'font-size:12px', title: dis ? fmt(t('card_short'), { n: Math.ceil(o.cost - G.faith) }) : '' }, o.n[L]); cardPress(b, () => { if (o.cost && G.faith < o.cost) { UI.toast(fmt(t('card_short'), { n: Math.ceil(o.cost - G.faith) }), '#ff8a8a'); Snd.se('fail'); return; } decideCard(c.n, k); Snd.se('ok'); UI.cardSig = ''; UI.refreshWar(); }); row.append(b); });
+      const lv = h('span', { class: 'btn', style: 'font-size:12px' }, t('card_leave')); cardPress(lv, () => { decideCard(c.n, 'leave'); UI.cardSig = ''; UI.refreshWar(); }); row.append(lv); E.cardWin.append(row); }
   }
   // awe + goal panel
   if (E.aweNum) UI.pxSet(E.aweNum, Math.floor(G.awe) + '/' + G.aweMax, '#e0b0ff', 3);
 };
 const _uiBuild0 = UI.build; UI.build = function () { _uiBuild0.apply(this, arguments); try { this.buildWar(); this.buildAwe(); } catch (e) { ERRS.push('war ui:' + e.message); } };
 const _uiRefresh0 = UI.refresh; UI.refresh = function (f) { _uiRefresh0.apply(this, arguments); try { this.refreshWar(); } catch (e) { } };
-UI.buildAwe = function () { const E = this.el; if (!E.faithWin) return; const row = h('div', { style: 'display:flex;align-items:center;gap:6px;position:absolute;right:10px;bottom:3px;font-size:12px;color:#e0b0ff' }, h('span', null, t('awe')), E.aweNum = h('span')); E.faithWin.style.position = 'absolute'; E.faithWin.appendChild(row); Tip.attach(row, () => [t('tip_awe'), t('tip_awe_d')]); };
+UI.buildAwe = function () { const E = this.el; if (!E.faithWin) return; const row = h('div', { style: 'display:flex;align-items:center;gap:6px;font-size:12px;color:#e0b0ff;margin-left:auto' }, h('span', null, t('awe')), E.aweNum = h('span')); E.faithWin.style.position = 'absolute'; const line = E.faithWin.children[1]; line.style.gap = '10px'; line.style.justifyContent = 'flex-start'; line.appendChild(row); /* A suggestion 2: in the flow, no overlap with the fatigue text */ Tip.attach(row, () => [t('tip_awe'), t('tip_awe_d')]); };
 /* goal panel: defense vs threat */
 const _goal0 = UI.refreshGoal; UI.refreshGoal = function () {
   _goal0.apply(this, arguments); const R = this.goalR; if (!R || !G || !G.assaults) return; const a = nextAssault();
@@ -6191,7 +6287,7 @@ Screens.battle = function () {
       if (B.pact) kids.push(h('div', { style: 'text-align:center;margin-top:8px' }, h('p', { class: 'gold' }, t('bt_pact')), h('span', { class: 'btn big', onclick: () => { battleStep('none'); Screens.rerender(); } }, t('bt_next'))));
       else {
         const opts = battleOptions(B.phase); const row = h('div', { style: 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px' }, h('div', { style: 'width:100%;text-align:center', class: 'gold' }, fmt(t('bt_phase'), { n: B.phase + 1, p: PHASE_N[B.phase][L] })));
-        opts.forEach(o => { const ok = canIntervene(o); row.append(h('span', { class: 'btn big' + (ok ? '' : ' dis'), style: 'color:#c8ffd0', onclick: () => { if (!ok) return; battleStep(o.id); Snd.se('divine'); Render.flash = 0.4; Screens.rerender(); } }, o.n[L] + '（' + (o.cost ? fmt(t('act_cost'), { n: o.cost }) : fmt(t('act_awe'), { n: o.awe })) + '）　' + t('war_pred') + ' +' + Math.max(1, Math.round(optEffect(o) * 100)) + '%')); });
+        opts.forEach(o => { const ok = canIntervene(o); row.append(h('span', { class: 'btn big' + (ok ? '' : ' dis'), style: 'color:#c8ffd0', onclick: () => { if (!ok) { UI.toast(o.cost ? fmt(t('card_short'), { n: Math.ceil(o.cost - G.faith) }) : fmt(t('awe_short'), { n: Math.ceil((o.awe || 0) - G.awe) }), '#ff8a8a'); Snd.se('fail'); return; } battleStep(o.id); Snd.se('divine'); Render.flash = 0.4; Screens.rerender(); } }, o.n[L] + '（' + (o.free ? t('free_once') : o.cost ? fmt(t('act_cost'), { n: o.cost }) : fmt(t('act_awe'), { n: o.awe })) + '）　' + t('war_pred') + ' +' + Math.max(1, Math.round(optEffect(o) * 100)) + '%')); });
         (INTERVENE[B.phase] || []).filter(o => (G.godLv || 1) < o.lv).forEach(o => row.append(h('span', { class: 'btn big dis' }, o.n[L] + '（' + fmt(t('act_lock_lv'), { n: o.lv }) + '）')));
         row.append(h('span', { class: 'btn big', onclick: () => { battleStep('none'); Snd.se('ok'); Screens.rerender(); } }, t('bt_watch')), h('span', { class: 'btn big', style: 'border-color:#c080ff', onclick: () => { battleStep('monsters'); Snd.se('fail'); Screens.rerender(); } }, t('bt_help')));
         kids.push(row);
@@ -6233,6 +6329,8 @@ Screens.council = function () {
   }, null, { noEsc: true });
 };
 /* ---------- event lines for the feed ---------- */
+/* B1: card buttons act on pointerdown (a re-render between press and release can no longer swallow the click); the what's-this mode keeps its own handling */
+function cardPress(el, f) { let done = 0; el.addEventListener('pointerdown', e => { if (e.button !== 0 || Game.whatMode) return; e.preventDefault(); e.stopPropagation(); done = performance.now(); f(); }); el.addEventListener('click', e => { if (Game.whatMode) return; if (performance.now() - done < 600) return; f(); }); }
 function evLineV4(ev) {
   const L = li(); const p = ev.payload || {}; const an = p.a && ASSAULT_DEF[p.a] ? ASSAULT_DEF[p.a].short[L] : '';
   switch (ev.type) {
@@ -6289,7 +6387,7 @@ Object.assign(S, {
   fc_now: ['いま', '現在'], fc_then: ['その時', '屆時'], tip_fc: ['予測勝率', '預測勝率'],
   tip_fc_d: ['「いま」＝今すぐ戦ったら。「その時」＝このまま育てば、攻防の日にこのくらい。どちらも神が手助けした場合です。', '「現在」＝如果現在開戰；「屆時」＝照目前的成長，攻防那天大約是這樣。兩者都假設神會出手幫忙。'],
   fl_title: ['信仰力の出入り（今日）', '信仰力收支（今天）'], fl_inc: ['信徒の祈り（{n}人）', '信徒的祈禱（{n} 人）'], fl_ans: ['祈りにこたえた', '回應祈禱'], fl_cast: ['神の力を使った', '使用神力'], fl_sab: ['安息日の礼拝', '安息日禮拜'], fl_war: ['攻防の勝利', '攻防勝利'], fl_exp: ['急ぎの祈りを放置', '放置緊急祈禱'], fl_over: ['あふれた分は糧食に', '溢出的部分變成糧食'], fl_next: ['次の日の収入まで {n}時間', '距離下次日結 {n} 小時'], fl_yday: ['きのうの合計 {n}', '昨天合計 {n}'],
-  pray_more: ['ほかに {n} 件の祈り', '還有 {n} 件祈禱'], pray_all: ['おすすめで全部こたえる（信仰{n}）', '依建議全部回應（信仰 {n}）'], pray_listen: ['傾聴', '傾聽'], pray_listen_d: ['期限を1日のばす。がっかりさせない。信仰は使わない（1日3回）', '期限延長 1 天，不讓祈禱者失望；不花信仰（每天 3 次）'], pray_listen_left: ['のこり{n}回', '剩 {n} 次'],
+  pray_more: ['ほかに {n} 件の祈り', '還有 {n} 件祈禱'], pray_all: ['おすすめで全部に応える（信仰{n}）', '依建議全部回應（信仰 {n}）'], pray_listen: ['傾聴', '傾聽'], pray_listen_d: ['期限を1日のばす。がっかりさせない。信仰は使わない（1日3回）', '期限延長 1 天，不讓祈禱者失望；不花信仰（每天 3 次）'], pray_listen_left: ['のこり{n}回', '剩 {n} 次'],
   skip_btn: ['⏭', '⏭'], tip_skip: ['次の大事件まで早送り', '快轉到下一個重要事件'], tip_skip_d: ['×64で進み、重要な出来事や予兆が起きたら止まります。', '以 ×64 前進，發生重要事件或預兆時停下。'], skip_stop: ['早送りを止めた：{s}', '停止快轉：{s}'], auto_back: ['速度を元にもどした', '速度已恢復'],
   hero_t: ['勇者', '勇者'], hero_none: ['勇者 まだいない（候補{n}）', '勇者 尚未誕生（候補 {n}）'], hero_cands: ['勇者の候補', '勇者候補'], tip_hero: ['勇者', '勇者'],
   tip_hero_d: ['この世に勇者は1人だけ。剣士がLv8以上になり、攻防で生き残って称号を得るか、恩寵を3回受けると選ばれます。勇者は最後の決戦で敵の大将と戦います。勇者が強いほど決戦に勝ちやすくなります。', '這一世只有 1 位勇者。劍士 Lv8 以上，並在攻防中活下來得到稱號，或受過 3 次恩寵，就會被選上。勇者會在最後的決勝階段對抗敵方首領；勇者越強，決勝越容易贏。'],
@@ -6403,8 +6501,8 @@ function optEffect(o) { const B = G.battle; if (!B) return 0; const base = sigm(
 function godDidLines(B, a) {
   const L = li(); const out = []; const win = isWin(B.grade);
   if (B.prepGain > 0.005) out.push(fmt(t('rp_prep'), { n: Math.round(B.prepGain * 100) }));
-  if (B.bonus > 0) out.push(fmt(t('rp_help'), { n: Math.round((sigm((B.D - B.T + B.bonus + 3) / WIN_K) - sigm((B.D - B.T + 3) / WIN_K)) * 100) }));
-  if (!out.length) out.push(t('rp_nohelp'));
+  { const fv = B.favor || 0; if (B.bonus - fv > 0.05) out.push(fmt(t('rp_help'), { n: Math.round((sigm((B.D - B.T + B.bonus + 3) / WIN_K) - sigm((B.D - B.T + fv + 3) / WIN_K)) * 100) })); }
+  if (!out.length || (out.length === 0)) out.push(t('rp_nohelp'));
   const lv = G.godLv || 1; const nx = GOD_LV_XP[lv] !== undefined ? GOD_LV_XP[lv] - (G.godXp || 0) : 0; if (B.xp) out.push(fmt(t('rp_xp'), { n: B.xp, l: lv, r: Math.max(0, nx) }));
   (B.decrees || []).forEach(d => out.push(fmt(t('rp_dec'), { n: DECREES[d.id].n[L], m: d.ok ? '✔' : '✘' })));
   return out;
@@ -6437,6 +6535,111 @@ Screens.council = function () {
       h('div', { style: 'text-align:center;margin-top:12px' }, h('span', { class: 'btn big' + (picked.length === 2 ? '' : ' dis'), onclick: () => { if (picked.length !== 2) return; closeCouncil(picked, edict); Snd.se('ok'); Screens.closeAll(); UI.refresh(true); } }, t('co_ok')))]);
   }, null, { noEsc: true });
 };
+
+/* ---- 14g_layout41.js ---- */
+/* ================= V4.1 fix B4: less UI over the map — one tabbed right panel (祈り｜出来事｜眷顧), every panel collapsible (remembered),
+   U hides everything but the top row, the era card lives in the right panel instead of the middle of the map ================= */
+Object.assign(S, {
+  tab_pray: ['祈り', '祈禱'], tab_feed: ['出来事', '事件'], tab_fav: ['眷顧', '眷顧'], ui_hidden: ['UIを隠しています（Uで戻す）', 'UI 已隱藏（按 U 恢復）'],
+  tip_col: ['たたむ／ひらく', '收合／展開'], tip_col_d: ['クリックでこの欄をたたみます。もう一度で元に戻ります。Uキーで全部の欄を隠せます。', '點一下收合這一欄，再點一次恢復。按 U 可以隱藏全部欄位。'],
+});
+UI.colKeys = ['mini', 'goal', 'right', 'pow', 'info', 'util', 'bal'];
+const _ubL = UI.build; UI.build = function () { _ubL.apply(this, arguments); try { UI.layout41(); } catch (e) { ERRS.push('layout41:' + e.message); } };
+UI.layout41 = function () {
+  const E = this.el, root = $('ui'); if (!root || !E.prayWin) return; const st = Game.settings; st.collapsed = st.collapsed || { info: true };
+  const flat = el => { el.style.position = 'static'; el.style.left = el.style.top = ''; el.style.width = 'auto'; el.style.height = 'auto'; el.style.padding = '0'; el.style.border = 'none'; el.style.background = 'none'; el.style.boxShadow = 'none'; el.style.backdropFilter = 'none'; el.classList.remove('win'); };
+  const colBtn = key => { const b = h('span', { class: 'btn colbtn', style: 'font-size:11px;padding:0 5px;line-height:16px', onclick: ev => { ev.stopPropagation(); UI.toggleCol(key); } }, '▾'); Tip.attach(b, () => [t('tip_col'), t('tip_col_d')]); return b; };
+  // --- top row a little narrower / lower
+  E.faithWin.style.height = E.balWin.style.height = E.timeWin.style.height = '48px';
+  // --- right tabbed panel
+  E.rightWin = h('div', { class: 'win glass', style: 'left:1032px;top:62px;width:240px;padding:3px 6px;max-height:276px;overflow:hidden' });
+  const tabs = h('div', { style: 'display:flex;gap:3px;align-items:center;margin-bottom:3px' }); E.rTabs = {};
+  ['pray', 'feed', 'fav'].forEach(k => { const b = h('span', { class: 'btn', style: 'font-size:12px;padding:0 7px;position:relative;line-height:18px', onclick: () => UI.rTab(k) }, t('tab_' + k)); b._dot = h('i', { style: 'position:absolute;right:-3px;top:-4px;width:8px;height:8px;border-radius:4px;background:#ff3a3a;display:none' }); b.appendChild(b._dot); E.rTabs[k] = b; tabs.appendChild(b); });
+  E.rCol = colBtn('right'); E.rCol.style.marginLeft = 'auto'; tabs.appendChild(E.rCol); E.rTabsRow = tabs;
+  E.rBody = h('div'); E.rPages = {};
+  [E.cardWin, E.prayWin, E.feedWin, E.favWin].forEach(flat);
+  E.cardWin.style.cssText += ';display:none;margin:0 0 4px;padding:2px 4px;border:1px solid #ffd86088;border-radius:3px;background:rgba(40,30,10,.35)';
+  const ph = E.prayWin.querySelector('h3'); if (ph) ph.style.display = 'none'; const fh = E.favWin.querySelector('h3'); if (fh) fh.style.display = 'none';
+  const fhd = E.feedWin.querySelector('h3'); if (fhd) { fhd.style.cssText = 'margin:0 0 2px;font-size:12px;display:flex;justify-content:flex-end'; fhd.firstChild.textContent = ''; }
+  E.rPages = { pray: E.prayWin, feed: E.feedWin, fav: E.favWin };
+  E.rBody.append(E.cardWin, E.prayWin, E.feedWin, E.favWin); E.rightWin.append(tabs, E.rBody); root.appendChild(E.rightWin);
+  // --- bottom: smaller power bar and tool buttons
+  E.powWin.style.cssText += ';top:664px;height:50px;padding:3px 5px;left:244px;width:740px'; E.powBtns.forEach(b => { b.style.width = '140px'; b.style.height = '42px'; b.style.lineHeight = '1.15'; });
+  E.utilWin.style.cssText += ';left:1032px;top:676px;width:240px;height:38px;padding:3px 4px'; Array.from(E.utilWin.children).forEach(b => { b.style.fontSize = '11px'; b.style.lineHeight = '1.1'; b.style.padding = '1px 2px'; });
+  E.infoWin.style.cssText += ';top:664px;height:50px;width:226px'; E.miniWin.style.height = '140px';
+  // collapse buttons on each panel
+  const addCol = (win, key, css) => { const b = colBtn(key); b.style.cssText += ';position:absolute;' + (css || 'right:3px;top:2px'); win.appendChild(b); win._colBtn = b; };
+  addCol(E.miniWin, 'mini'); addCol(E.balWin, 'bal', 'right:3px;top:3px'); E.balWin.style.overflow = 'hidden'; E.balWin.style.paddingRight = '24px'; addCol(E.powWin, 'pow', 'right:2px;top:-18px'); addCol(E.infoWin, 'info'); addCol(E.utilWin, 'util', 'right:2px;top:-18px');
+  if (this.goalR && this.goalR.head) { const b = colBtn('goal'); this.goalR.head.insertBefore(b, this.goalR.head.lastChild); }
+  this.rTab(st.rTab || 'pray', true); this.applyCol();
+};
+UI.rTab = function (k, silent) { const E = this.el; if (!E.rPages) return; Game.settings.rTab = k; for (const p in E.rPages) E.rPages[p].style.display = p === k ? 'block' : 'none'; for (const p in E.rTabs) E.rTabs[p].classList.toggle('on', p === k);
+  if (k === 'pray') this.seenPray = openPrayers().map(p => p.id); if (k === 'feed') this.seenFeed = this.feed.length; if (Game.settings.collapsed.right) { Game.settings.collapsed.right = false; this.applyCol(); } if (!silent) { Snd.se('cursor'); Game.saveSettings(); } this.rDots(); };
+UI.rDots = function () { const E = this.el; if (!E.rTabs || !G) return; const tab = Game.settings.rTab || 'pray'; const col = Game.settings.collapsed.right;
+  const np = openPrayers().some(p => (this.seenPray || []).indexOf(p.id) < 0); if (tab === 'pray' && !col) this.seenPray = openPrayers().map(p => p.id);
+  const nf = this.feed.slice(this.seenFeed || 0).some(f => f.imp); if (tab === 'feed' && !col) this.seenFeed = this.feed.length;
+  E.rTabs.pray._dot.style.display = np && (tab !== 'pray' || col) ? 'block' : 'none'; E.rTabs.feed._dot.style.display = nf && (tab !== 'feed' || col) ? 'block' : 'none'; };
+UI.toggleCol = function (key, v) { const c = Game.settings.collapsed; c[key] = v === undefined ? !c[key] : v; this.applyCol(); Game.saveSettings(); Snd.se('cursor'); };
+UI.collapseAll = function (v) { this.colKeys.forEach(k => Game.settings.collapsed[k] = v); this.applyCol(); };
+UI.applyCol = function () { const E = this.el, c = Game.settings.collapsed; if (!E.rightWin) return;
+  const kids = (win, keep, on) => Array.from(win.children).forEach(ch => { if (keep.indexOf(ch) < 0) ch.style.display = on ? 'none' : ''; });
+  // mini
+  E.miniWin.style.height = c.mini ? '22px' : '140px'; E.miniWin.style.width = c.mini ? '96px' : '214px'; kids(E.miniWin, [E.miniWin._colBtn], c.mini); E.miniWin._colBtn.textContent = c.mini ? '▸ 🗺' : '▾';
+  // goal
+  const R = this.goalR; if (R) { E.goalWin.classList.toggle('colgoal', !!c.goal); E.goalWin.style.width = c.goal ? '112px' : '214px'; E.goalWin.style.whiteSpace = c.goal ? 'nowrap' : ''; E.goalWin.style.top = c.mini ? '92px' : '210px'; const cb = R.head.querySelector('.colbtn'); if (cb) cb.textContent = c.goal ? '▸' : '▾'; }
+  // right
+  E.rBody.style.display = c.right ? 'none' : ''; E.rightWin.style.width = c.right ? '124px' : '240px'; E.rightWin.style.left = c.right ? '1148px' : '1032px'; E.rCol.textContent = c.right ? '◂' : '▾'; Array.from(E.rTabsRow.children).forEach(ch => { if (ch !== E.rCol && E.rTabs) ch.style.fontSize = c.right ? '10px' : '12px'; ch.style.padding = c.right ? '0 3px' : ''; });
+  // power bar -> 5 small key buttons
+  E.powBtns.forEach((b, i) => { b.style.width = c.pow ? '28px' : '140px'; b.style.height = c.pow ? '20px' : '42px'; Array.from(b.children).forEach((ch, j) => { if (j > 0) ch.style.display = c.pow ? 'none' : ''; }); const n = b.firstChild && b.firstChild.lastChild; if (n) n.style.display = c.pow ? 'none' : ''; });
+  E.powWin.style.width = c.pow ? '168px' : '740px'; E.powWin.style.height = c.pow ? '26px' : '50px'; E.powWin.style.top = c.pow ? '688px' : '664px'; E.powWin.style.left = c.pow ? '556px' : '244px'; E.powWin._colBtn.textContent = c.pow ? '▴' : '▾';
+  E.balWin.style.width = c.bal ? '170px' : '400px'; E.balWin.style.left = c.bal ? '555px' : '440px'; E.balWin.style.justifyContent = c.bal ? 'flex-start' : 'center'; E.balWin._colBtn.textContent = c.bal ? '▸' : '▾';
+  // info / util
+  kids(E.infoWin, [E.infoWin._colBtn], c.info); E.infoWin.style.width = c.info ? '30px' : '226px'; E.infoWin.style.height = c.info ? '22px' : '50px'; E.infoWin.style.top = c.info ? '692px' : '664px'; E.infoWin._colBtn.textContent = c.info ? '⌨' : '▾';
+  kids(E.utilWin, [E.utilWin._colBtn], c.util); E.utilWin.style.width = c.util ? '30px' : '240px'; E.utilWin.style.height = c.util ? '22px' : '38px'; E.utilWin.style.left = c.util ? '1242px' : '1032px'; E.utilWin.style.top = c.util ? '692px' : '676px'; E.utilWin._colBtn.textContent = c.util ? '▴' : '▾'; E.utilWin._colBtn.style.top = c.util ? '2px' : '-18px';
+  E.powWin._colBtn.style.top = c.pow ? '4px' : '-18px'; E.powWin._colBtn.style.right = c.pow ? '-26px' : '2px';
+  this.rDots();
+};
+/* U: hide all but the top row */
+UI.toggleHide = function () { Game.hideUI = !Game.hideUI; const root = $('ui'); if (root) root.classList.toggle('hideui', Game.hideUI); if (Game.hideUI) UI.pushFeed(t('ui_hidden'), '#a8e0ff'); };
+if (typeof document !== 'undefined') document.addEventListener('keydown', e => { if (typeof Game === 'undefined' || Game.scene !== 'play' || Game.modals.length) return; if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === 'u' || e.key === 'U') { e.preventDefault(); UI.toggleHide(); } });
+if (typeof document !== 'undefined') (function () { const css = document.createElement('style'); css.textContent = '#ui.hideui .win:not(.keepui){display:none!important} .win.colgoal>*:not(h3){display:none!important} .win.colgoal h3>*:not(.colbtn){display:none!important} .win.colgoal h3{margin:0}'; document.head.appendChild(css); })();
+const _ubL2 = UI.build; UI.build = function () { _ubL2.apply(this, arguments); const E = this.el; [E.faithWin, E.timeWin].forEach(w => w && w.classList.add('keepui')); if (Game.hideUI) $('ui').classList.add('hideui'); };
+const _urL = UI.refreshWar; UI.refreshWar = function () { _urL.apply(this, arguments); if ((this._rdT = (this._rdT || 0) + 1) % 10 === 0) this.rDots(); };
+/* toasts: the feed may sit in a closed tab now, so short messages also float above the power bar for 2.5 s */
+UI.toast = function (text, col) { this.pushFeed(text, col || '#fff'); const root = $('ui'); if (!root) return; if (!this.toastEl || !this.toastEl.isConnected) { this.toastEl = h('div', { class: 'win glass keepui', style: 'left:340px;top:612px;width:600px;text-align:center;padding:4px 10px;font-size:15px;z-index:25;pointer-events:none;display:none' }); root.appendChild(this.toastEl); }
+  const el = this.toastEl; el.textContent = text; el.style.color = col || '#fff'; el.style.display = 'block'; clearTimeout(this._toastT); this._toastT = setTimeout(() => { el.style.display = 'none'; }, 2500); };
+
+/* ---- 14h_ruins_ui.js ---- */
+/* ================= V4.1 fix C UI: damage tour after a lost battle, damage summary, ruined buildings (with thumbnails) in the war report,
+   "重建の祝福" in the defense screen, stalled-repair notice, divine favour line in the report ================= */
+Object.assign(S, {
+  dmg_sum: ['被害：{b}／死者 {d} 人{w}', '損害：{b}／死者 {d} 人{w}'], dmg_wall: ['／城壁 −1段', '／城牆 −1 級'], dmg_none: ['なし', '無'], dmg_skip: ['クリックかEscで飛ばす', '點一下或按 Esc 跳過'],
+  rp_ruin_t: ['壊された建物', '被毀的建築'], free_once: ['無料・1回', '免費・1 次'], awe_short: ['畏怖が足りない（あと{n}）', '畏懼不足（還差 {n}）'], ruin_t: ['修復中の建物', '修復中的建築'], ruin_fn: { shop: ['武器を強化できない', '無法強化武器'], inn: ['休めない', '無法休息'], church: ['信仰の収入 −30%', '信仰收入 −30%'], house: ['住人は教会で寝る', '住戶在教會過夜'], smithy: ['武器の神託が使えない', '無法使用武器神諭'], armor: ['防具を買えない', '無法購買防具'] },
+  ruin_bless: ['重建の祝福（信仰15）', '重建的祝福（信仰 15）'], ruin_left: ['あと約{n}日', '約剩 {n} 天'], repair_stalled: ['修復が止まっています（食料か木材が足りない）', '修復停工了（糧食或木材不足）'], rp_favor: ['神眷（祈りに応えてきた力）：勝率 +{n}%', '神眷（回應祈禱累積的力量）：勝率 +{n}%'], wood: ['木材', '木材'],
+});
+function ruinThumb(id, sz) { const b = W.blds[id]; const cv = document.createElement('canvas'); cv.width = b.w * TS; cv.height = b.h * TS + 6; cv.style.cssText = 'height:' + (sz || 48) + 'px;image-rendering:pixelated;border:1px solid #555;background:#000'; const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.filter = 'brightness(0.45) sepia(0.4)'; c.drawImage(getWorldCanvas(seasonOf(G.tick)), b.x * TS, b.y * TS - 6, b.w * TS, b.h * TS + 6, 0, 0, b.w * TS, b.h * TS + 6); c.filter = 'none'; c.fillStyle = '#0c0808'; c.fillRect(Math.round(cv.width * 0.25), 3, Math.round(cv.width * 0.5), Math.round(cv.height * 0.35)); return cv; }
+function damageSummary(r) { const L = li(); const cnt = {}; (r.ruined || []).forEach(id => { const n = PLACES[W.blds[id].kind][L]; cnt[n] = (cnt[n] || 0) + 1; });
+  const b = Object.keys(cnt).map(n => cnt[n] > 1 ? n + ' ×' + cnt[n] : n).join('、') || t('dmg_none'); return fmt(t('dmg_sum'), { b, d: (r.deaths || []).length, w: r.wallDown ? t('dmg_wall') : '' }); }
+const _warReportC = warReport; warReport = function (B, a) { const el = _warReportC(B, a); try { const r = B.res || {};
+    if (r.ruined && r.ruined.length) { const row = h('div', { style: 'display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:6px 20px' }, h('b', { class: 'sm', style: 'color:#ff9a9a;width:100%' }, t('rp_ruin_t') + '（' + damageSummary(r) + '）'), ...r.ruined.map(id => h('div', { class: 'sm', style: 'text-align:center' }, ruinThumb(id, 52), h('div', null, PLACES[W.blds[id].kind][li()])))); el.appendChild(row); }
+    if ((r.ruined && r.ruined.length) || (r.deaths && r.deaths.length) || r.wallDown) UI.pendingTour = { ids: (r.ruined || []).slice(), sum: damageSummary(r) }; } catch (e) { ERRS.push('warReportC:' + e.message); } return el; };
+const _godDidC = godDidLines; godDidLines = function (B, a) { const out = _godDidC(B, a); if (B.favor > 0.05) out.unshift(fmt(t('rp_favor'), { n: Math.round((sigm((B.D - B.T + B.favor + 3) / WIN_K) - sigm((B.D - B.T + 3) / WIN_K)) * 100) })); return out; };
+/* damage tour: the camera visits each ruined building (1.5 s), then the plaza; click / Esc skips */
+UI.startTour = function (T) { this.pendingTour = null; if (!T || !G) return; this.tour = { ids: T.ids, i: -1, t: 0, sum: T.sum, wasPaused: Game.paused }; Game.paused = true; Game.follow = 0;
+  const root = $('ui'); this.tourEl = h('div', { class: 'win keepui', style: 'left:240px;top:104px;width:800px;text-align:center;padding:6px 10px;font-size:18px;color:#ffb0a0;border-color:#ff7050;z-index:26;cursor:pointer', onclick: () => UI.endTour() }, h('div', null, T.sum), h('div', { class: 'sm', style: 'color:#cfcfe6' }, t('dmg_skip'))); root.appendChild(this.tourEl); this.tourStep(); };
+UI.tourStep = function () { const T = this.tour; if (!T) return; T.i++; if (T.i < T.ids.length) { const b = W.blds[T.ids[T.i]]; Render.centerOn(b.x + b.w / 2, b.y + b.h / 2); Snd.se('fail'); } else if (T.i === T.ids.length) Render.centerOn(PLAZA.x, PLAZA.y); else { this.endTour(); return; } clearTimeout(this._tourT); this._tourT = setTimeout(() => UI.tourStep(), 1500); };
+UI.endTour = function () { const T = this.tour; if (!T) return; clearTimeout(this._tourT); this.tour = null; if (this.tourEl) this.tourEl.remove(); this.tourEl = null; Game.paused = T.wasPaused; Render.centerOn(PLAZA.x, PLAZA.y); UI.refresh(true); };
+if (typeof document !== 'undefined') document.addEventListener('keydown', e => { if (e.key === 'Escape' && UI.tour) { e.stopImmediatePropagation(); e.preventDefault(); UI.endTour(); } }, true);
+const _rwC = UI.refreshWar; UI.refreshWar = function () { _rwC.apply(this, arguments); if (!G) return;
+  if (this.pendingTour && !Game.modals.length && !(G.battle && !G.battle.done)) this.startTour(this.pendingTour);
+  const d = dayIdx(G.tick); if (G.repairStalled && Object.keys(G.ruins || {}).length && this._stallDay !== d) { this._stallDay = d; UI.toast(t('repair_stalled'), '#ffb060'); } };
+/* defense screen: ruined buildings, what they cannot do, days left, rebuild blessing */
+const _defC = Screens.defense; Screens.defense = function () { _defC.apply(this, arguments); const top = this.stack[this.stack.length - 1]; if (!top || top.name !== 'defense') return; const b0 = top.build;
+  top.build = () => { const el = b0(); try { const ids = Object.keys(G.ruins || {}); if (ids.length) { const L = li(); const box = h('div', { style: 'margin:6px 0;padding:4px 8px;border:1px solid #ff705088;background:rgba(60,20,16,.55);border-radius:3px' }, h('b', { style: 'color:#ffb0a0' }, t('ruin_t') + '　' + t('wood') + ' ' + Math.floor(G.town.wood || 0)));
+        ids.forEach(id => { const b = W.blds[id]; const I = (G.ruinInfo || {})[id] || { days: 4 }; const daysLeft = Math.max(1, Math.ceil(G.ruins[id] / (100 / I.days))); const fn = S.ruin_fn[b.kind]; const ok = G.faith >= 15;
+          box.appendChild(h('div', { style: 'display:flex;gap:8px;align-items:center;margin-top:3px' }, ruinThumb(+id, 34), h('div', { style: 'flex:1;font-size:13px' }, PLACES[b.kind][L] + '　' + fmt(t('repairing'), { n: repairPct(id) }) + '　' + fmt(t('ruin_left'), { n: daysLeft }), fn ? h('div', { class: 'sm', style: 'color:#ff9a9a' }, fn[L]) : null),
+            h('span', { class: 'btn' + (ok ? '' : ' dis'), style: 'font-size:12px', onclick: () => { if (!ok) { UI.toast(fmt(t('card_short'), { n: Math.ceil(15 - G.faith) }), '#ff8a8a'); return; } if (rebuildBless(+id)) { Snd.se('divine'); Render.flash = 0.3; UI.refresh(true); Screens.rerender(); } } }, t('ruin_bless')))); });
+        const sc = el.querySelector('.scroll') || el; sc.insertBefore(box, sc.firstChild); } } catch (e) { ERRS.push('defC:' + e.message); } return el; }; Screens.rerender(); };
 
 /* ---- 15_main.js ---- */
 /* ================= main: scale, input, loop, save, boot ================= */
@@ -6586,7 +6789,7 @@ function onKeyDown(e) {
   Game.keys[kl] = true; Game.keys[k] = true;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].indexOf(k) >= 0) e.preventDefault();
   switch (kl) {
-    case 'Escape': if (Game.power) { Game.power = null; UI.refresh(true); } else Screens.pause(); break;
+    case 'Escape': if (Game.power) { Game.power = null; UI.refresh(true); } else if (UI.selPrayer) { UI.selPrayer = 0; UI.lastPray = ''; UI.refresh(true); } else Screens.pause(); break;
     case ' ': Game.paused = !Game.paused; UI.refresh(true); break;
     case 'q': Game.speedIdx = Math.max(0, Game.speedIdx - 1); Game.paused = false; UI.refresh(true); break;
     case 'e': Game.speedIdx = Math.min(3, Game.speedIdx + 1); Game.paused = false; UI.refresh(true); break;
@@ -6615,8 +6818,8 @@ function canvasClick(p) {
   if (hh) {
     if (Game.power === 'eye') { Screens.eyeOn(hh.id); return; }
     if (Game.power) { Game.selId = hh.id; Render.sel = hh.id; castOn(Game.power, hh.id); return; }
-    Game.selId = hh.id; Render.sel = hh.id; Game.follow = 0; UI.lastPray = ''; UI.refresh(true); Snd.se('cursor');
-  } else if (!Game.power) { Game.selId = 0; Render.sel = 0; UI.refresh(true); }
+    Game.selId = hh.id; Render.sel = hh.id; Game.follow = 0; { const op = openPrayers().find(q => q.hid === hh.id); UI.selPrayer = op ? op.id : 0; } UI.lastPray = ''; UI.refresh(true); Snd.se('cursor');
+  } else if (!Game.power) { Game.selId = 0; Render.sel = 0; UI.selPrayer = 0; UI.lastPray = ''; UI.refresh(true); }
 }
 function dragMove(e) {
   const d = Game.drag; if (!d) return; if (Game.modals.length || Game.scene !== 'play') { endDrag(); return; }
@@ -6662,7 +6865,7 @@ Object.assign(S, {
   tut_s6b: ['ここに、世界のできごとが物語になって並びます。読んだら「閉じる」を押してください。', '這裡會把世界發生的事寫成故事。讀完後按「關閉」。'],
   tut_s7: ['迷ったら「顧問」に聞きましょう。成功率とリスクだけを教えてくれます。（Gキー）', '猶豫時就問「顧問」。她只會告訴你成功率與風險。（按 G 鍵）'],
   tut_s7b: ['顧問は、できることを成功率つきで並べます。決めるのはあなたです。閉じてください。', '顧問會把能做的事連同成功率列出來，決定的是你。看完請關閉。'],
-  tut_s8: ['上の「天秤」は、世界の光と闇のバランスです。闇に傾くと魔物が増え、魔王が早く目覚めます。左の「もくひょう」で進み具合が見られます。', '上方的「天秤」代表世界的光暗平衡。偏向暗側會讓魔物增加、魔王提早覺醒。左邊的「目標」可以看進度。'],
+  tut_s8: ['上の「天秤」は、世界の光と闇のバランスです。闇に傾くと魔物が増え、魔王が早く目覚めます。左の「目標」で進み具合が見られます。', '上方的「天秤」代表世界的光暗平衡。偏向暗側會讓魔物增加、魔王提早覺醒。左邊的「目標」可以看進度。'],
   tut_s9: ['ここで時間の速さを変えます。⏸ は一時停止、×1〜×64 は速さです。最初は ×1 がおすすめ。大事なことが起きると、自動で ×1 に戻ります。', '在這裡調整時間速度。⏸ 是暫停，×1～×64 是速度。剛開始建議用 ×1。發生重要事件時會自動降回 ×1。'],
   tut_s10: ['これで基本はおしまいです。マウスを乗せると説明が出ます。「?」で遊び方、「☰」でメニューが開きます。さあ、世界を見守りましょう！', '基本操作就是這些。滑鼠停在任何東西上都會顯示說明。「?」可開啟玩法說明，「☰」是選單。那麼，開始守望這個世界吧！'],
   tut_pick: ['右の「祈り」カードが、その人の願いです。「おすすめ」は、いちばん合う神力。下の5つが神力なので、まずは「{rec}」を選びましょう。（数字キー {key} でもOK）', '右邊的「祈禱」卡片是他的願望，「建議」是最適合的神力。下面 5 個是神力，先選「{rec}」吧。（按數字鍵 {key} 也可以）'],
@@ -6771,57 +6974,57 @@ Game.tut = null;
 /* ================= V4.1-A12: "3 lessons for an apprentice god" (practice world), duties list, first-use hints,
    "What's this?" mode, 4-page picture guide, easy mode, Japanese ruby ================= */
 Object.assign(S, {
-  l1_card: ['あなたは神さまです。村の人を見守ります。', '你是神。你要守護村裡的人。'],
-  l1_a: ['光っている人が祈っています。その人をクリックしよう。', '發光的人正在祈禱。點一下那個人。'],
-  l1_b: ['下のボタンが神力（神のわざ）です。「{rec}」をえらぼう。', '下面是神力（神的法術）。選「{rec}」。'],
-  l1_wrong: ['まずは「{rec}」をえらんでみよう。', '先選「{rec}」試試看。'],
-  l1_c: ['もう一度、祈っている人をクリックしよう。', '再點一下祈禱的人。'],
-  l1_dir: ['どれか1つえらべばOKです。', '選一個就可以。'],
-  l1_done: ['うまくいくと信仰力（神の力のもと）がふえます。', '成功時，信仰力（神的能量）會增加。'],
-  l2_card: ['次は、村をまもる練習です。', '接下來，練習守護村莊。'],
-  l2_a: ['上のらんは次の攻防（魔物との戦い）です。数字は勝てる見こみです。', '上面是下一場攻防（和魔物作戰）。數字是獲勝機率。'],
-  l2_b: ['「備え（B）」をおして、村の守りを開こう。', '按「備戰（B）」打開村莊防衛。'],
-  l2_c: ['★がついた行動の「行う」をおそう。', '按有★的行動的「執行」。'],
-  l2_d: ['勝率が {a}% から {b}% に上がった！「閉じる」でもどろう。', '勝率從 {a}% 升到 {b}%！按「關閉」回去。'],
-  l3_card: ['魔物がやって来た！戦いは3回に分かれています。', '魔物來了！戰鬥分成 3 段。'],
-  l3_a: ['緑のボタンで、1回ずつ手助けしよう。', '用綠色按鈕，每段幫一次。'],
-  l3_b: ['戦後報告です。あなたの手助けの効果が書いてあります。', '這是戰後報告。上面有你的幫助效果。'],
-  l3_c: ['勇者は世界に1人だけ。左の勇者カードで見られます。', '勇者只有 1 位。左邊的卡片可以看。'],
-  gr_a: ['最後は評定会（神さまの会議）です。目標を2つえらぼう。', '最後是評定會（神的會議）。選 2 個目標。'],
-  gr_card: ['卒業です！ほんとうの世界へ行こう。', '畢業了！前往真正的世界吧。'],
-  gr_easy: ['かんたんモードで始める', '用簡單模式開始'], gr_norm: ['ふつうで始める', '用一般模式開始'], gr_easy_d: ['ふつうの祈りは自動でこたえます。', '一般祈禱會自動回應。'],
+  l1_card: ['あなたは神です。村の人々を見守ります。', '你是神。你要守護村裡的人。'],
+  l1_a: ['光っている人が祈っています。右の祈りカードをクリックしましょう。', '發光的人正在祈禱。點一下那個人。'],
+  l1_b: ['下のボタンが神力（神のわざ）です。「{rec}」を押すと、すぐにその人へ使えます。', '下面是神力（神的法術）。選「{rec}」。'],
+  l1_wrong: ['まずは「{rec}」を押してみましょう。', '先選「{rec}」試試看。'],
+  l1_c: ['祈っている人をクリックしてください。', '再點一下祈禱的人。'],
+  l1_dir: ['どれか1つ選んでください。', '選一個就可以。'],
+  l1_done: ['成功すると信仰力（神力の源）が増えます。', '成功時，信仰力（神的能量）會增加。'],
+  l2_card: ['次は、村を守る練習です。', '接下來，練習守護村莊。'],
+  l2_a: ['上の欄は次の攻防（魔物との戦い）です。数字は勝率の予測です。', '上面是下一場攻防（和魔物作戰）。數字是獲勝機率。'],
+  l2_b: ['「備え（B）」を押して、村の防衛画面を開きましょう。', '按「備戰（B）」打開村莊防衛。'],
+  l2_c: ['★の付いた行動の「行う」を押しましょう。', '按有★的行動的「執行」。'],
+  l2_d: ['勝率が {a}% から {b}% に上がりました。「閉じる」で戻りましょう。', '勝率從 {a}% 升到 {b}%！按「關閉」回去。'],
+  l3_card: ['魔物が攻めてきました。戦いは3段階に分かれています。', '魔物來了！戰鬥分成 3 段。'],
+  l3_a: ['緑のボタンで、各段階に1回ずつ手助けしましょう。', '用綠色按鈕，每段幫一次。'],
+  l3_b: ['戦後報告です。あなたの手助けの効果が書かれています。', '這是戰後報告。上面有你的幫助效果。'],
+  l3_c: ['勇者は世界に1人だけ。左の勇者カードで確認できます。', '勇者只有 1 位。左邊的卡片可以看。'],
+  gr_a: ['最後は評定会（神々の会議）です。神旨を2つ選びましょう。', '最後是評定會（神的會議）。選 2 個目標。'],
+  gr_card: ['卒業です。本番の世界へ進みましょう。', '畢業了！前往真正的世界吧。'],
+  gr_easy: ['簡単モードで始める', '用簡單模式開始'], gr_norm: ['通常モードで始める', '用一般模式開始'], gr_easy_d: ['普段の祈りには自動で応えます。', '一般祈禱會自動回應。'],
   lesson: ['第{n}課', '第 {n} 課'], lesson_t: [['祈りを聞く', '守る準備', '魔物に勝つ', '卒業'], ['聽見祈禱', '守護村莊', '打贏魔物', '畢業']], stamp: ['できた！', '學會了！'],
   tut_skip2: ['スキップ', '跳過'], tut_retake: ['この課をやり直す', '重上這一課'], tut_lessons: ['練習のやり直し', '重上課程'], tut_retake_q: ['練習用の小さな世界で、もう一度学びます。いまのゲームはオートセーブします。', '會在練習用的小世界重新學習；目前的遊戲會自動存檔。'],
   // duties
   du_title: ['神務（いまやること）', '神務（現在要做的事）'], du_next: ['★ 次：{n}（{l}）', '★ 下一場：{n}（{l}）'], du_ok: ['神務達成：{n}', '神務完成：{n}'],
-  du_answer: ['祈りに1つこたえる', '回應 1 個祈禱'], du_prep: ['備えを1つする（B）', '做 1 次備戰（B）'], du_p50: ['「いま」の勝率を50%以上に', '讓「現在」勝率超過 50%'],
-  du_chron: ['史官の書いた物語を読む（H）', '看看史官寫了什麼（H）'], du_listen: ['祈りを「傾聴」する', '「傾聽」一個祈禱'], du_follow: ['だれか1人を追いかける（N）', '追蹤 1 個人（N）'],
-  du_counsel: ['顧問に聞いてみる（G）', '問問顧問（G）'], du_eye: ['神眼で人の心を見る（X）', '用神眼看人的內心（X）'], du_castle: ['魔王城をのぞきに行く（東の端）', '去看看魔王城（東邊盡頭）'],
+  du_answer: ['祈りに1つ応える', '回應 1 個祈禱'], du_prep: ['備えを1つ行う（B）', '做 1 次備戰（B）'], du_p50: ['「いま」の勝率を50%以上に', '讓「現在」勝率超過 50%'],
+  du_chron: ['史官の物語を読む（H）', '看看史官寫了什麼（H）'], du_listen: ['祈りを「傾聴」する', '「傾聽」一個祈禱'], du_follow: ['誰か1人を追う（N）', '追蹤 1 個人（N）'],
+  du_counsel: ['顧問に相談する（G）', '問問顧問（G）'], du_eye: ['神眼で人の心を見る（X）', '用神眼看人的內心（X）'], du_castle: ['魔王城を見に行く（東の端）', '去看看魔王城（東邊盡頭）'],
   du_hero: ['勇者カードを見る', '看看勇者卡'], du_souls: ['魂の河を見る（S）', '看看靈魂之河（S）'], du_fav: ['★で気になる人を見守る', '用★守護在意的人'],
   // hints
-  hint_ok: ['わかった', '知道了'], hint_reset: ['ヒントをもう一度見せる', '重新顯示所有提示'], later: ['あとで教えます', '之後會教你'],
+  hint_ok: ['了解', '知道了'], hint_reset: ['ヒントをもう一度見せる', '重新顯示所有提示'], later: ['後で説明します', '之後會教你'],
   hi_duty: ['ここに「いまやること」が出ます。全部やると神格が上がります。', '這裡會出現「現在要做的事」。完成會提升神格。'],
   hi_skip: ['⏭で、次の大事なことまで早送りできます。', '用⏭可以快轉到下一件大事。'],
-  hi_awe: ['魔物があなたをこわがると「畏怖」がたまります。畏怖も力に使えます。', '魔物怕你時會累積「畏怖」。畏怖也能當神力用。'],
-  hi_card: ['時代の兆しです。おす・とめる・ほうっておく、をえらびます。', '這是時代徵兆。選推動、阻止或放置。'],
+  hi_awe: ['魔物があなたを恐れると「畏怖」がたまります。畏怖も神力に使えます。', '魔物怕你時會累積「畏怖」。畏怖也能當神力用。'],
+  hi_card: ['時代の兆しです。「後押し」「阻止」「放っておく」から選びます。', '這是時代徵兆。選推動、阻止或放置。'],
   hi_godlv: ['神格が上がりました。戦いで新しい手助けが使えます。', '神格升級了。戰鬥中能用新的幫助。'],
-  hi_listen: ['「傾聴」は信仰を使いません。祈りが1日長くなります。', '「傾聽」不花信仰。祈禱會延長 1 天。'],
+  hi_listen: ['「傾聴」は信仰力を使いません。祈りの期限が1日延びます。', '「傾聽」不花信仰。祈禱會延長 1 天。'],
   hi_adv: ['魂への干渉と勢力操作が使えるようになりました。', '干涉靈魂和勢力操作開放了。'],
   // what's this / guide
-  q_menu: ['ヘルプ', '說明'], q_what: ['これなに？（クリックで説明）', '這是什麼？（點一下就說明）'], q_guide: ['遊び方（絵で見る）', '怎麼玩（圖解）'], q_detail: ['くわしい説明', '詳細說明'], q_pick: ['説明してほしい所をクリックしてね', '點一下想知道的地方'],
+  q_menu: ['ヘルプ', '說明'], q_what: ['これは何？（クリックで説明）', '這是什麼？（點一下就說明）'], q_guide: ['遊び方（図解）', '怎麼玩（圖解）'], q_detail: ['詳しい説明', '詳細說明'], q_pick: ['説明してほしい所をクリックしてください', '點一下想知道的地方'],
   q_person: ['{n}（{j}）', '{n}（{j}）'], q_person_d: ['村の人です。クリックで選ぶと、神力を使えます。', '這是村民。點選後可以使用神力。'], q_bld_d: ['村の建物です。人がここで働いたり休んだりします。', '這是村裡的建築。居民在這裡工作或休息。'], q_mon_d: ['魔物です。冒険者がたおすと村が安全になります。', '這是魔物。冒險者打倒牠，村莊就會安全。'], q_ground: ['地面', '地面'], q_ground_d: ['ドラッグすると地図を動かせます。', '拖曳可以移動地圖。'],
   g_t: [['あなたは神さま', '神力で助ける', '村をまもる', '物語になる'], ['你是神', '用神力幫忙', '守護村莊', '變成故事']],
-  g_1: ['あなたは村を見守る神さまです。人々はあなたに祈ります。光っている人が祈っている人です。', '你是守護村莊的神。人們會向你祈禱。發光的人正在祈禱。'],
-  g_2: ['下の5つのボタンが神力です。祈りにあうものをえらんで、その人をクリックします。うまくいくと信仰力がふえます。', '下面 5 個按鈕是神力。選合適的，再點那個人。成功時信仰力會增加。'],
-  g_3: ['10年のあいだに魔物が5回せめてきます。上のらんで次の戦いと勝てる見こみが見られます。Bで備え、戦いでは1回ずつ手助けできます。', '10 年內魔物會進攻 5 次。上方欄可看下一場和勝率。按 B 備戰，戰鬥中每段可幫一次。'],
-  g_4: ['あなたのしたことは、史官が物語に書きます。Hで物語の本が読めます。あなたの選んだ道が、ひとつの物語になります。', '你做的事，史官會寫成故事。按 H 可以讀故事書。你選的路，會變成一個故事。'],
-  easy_mode: ['かんたんモード', '簡單模式'], easy_d: ['ふつうの祈りを自動でこたえ、戦いも少しやさしくなります。', '一般祈禱自動回應，戰鬥也稍微簡單。'],
+  g_1: ['あなたは村を見守る神です。人々はあなたに祈ります。光っている人が祈っている人です。', '你是守護村莊的神。人們會向你祈禱。發光的人正在祈禱。'],
+  g_2: ['下の5つのボタンが神力です。祈りカードを選んでから、合う神力を押します。成功すると信仰力が増えます。', '下面 5 個按鈕是神力。選合適的，再點那個人。成功時信仰力會增加。'],
+  g_3: ['10年の間に魔物が5回攻めてきます。上の欄で次の戦いと勝率の予測が見られます。Bで備え、戦いでは各段階に1回ずつ手助けできます。', '10 年內魔物會進攻 5 次。上方欄可看下一場和勝率。按 B 備戰，戰鬥中每段可幫一次。'],
+  g_4: ['あなたの行いは、史官が物語に書き残します。Hで物語の本が読めます。あなたが選んだ道が、ひとつの物語になります。', '你做的事，史官會寫成故事。按 H 可以讀故事書。你選的路，會變成一個故事。'],
+  easy_mode: ['簡単モード', '簡單模式'], easy_d: ['普段の祈りに自動で応え、戦いも少し易しくなります。', '一般祈禱自動回應，戰鬥也稍微簡單。'],
 });
 /* ---------- Japanese ruby (furigana) for tutorial / duties / hints ---------- */
 const RUBY = { 信仰力: 'しんこうりょく', 神力: 'しんりょく', 神格: 'しんかく', 攻防: 'こうぼう', 魔物: 'まもの', 勝率: 'しょうりつ', 評定会: 'ひょうじょうかい', 会議: 'かいぎ', 目標: 'もくひょう', 卒業: 'そつぎょう', 練習: 'れんしゅう', 戦後報告: 'せんごほうこく', 効果: 'こうか', 勇者: 'ゆうしゃ', 世界: 'せかい', 最後: 'さいご', 行動: 'こうどう', 史官: 'しかん', 物語: 'ものがたり', 顧問: 'こもん', 神眼: 'しんがん', 魔王城: 'まおうじょう', 傾聴: 'けいちょう', 畏怖: 'いふ', 時代: 'じだい', 兆: 'きざ', 神務: 'しんむ', 達成: 'たっせい', 早送: 'はやおく', 数字: 'すうじ', 手助: 'てだす', 神: 'かみ', 村: 'むら', 人: 'ひと', 見守: 'みまも', 光: 'ひか', 祈: 'いの', 力: 'ちから', 次: 'つぎ', 戦: 'たたか', 勝: 'か', 見: 'み', 備: 'そな', 守: 'まも', 開: 'ひら', 行: 'おこな', 上: 'うえ', 閉: 'と', 回: 'かい', 分: 'わ', 緑: 'みどり', 書: 'か', 左: 'ひだり', 下: 'した', 一度: 'いちど', 度: 'ど', 来: 'き', 大事: 'だいじ', 東: 'ひがし', 端: 'はし', 読: 'よ', 心: 'こころ', 魂: 'たましい', 河: 'かわ', 気: 'き', 使: 'つか', 長: 'なが', 新: 'あたら', 干渉: 'かんしょう', 勢力操作: 'せいりょくそうさ', 自動: 'じどう', 少: 'すこ', 年: 'ねん', 道: 'みち', 本: 'ほん', 選: 'えら', 間: 'あいだ', 地図: 'ちず', 動: 'うご', 建物: 'たてもの', 働: 'はたら', 休: 'やす', 冒険者: 'ぼうけんしゃ', 安全: 'あんぜん', 地面: 'じめん', 説明: 'せつめい', 所: 'ところ', 全部: 'ぜんぶ', 上が: ['上', 'あ'], 上げ: ['上', 'あ'], 上の: ['上', 'うえ'], 下の: ['下', 'した'] };
 const RUBY_KEYS = Object.keys(RUBY).sort((a, b) => b.length - a.length);
 function rb(s) { // -> HTML string; kanji words get <ruby> when the setting is on (Japanese only)
-  const esc = x => x.replace(/&/g, '&amp;').replace(/</g, '&lt;'); if (LANG !== 'ja' || Game.settings.ruby === false) return esc(s);
+  const esc = x => x.replace(/&/g, '&amp;').replace(/</g, '&lt;'); if (LANG !== 'ja' || !Game.settings.ruby) return esc(s); // B3: ruby is OFF unless switched on in the settings
   let o = '', i = 0; while (i < s.length) { const k = RUBY_KEYS.find(w => s.startsWith(w, i)); if (k) { const v = RUBY[k]; if (Array.isArray(v)) o += '<ruby>' + esc(v[0]) + '<rt>' + v[1] + '</rt></ruby>' + esc(k.slice(v[0].length)); else o += '<ruby>' + esc(k) + '<rt>' + v + '</rt></ruby>'; i += k.length; } else { o += esc(s[i]); i++; } } return o;
 }
 /* ---------- illustration cards (drawn by code) ---------- */
@@ -6842,7 +7045,7 @@ Tut.build = function () {
   T.steps = [
     { id: 'l1card', les: 1, art: 'god', text: () => t('l1_card'), next: true, noHole: true },
     { id: 'l1a', les: 1, art: 'pray', text: () => t('l1_a'), target: () => T.humanRect(), cond: () => Game.selId === T.hid },
-    { id: 'l1b', les: 1, text: () => T.wrong ? fmt(t('l1_wrong'), { rec: recN() }) : fmt(t('l1_b'), { rec: recN() }), target: () => T.rect(E.powBtns[rec().idx]), cond: () => Game.power === rec().pid },
+    { id: 'l1b', les: 1, text: () => T.wrong ? fmt(t('l1_wrong'), { rec: recN() }) : fmt(t('l1_b'), { rec: recN() }), target: () => T.rect(E.powBtns[rec().idx]), cond: () => Game.power === rec().pid || G.stats.casts > 0 },
     { id: 'l1c', les: 1, text: () => Game.modals.indexOf('menu') >= 0 ? t('l1_dir') : t('l1_c'), target: () => T.humanRect(), cond: () => G.stats.casts > 0, back: () => !Game.power && G.stats.casts === 0 && Game.modals.indexOf('menu') < 0 },
     { id: 'l1done', les: 1, text: () => t('l1_done'), target: () => T.rect(E.faithWin), next: true, stamp: true },
     { id: 'l2card', les: 2, art: 'shield', text: () => t('l2_card'), next: true, noHole: true },
@@ -6883,7 +7086,7 @@ const _tutShow0 = Tut.show; Tut.show = function () {
 };
 const _tutLayout0 = Tut.layout; Tut.layout = function (force) {
   _tutLayout0.call(this, force); const s = this.steps[this.i]; if (!s) return;
-  const txt = s.text(); const sig = txt + LANG + (Game.settings.ruby === false); if (sig !== this._rbSig) { this._rbSig = sig; this.txt.innerHTML = rb(txt); }
+  const txt = s.text(); const sig = txt + LANG + !!Game.settings.ruby; if (sig !== this._rbSig) { this._rbSig = sig; this.txt.innerHTML = rb(txt); }
   if (s.modalBox && Game.modals.length) { this.box.style.left = '840px'; this.box.style.top = '560px'; }
 };
 Tut.graduate = function (easy) {

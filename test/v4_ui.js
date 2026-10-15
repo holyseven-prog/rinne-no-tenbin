@@ -33,7 +33,8 @@ const out = []; const ck = (n, c, x) => out.push((c ? 'PASS ' : 'FAIL ') + n + (
   s = await st(); ck('battle finished after 3 phases', s.battle && s.battle.done, JSON.stringify(s)); await pg.screenshot({ path: path.join(OUT, 'v4_report_' + lang + '.png') });
   await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn')).pop(); b.click(); }); await wait(500);
   s = await st(); ck('report closed, game continues', s.modals === '' && !s.battle, JSON.stringify(s));
-  const t1 = s.tick; await wait(1500); ck('time runs again', (await st()).tick > t1);
+  for (let i = 0; i < 40 && await pg.evaluate(() => !!__RT.ui.UI.tour); i++) await wait(500); // after a lost battle the damage tour runs first (C)
+  const t1 = (await st()).tick; await wait(1500); ck('time runs again', (await st()).tick > t1);
   ck('wave1 graded', await pg.evaluate(() => !!__RT.G().assaults[0].grade));
   // fast-forward to the end (auto battles) and look at the world
   await pg.evaluate(() => { __RT.policy('basic'); const G = __RT.G(); for (let i = 0; i < 30000 && !G.ending; i++) __RT.step(1); }); await wait(500);

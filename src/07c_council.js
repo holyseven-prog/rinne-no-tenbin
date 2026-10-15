@@ -64,7 +64,7 @@ function councilTick() {
   const dr = G.assaults.find(a => a.id === 'dragon'); if (dr && dr.state === 'done' && !G.councilDone1 && !G.battle) { G.councilDone1 = 1; G.council = null; openCouncil(1); }
   if (G.council && !G.council.done && !G.uiAttached || G.council && !G.council.done && G.forceAuto) autoCouncil();
 }
-function autoCouncil() { const C = G.council; const pol = G.policy || 'none'; const prefer = C.offer.filter(id => DECREES[id].side !== 'm'); const picked = (pol === 'basic' ? prefer.concat(C.offer) : C.offer).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2); closeCouncil(picked, pol === 'basic' && G.faith > 90 ? 'unity' : null); }
+function autoCouncil() { const C = G.council; const pol = G.policy || 'none'; const prefer = C.offer.filter(id => DECREES[id].side !== 'm'); const picked = (pol === 'basic' || pol === 'engaged' ? prefer.concat(C.offer) : C.offer).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2); closeCouncil(picked, (pol === 'basic' || pol === 'engaged') && G.faith > 90 ? 'unity' : null); }
 function periodDaily() {
   if (!G.period) return; G.period.balDays++; if (Math.abs(G.balance) <= 25) G.period.balIn++;
 }
@@ -90,7 +90,7 @@ function cardTick() {
       const n = 1; for (let i = 0; i < n; i++) { const pool = CARD_KEYS.filter(k => (!CARDS[k].need || CARDS[k].need()) && !(G.cards || []).some(c => c.id === k) && G.tick - ((G.cardSeen || {})[k] || -1e9) > 4 * SEASON_T); if (!pool.length) break; const id = rpick(pool); (G.cardSeen = G.cardSeen || {})[id] = G.tick; G.cards.push({ id, t: G.tick, n: G.nid++ }); if (G.onCard) G.onCard(id); }
     }
   }
-  if ((G.cards || []).length && (!G.uiAttached || G.forceAuto)) { const pol = G.policy || 'none'; G.cards.slice().forEach(c => { if (pol === 'basic') { const C = CARDS[c.id]; const o = C.opts[C.rec]; decideCard(c.n, o && (!o.cost || G.faith >= o.cost + 30) ? C.rec : 'leave'); } else decideCard(c.n, 'leave'); }); }
+  if ((G.cards || []).length && (!G.uiAttached || G.forceAuto)) { const pol = G.policy || 'none'; G.cards.slice().forEach(c => { if (pol === 'basic' || pol === 'engaged') { const C = CARDS[c.id]; const o = C.opts[C.rec]; decideCard(c.n, o && (!o.cost || G.faith >= o.cost + 30) ? C.rec : 'leave'); } else decideCard(c.n, 'leave'); }); }
 }
 function resolveCard(c, opt) {
   const C = CARDS[c.id]; if (!C) return; if (opt === 'leave') { if (C.leave) C.leave(); } else { const o = C.opts[opt]; if (!o) return; if (o.cost && G.faith < o.cost) { if (C.leave) C.leave(); return; } if (o.cost) G.faith -= o.cost; o.run(); }

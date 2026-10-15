@@ -1,6 +1,6 @@
 // helper: decode a PNG to {w,h,data(Uint8 RGBA)} / save RGBA as PNG, via headless Chrome (no npm image libs needed)
-const puppeteer = require('../test/node_modules/puppeteer-core'); const fs = require('fs');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const puppeteer = (() => { const pth = require('path'); for (const p of [process.env.PUPPETEER_CORE, 'puppeteer-core', pth.join(__dirname, '..', 'test', 'node_modules', 'puppeteer-core'), pth.join(__dirname, 'node_modules', 'puppeteer-core')]) { if (!p) continue; try { return require(p); } catch (e) { } } throw new Error('puppeteer-core not found: run npm i puppeteer-core in test/ or set PUPPETEER_CORE'); })(); const fs = require('fs');
+const CHROME = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean).find(p => fs.existsSync(p));
 async function load(files) {
   const br = await puppeteer.launch({ executablePath: CHROME, headless: 'new' }); const pg = await br.newPage(); const out = {};
   for (const f of files) { const u = 'data:image/png;base64,' + fs.readFileSync(f).toString('base64');

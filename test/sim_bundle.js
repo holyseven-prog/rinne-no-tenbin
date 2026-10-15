@@ -706,7 +706,7 @@ function addPrayer(h, kind, urg) {
   if (h.prayCd > 0 || hasPrayer(h) || h.inside && false) return null;
   if (openPrayers().length >= 8) return null;
   const p = { id: G.nid++, hid: h.id, kind, urg: clamp(urg, 0.1, 1), t: G.tick, exp: G.tick + 2 * TICK_DAY, state: 'open', v: rint(0, 1) };
-  G.prayers.push(p); h.prayCd = rint(420, 880); // V4.1-A6: about 30% fewer prayers G.stats.prayers++;
+  G.prayers.push(p); h.prayCd = rint(420, 880); G.stats.prayers++; // V4.1-A6: about 30% fewer prayers
   logEvent('prayer', [h.id], { kind }, ['prayer'], 0.3 + urg * 0.3, 0.5, h);
   if (G.fxOn) G.fx.push({ t: 'pray', x: h.x, y: h.y });
   if (G.onPrayer) G.onPrayer(p);
@@ -1183,7 +1183,7 @@ function dayUpdate() {
   // faith
   let dis = 0; for (const h of aliveHumans()) { dis += h.disappoint || 0; if (h.disappoint > 0) h.disappoint = Math.max(0, h.disappoint - 0.012); } dis /= Math.max(1, pop);
   if (G.assaults) { const r = (G.ansN || 0) / Math.max(1, (G.ansN || 0) + (G.expN || 0)); const tgt = (G.ansN || 0) + (G.expN || 0) < 3 ? 0.8 : 0.15 + 0.95 * r; G.devotion = (G.devotion === undefined ? 0.8 : G.devotion) + (tgt - (G.devotion === undefined ? 0.8 : G.devotion)) * 0.12; G.ansN = (G.ansN || 0) * 0.94; G.expN = (G.expN || 0) * 0.94; } // V4.1-A14: devotion follows how often the god answers
-  const devo = clamp(1 - dis * TUNE.disMul, 0.1, 1) * (G.assaults ? G.devotion : 1); const church = G.assaults ? [0.9, 1, 1.2, 1.4][devLevel()] : 1; const inc = pop * 0.16 * devo * church; G.faith = Math.min(G.faithMax, G.faith + inc); faithLog('inc', inc); G.faithDayInc = inc; G.listenLeft = 3;
+  const devo = clamp(1 - dis * TUNE.disMul, 0.1, 1) * (G.assaults ? G.devotion : 1); const church = G.assaults ? [0.9, 1, 1.2, 1.4][devLevel()] : 1; const inc = pop * 0.16 * devo * church * (G.ruins && typeof isRuined === 'function' && isRuined('church') ? 0.7 : 1); // V4.1 fix C: a ruined church collects 30% less G.faith = Math.min(G.faithMax, G.faith + inc); faithLog('inc', inc); G.faithDayInc = inc; G.listenLeft = 3;
   if (G.assaults && d % 3 === 0) { const att = aliveHumans().filter(h => h.age >= 10).length; const g = Math.round(att * 0.45 * devo * 10) / 10; if (g > 0) { G.faith = Math.min(G.faithMax, G.faith + g); faithLog('sab', g); logEvent('sabbath', [], { n: att, g }, ['faith'], 0.3, 0.6, (W.bk.church && W.bk.church[0]) ? W.bk.church[0].appr : PLAZA); } } // V4.1-A14: sabbath every 3 days
   if (G.assaults) faithDay(); heroDaily();
   const ovT = G.assaults ? G.faithMax * 0.62 : 100; if (G.faith > ovT) { const ex = (G.faith - ovT) * (G.assaults ? 0.45 : 0.3); G.faith -= ex; faithLog("over", -ex); G.town.food += ex * 0.8; G.town.hp = Math.min(100, G.town.hp + ex * 0.15); G.stats.overflow = (G.stats.overflow || 0) + ex; if (G.onOverflow && ex > 1.2) G.onOverflow(ex); }
@@ -1287,11 +1287,11 @@ function scripted() {
 /* ================= V4-A1: assault timeline, village defense, 3-phase battles, consequences, chains ================= */
 const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
-  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
-  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 47, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 49, kind: 'dragon', mon: 'dragon', scale: 1.3 },
-  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 40, kind: 'wave', mon: 'wolf', scale: 1.2 },
-  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 45, kind: 'king', mon: 'boss', scale: 1.6 },
+  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 49.5, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
+  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 48, kind: 'wave', mon: 'skel', scale: 1 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 53, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41.5, kind: 'wave', mon: 'wolf', scale: 1.2 },
+  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 44, kind: 'king', mon: 'boss', scale: 1.6 },
 };
 const ASSAULT_ORDER = ['wave1', 'wave2', 'dragon', 'wave3', 'king'];
 const GRADES = ['crush', 'win', 'pyrrhic', 'loss', 'rout']; // 大勝 勝利 慘勝 敗北 潰滅
@@ -1348,19 +1348,23 @@ function threatOf(a) {
   return t;
 }
 function adaptT(D, a) { if (a && a.adRef != null) return 0.8 * Math.max(0, a.adRef - 36) + 0.35 * Math.max(0, D - a.adRef); return 0.8 * Math.max(0, D - 36); } // V4.1-A3: the enemy answers a stronger village; it stops adapting at the half-year scout report, so late preparation counts fully
-function winProb(a, extra) { if (!a) return 0; const D = defenseScore(); return sigm((D - threatOf(a) - adaptT(D, a) + 3 + (extra || 0)) / WIN_K); }
+/* V4.1 fix A-1: 神眷 — every answered prayer adds favour (crit 1.5), 3%/day fades; the village fights for a god who listens: up to +3 battle margin (≈ +12pt) */
+const FAVOR_MAX = 8; function favorBonus() { return Math.min(3, (G.favor || 0) * 0.45); }
+function winProb(a, extra) { if (!a) return 0; const D = defenseScore(); return sigm((D - threatOf(a) - adaptT(D, a) + 3 + favorBonus() + (extra || 0)) / WIN_K); }
 /* V4.1-A1: expected help from the god in the 3 phases (best affordable option per phase, sequential budget) */
-function expHelp(faith) { let f = Math.max(60, faith === undefined ? G.faith : faith), aw = G.awe || 0, b = 0; for (let ph = 0; ph < 3; ph++) { const o = battleOptions(ph).filter(x => x.cost ? f >= x.cost : aw >= (x.awe || 0)).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.cost) f -= o.cost; else aw -= o.awe; } } return b; }
+function expHelp(faith) { const f0 = faith === undefined ? G.faith : faith; let f = G.tutMode ? Math.max(60, f0) : f0, /* A-2: the real faith (the practice world assumes 60) */ aw = G.awe || 0, b = 0; for (let ph = 0; ph < 3; ph++) { const o = battleOptions(ph).filter(x => x.cost ? f >= x.cost : aw >= (x.awe || 0)).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.cost) f -= o.cost; else aw -= o.awe; } } return b; }
 /* defense trend -> projected defense when the assault arrives */
 function defSample() { G.defHist = G.defHist || []; G.defHist.push([G.tick, defenseScore()]); if (G.defHist.length > 40) G.defHist.shift(); }
 function defSlope() { const h = (G.defHist || []).filter(x => G.tick - x[0] <= TICK_YEAR * 1.5); if (h.length < 4) return 0.012; let sx = 0, sy = 0, sxx = 0, sxy = 0; for (const [x, y] of h) { sx += x; sy += y; sxx += x * x; sxy += x * y; } const n = h.length, den = n * sxx - sx * sx; return den ? (n * sxy - sx * sy) / den : 0; }
 function winForecast(a) {
   a = a || nextAssault(); if (!a) return null; const D = defenseScore(), T = threatOf(a); const left = Math.max(0, a.t - G.tick);
-  const now = sigm((D - T - adaptT(D, a) + 3 + expHelp()) / WIN_K);
+  const fb = favorBonus(); const now = sigm((D - T - adaptT(D, a) + 3 + fb + expHelp()) / WIN_K);
   const Dp = clamp(D + clamp(defSlope(), -0.004, 0.03) * left * 0.8 + (left > SEASON_T ? 3 : 0), D - 5, D + 30);
   const faithThen = Math.min(G.faithMax, G.faith + left / TICK_DAY * 3);
-  const then = sigm((Dp - T - adaptT(a.adRef != null ? D : Dp, a) + 3 + expHelp(faithThen)) / WIN_K);
-  return { now, then, nowNoHelp: winProb(a), left };
+  const then = sigm((Dp - T - adaptT(a.adRef != null ? D : Dp, a) + 3 + fb + expHelp(faithThen)) / WIN_K);
+  // V4.1 fix A-2 (fit on basic + engaged runs): players prepare more when the outlook is poor, more so when they keep answering prayers -> the far forecast leans toward the usual outcome
+  const k = left > SEASON_T ? 0.15 : 0.05; const then2 = then < 0.75 ? then + (0.75 - then) * k : then;
+  return { now, then: then2, thenRaw: then, nowNoHelp: winProb(a), left };
 }
 /* ---------- timeline tick ---------- */
 function assaultTick() {
@@ -1378,7 +1382,7 @@ function assaultTick() {
 /* ---------- prep actions ---------- */
 const PREP = {
   walls: { n: ['村長に神託：防壁を築く', '向村長降神諭：修築防壁'], d: ['守備↑（2日かけて1段階。糧食30）', '守備↑（花 2 天升 1 級，糧食 30）'], cost: 10, lv: 1, ok: () => G.walls + (G.wallBuild > 0 ? 1 : 0) < wallCap() && G.town.food >= 30 && !(G.wallBuild > 0), run: () => { G.town.food -= 30; G.wallBuild = 2 * TICK_DAY; } },
-  weapons: { n: ['鍛冶に神託：武器を打つ', '向鐵匠降神諭：打造武器'], d: ['戦力↑（冒険者3人の装備+1）', '戰力↑（3 名冒險者裝備 +1）'], cost: 12, lv: 1, ok: () => !G.ruins[bldIdOf('smithy')] && G.humans.some(h => isAdv(h) && h.gear < 6), run: () => { G.humans.filter(h => isAdv(h) && h.gear < 6).sort((a, b) => b.lvl - a.lvl).slice(0, 3).forEach(h => { h.gear++; const st = hStats(h); h.maxHp = st.hp; }); } },
+  weapons: { n: ['鍛冶に神託：武器を打つ', '向鐵匠降神諭：打造武器'], d: ['戦力↑（冒険者3人の装備+1）', '戰力↑（3 名冒險者裝備 +1）'], cost: 12, lv: 1, ok: () => !G.ruins[bldIdOf('smithy')] && !G.ruins[bldIdOf('shop')] && G.humans.some(h => isAdv(h) && h.gear < 6), run: () => { G.humans.filter(h => isAdv(h) && h.gear < 6).sort((a, b) => b.lvl - a.lvl).slice(0, 3).forEach(h => { h.gear++; const st = hStats(h); h.maxHp = st.hp; }); } },
   train: { n: ['試煉：冒険者に修行させる', '試煉：讓冒險者修行'], d: ['戦力↑（多くがLv+1、けがの危険あり）', '戰力↑（多數 Lv+1，有受傷風險）'], cost: 25, lv: 1, ok: () => G.humans.some(isAdv), run: () => { G.humans.filter(isAdv).forEach(h => { const r = rnd(); if (r < 0.72) addExp(h, 30 * h.lvl); else if (r < 0.9) h.hp = Math.max(1, h.hp * 0.5); }); } },
   harvest: { n: ['豊穣の恩寵', '豐收恩寵'], d: ['補給↑（糧食+80）', '補給↑（糧食 +80）'], cost: 18, lv: 1, ok: () => G.town.food < 380, run: () => { G.town.food = Math.min(400, G.town.food + 80); } },
   potions: { n: ['薬師に神託：薬を作る', '向藥師降神諭：製藥'], d: ['補給↑（薬+6）', '補給↑（藥 +6）'], cost: 8, lv: 1, ok: () => G.town.potions < 28, run: () => { G.town.potions = Math.min(30, G.town.potions + 6); } },
@@ -1412,10 +1416,10 @@ function prepDelta(id) { // effect on the shown win chance ("now", with the god'
 }
 function advisorPreps(n) { return PREP_ORDER.filter(prepAvailable).filter(id => id !== 'provoke' && id !== 'evac' && !(G.tutMode && id === 'walls')).map(id => ({ id, d: prepDelta(id), c: Math.max(5, PREP[id].cost) })).sort((x, y) => y.d / y.c - x.d / x.c).slice(0, n || 3); }
 function dailyDefense() {
-  if (!G.assaults) return;
+  if (!G.assaults) return; G.favor = (G.favor || 0) * 0.9;
   if (G.wallBuild > 0) { G.wallBuild -= TICK_DAY; if (G.wallBuild <= 0) { G.wallBuild = 0; G.walls = Math.min(wallCap(), G.walls + 1); G.wallHp = 100; logEvent('walls_up', [], { lv: G.walls }, ['assault'], 0.3, 0.4, PLAZA); } }
   if (G.wallHp < 100 && G.town.food >= 5) { G.wallHp = Math.min(100, G.wallHp + 6); G.town.food -= 1; }
-  for (const id in G.ruins) { if (G.town.food >= 8) { G.ruins[id] -= 25; G.town.food -= 2; if (G.ruins[id] <= 0) { delete G.ruins[id]; logEvent('rebuilt', [], { b: +id }, ['assault'], 0.3, 0.4, PLAZA); } } }
+  repairDaily(); // V4.1 fix C
   G.prep = Math.max(0, (G.prep || 0) - 4);
   G.moraleMod = (G.moraleMod || 0) * 0.97;
   G.awe = clamp(G.awe + Math.max(0, -G.balance) / 40 + 0.3 * (G.balance < 70 ? 1 : 0.3), 0, G.aweMax);
@@ -1430,17 +1434,19 @@ const PHASE_N = [['前哨戦', '前哨戰'], ['本戦', '主戰'], ['決戦', '�
 function startBattle(a) {
   a.state = 'battle'; const D0 = defenseScore(); const D = D0 - adaptT(D0, a), T = threatOf(a); const L = WIN_K * Math.log(1 / Math.max(1e-6, rnd()) - 1) * -1; // logistic noise
   a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
-  G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: 0, choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
+  G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: favorBonus(), favor: favorBonus(), choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
   if (a.id === 'dragon' && G.dragonPact) { G.battle.pact = true; }
   logEvent('assault_start', [], { a: a.id, p: a.pred, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 1, 0.9, a.id === 'king' ? PLAZA : { x: FIELD_X0, y: 23 });
   if (G.onBattle) G.onBattle(G.battle);
 }
-function battleOptions(phase) { return (INTERVENE[phase] || []).filter(o => (G.godLv || 1) >= o.lv); }
+/* V4.1 fix A-1: when the god's faith has run dry, the villagers' own prayers can help once per battle (free) */
+const VPRAYER = { id: 'vprayer', n: ['村人の祈り（信仰が尽きたとき1回）', '村民的祈禱（信仰耗盡時 1 次）'], b: 2, lv: 1, free: 1 };
+function battleOptions(phase) { const l = (INTERVENE[phase] || []).filter(o => (G.godLv || 1) >= o.lv); if (G.faith < 15 && G.battle && !G.battle.vpUsed) l.push(VPRAYER); return l; }
 function canIntervene(o) { return o.cost ? G.faith >= o.cost : G.awe >= (o.awe || 0); }
 function battleStep(choice) { // choice: option id | 'none' | 'monsters'
   const B = G.battle; if (!B || B.done) return null;
   if (B.pact) { finishBattle(); return B; }
-  let bonus = 0; const opt = (INTERVENE[B.phase] || []).find(o => o.id === choice);
+  let bonus = 0; const opt = battleOptions(B.phase).find(o => o.id === choice); if (opt && opt.free) B.vpUsed = 1;
   if (opt && (G.godLv || 1) >= opt.lv && canIntervene(opt)) { if (opt.cost) G.faith -= opt.cost; if (opt.awe) G.awe -= opt.awe; bonus = opt.b; G.stats.interventions = (G.stats.interventions || 0) + 1; }
   else if (choice === 'monsters') { bonus = -[6, 8, 10][B.phase]; G.awe = clamp(G.awe + [12, 18, 28][B.phase], 0, G.aweMax); B.helpMon++; }
   B.choices.push(opt || choice === 'monsters' ? (opt ? opt.id : 'monsters') : 'none'); B.bonus += bonus;
@@ -1451,7 +1457,7 @@ function battleStep(choice) { // choice: option id | 'none' | 'monsters'
 function gradeOf(m) { return m >= 14 ? 'crush' : m >= 4 ? 'win' : m >= -3 ? 'pyrrhic' : m >= -14 ? 'loss' : 'rout'; }
 function finishBattle() {
   const B = G.battle, a = G.assaults.find(x => x.id === B.a); B.done = true;
-  let m = B.D - B.T + B.bonus + B.L; if (G.tutMode && B.a === 'wave1' && B.bonus > 0) m = Math.max(m, 5); // practice world: helping always wins
+  let m = B.D - B.T + B.bonus + B.L; if (G.tutMode && B.a === 'wave1' && B.bonus > (B.favor || 0)) m = Math.max(m, 5); // practice world: helping always wins
   let grade = B.pact ? 'pact' : gradeOf(m); B.m = m; B.grade = grade; a.predFinal = Math.round(sigm((B.D - B.T + B.bonus + 3) / WIN_K) * 100); a.grade = grade; a.state = 'done';
   const res = applyConsequences(a, grade); B.res = res; a.res = res; G.battleLog.push({ id: a.id, grade, pred: a.pred, m: Math.round(m), deaths: res.deaths.length, t: G.tick });
   G.flags.aid = 0; G.flags.evac = 0; G.prep = 0; G.flags.talked = 0; if (G.period && !isWin(grade)) G.period.losses++;
@@ -1470,12 +1476,12 @@ function applyConsequences(a, grade) {
   // casualties
   const nd = { crush: [0, 1], win: [1, 2], pyrrhic: [2, 4], loss: [4, 7], rout: [7, 11] }[grade]; let dn = Math.round(rint(nd[0], nd[1]) * (k.kind === 'wave' ? 1 : 1.25));
   const pool = G.humans.filter(h => h.alive && h.age >= 6); const w = h => (isAdv(h) ? 4 : 1) * ((h.child || h.age >= 56) ? (G.flags.evac ? 0.15 : 1) : 1) * (h.job === 'historian' ? 0.2 : 1);
-  for (let i = 0; i < dn && pool.length > 6; i++) { let tot = 0; pool.forEach(h => tot += w(h)); let r = rnd() * tot; let pick = pool[0]; for (const h of pool) { r -= w(h); if (r <= 0) { pick = h; break; } } pool.splice(pool.indexOf(pick), 1); killHuman(pick, 'battle', null); res.deaths.push(pick.id); G.humans.forEach(o => { if (o.alive && o.parent === pick.id && o.age < 16) o.vengeful = 1; }); }
+  for (let i = 0; i < dn && pool.length > 6; i++) { let tot = 0; pool.forEach(h => tot += w(h)); let r = rnd() * tot; let pick = pool[0]; for (const h of pool) { r -= w(h); if (r <= 0) { pick = h; break; } } pool.splice(pool.indexOf(pick), 1); killHuman(pick, 'battle', null); addGrave(pick); res.deaths.push(pick.id); G.humans.forEach(o => { if (o.alive && o.parent === pick.id && o.age < 16) o.vengeful = 1; }); }
   res.levels = res.levels.filter(l => !res.deaths.includes(l[0]));
   // buildings & walls
   const nr = { crush: 0, win: 0, pyrrhic: 1, loss: 2, rout: 4 }[grade] + (a.id === 'dragon' && G.chain.dragonType === 'village' && !win ? 2 : 0);
-  const cand = W.blds.filter(b => b.kind !== 'castle' && b.kind !== 'mill' && !G.ruins[b.id]); for (let i = 0; i < nr && cand.length; i++) { const b = cand.splice(rint(0, cand.length - 1), 1)[0]; G.ruins[b.id] = 100; res.ruined.push(b.id); }
-  G.wallHp = Math.max(0, G.wallHp - { crush: 5, win: 15, pyrrhic: 35, loss: 60, rout: 90 }[grade]); if (grade === 'rout' && G.walls > 0) G.walls--;
+  const cand = W.blds.filter(b => b.kind !== 'castle' && b.kind !== 'mill' && !G.ruins[b.id]); for (let i = 0; i < nr && cand.length; i++) { const b = cand.splice(rint(0, cand.length - 1), 1)[0]; ruinBuilding(b, win && grade !== 'pyrrhic' ? 'pyrrhic' : grade); res.ruined.push(b.id); }
+  G.wallHp = Math.max(0, G.wallHp - { crush: 5, win: 15, pyrrhic: 35, loss: 60, rout: 90 }[grade]); if (grade === 'rout' && G.walls > 0) { G.walls--; res.wallDown = 1; }
   // supplies, morale, balance, faith / awe
   G.town.food = Math.max(0, G.town.food * (win ? 0.85 : 0.6) - (G.flags.aid ? 60 : 0)); G.town.potions = Math.floor(G.town.potions * 0.5); G.town.gearStock = Math.max(0, G.town.gearStock - (win ? 0 : 2));
   G.moraleMod += { crush: 15, win: 10, pyrrhic: 0, loss: -12, rout: -20 }[grade];
@@ -1586,7 +1592,7 @@ function councilTick() {
   const dr = G.assaults.find(a => a.id === 'dragon'); if (dr && dr.state === 'done' && !G.councilDone1 && !G.battle) { G.councilDone1 = 1; G.council = null; openCouncil(1); }
   if (G.council && !G.council.done && !G.uiAttached || G.council && !G.council.done && G.forceAuto) autoCouncil();
 }
-function autoCouncil() { const C = G.council; const pol = G.policy || 'none'; const prefer = C.offer.filter(id => DECREES[id].side !== 'm'); const picked = (pol === 'basic' ? prefer.concat(C.offer) : C.offer).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2); closeCouncil(picked, pol === 'basic' && G.faith > 90 ? 'unity' : null); }
+function autoCouncil() { const C = G.council; const pol = G.policy || 'none'; const prefer = C.offer.filter(id => DECREES[id].side !== 'm'); const picked = (pol === 'basic' || pol === 'engaged' ? prefer.concat(C.offer) : C.offer).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2); closeCouncil(picked, (pol === 'basic' || pol === 'engaged') && G.faith > 90 ? 'unity' : null); }
 function periodDaily() {
   if (!G.period) return; G.period.balDays++; if (Math.abs(G.balance) <= 25) G.period.balIn++;
 }
@@ -1612,7 +1618,7 @@ function cardTick() {
       const n = 1; for (let i = 0; i < n; i++) { const pool = CARD_KEYS.filter(k => (!CARDS[k].need || CARDS[k].need()) && !(G.cards || []).some(c => c.id === k) && G.tick - ((G.cardSeen || {})[k] || -1e9) > 4 * SEASON_T); if (!pool.length) break; const id = rpick(pool); (G.cardSeen = G.cardSeen || {})[id] = G.tick; G.cards.push({ id, t: G.tick, n: G.nid++ }); if (G.onCard) G.onCard(id); }
     }
   }
-  if ((G.cards || []).length && (!G.uiAttached || G.forceAuto)) { const pol = G.policy || 'none'; G.cards.slice().forEach(c => { if (pol === 'basic') { const C = CARDS[c.id]; const o = C.opts[C.rec]; decideCard(c.n, o && (!o.cost || G.faith >= o.cost + 30) ? C.rec : 'leave'); } else decideCard(c.n, 'leave'); }); }
+  if ((G.cards || []).length && (!G.uiAttached || G.forceAuto)) { const pol = G.policy || 'none'; G.cards.slice().forEach(c => { if (pol === 'basic' || pol === 'engaged') { const C = CARDS[c.id]; const o = C.opts[C.rec]; decideCard(c.n, o && (!o.cost || G.faith >= o.cost + 30) ? C.rec : 'leave'); } else decideCard(c.n, 'leave'); }); }
 }
 function resolveCard(c, opt) {
   const C = CARDS[c.id]; if (!C) return; if (opt === 'leave') { if (C.leave) C.leave(); } else { const o = C.opts[opt]; if (!o) return; if (o.cost && G.faith < o.cost) { if (C.leave) C.leave(); return; } if (o.cost) G.faith -= o.cost; o.run(); }
@@ -1624,6 +1630,50 @@ const FEED_S = { assault_start: 1, assault_end: 1, hero_born: 1, boss_awaken: 1,
 const FEED_A = { death: 1, marriage: 1, betrayal: 1, birth: 1, love_start: 1, dev_change: 1, festival: 1, promotion: 1, god_lv: 1, decree_settle: 1, master_farewell: 1, destined_reunion: 1, miracle: 1, reincarnation: 1 };
 const FEED_B = { party_formed: 1, quest_clear: 1, quest_fail: 1, first_battle: 1, prep: 1, walls_up: 1, rebuilt: 1, coming_of_age: 1, migrant: 1, gear: 1, quarrel: 1, reconcile: 1, love_notice: 1, divine_act: 1, prayer_expired: 1, monster_raid: 1 };
 function feedClass(ev) { if (ev.type === 'assault_omen') return ev.payload && ev.payload.step === 3 ? 'S' : 'A'; if (FEED_S[ev.type]) return 'S'; if (FEED_A[ev.type]) return 'A'; if (FEED_B[ev.type]) return 'B'; return ev.tension >= 0.6 ? 'A' : null; }
+
+/* ---- 07f_ruins.js ---- */
+/* ================= V4.1 fix C: defeat damage that matters — ruins by grade, repair time 2/4/6 days (food + wood), lost functions,
+   graves for the fallen, villagers clearing rubble, "重建の祝福" (grace, faith 15) finishes one building at once ================= */
+const REPAIR_DAYS = { pyrrhic: 2, loss: 4, rout: 6 };
+const REPAIR_COST = { food: 3, wood: 4 }; // per building per day
+function ruinBuilding(b, grade) {
+  G.ruins[b.id] = 100; G.ruinInfo = G.ruinInfo || {}; G.ruinInfo[b.id] = { t0: G.tick, grade: grade, days: REPAIR_DAYS[grade] || 4, burn: G.tick + TICK_DAY };
+  G.humans.forEach(h => { if (h.alive && (h.inside === b.id + 1 || (h.act && h.act.bld === b.id))) { h.inside = 0; h.act = null; h.path = []; h.thinkCd = 0; } }); /* nobody stays inside a ruin */ G.ruinWorkUntil = G.tick + TICK_DAY; G.scorchUntil = Math.max(G.scorchUntil || 0, G.tick + (REPAIR_DAYS[grade] || 4) * TICK_DAY);
+}
+function isRuined(kind) { const b = W.blds.find(x => x.kind === kind); return !!(b && G.ruins && G.ruins[b.id]); }
+function bldRuined(b) { return !!(b && G.ruins && G.ruins[b.id]); }
+function repairPct(id) { return Math.round(100 - (G.ruins[id] || 0)); }
+function repairDaily() { // once a day: pay food + wood for every ruin; a ruin that cannot be paid for slips by a day
+  G.town.wood = Math.min(240, (G.town.wood === undefined ? 80 : G.town.wood) + 4 + G.humans.filter(h => h.alive && h.age >= ADULT_AGE).length * 0.2);
+  let stalled = false;
+  for (const id in G.ruins) { const I = (G.ruinInfo = G.ruinInfo || {})[id] || (G.ruinInfo[id] = { days: 4, t0: G.tick, burn: 0 }); I.stall = I.stall || 0;
+    if (G.town.food < REPAIR_COST.food && (G.town.gold || 0) >= REPAIR_COST.food * 8) { G.town.gold -= REPAIR_COST.food * 8; G.town.food += REPAIR_COST.food; } /* short of food: the crew buys it */
+    if (G.town.food >= REPAIR_COST.food && G.town.wood >= REPAIR_COST.wood) { G.town.food -= REPAIR_COST.food; G.town.wood -= REPAIR_COST.wood; }
+    else { stalled = true; I.stall += TICK_DAY; } }
+  G.repairStalled = stalled ? G.tick : 0;
+}
+function repairTick() { // every tick: progress for the label, finish exactly after 2 / 4 / 6 days of work
+  for (const id in G.ruins) { const I = (G.ruinInfo || {})[id]; if (!I) continue; const span = I.days * TICK_DAY; const done = clamp((G.tick - I.t0 - (I.stall || 0)) / span, 0, 1); G.ruins[id] = Math.max(0.01, 100 * (1 - done)); if (done >= 1) finishRepair(+id, false); } }
+const _assaultTickR = assaultTick; assaultTick = function () { _assaultTickR.apply(this, arguments); if (G.assaults && G.ruins) repairTick(); };
+function finishRepair(id, blessed) { const I = (G.ruinInfo || {})[id]; delete G.ruins[id]; if (I) { (G.repairLog = G.repairLog || []).push({ grade: I.grade, days: (G.tick - I.t0) / TICK_DAY, blessed: !!blessed }); delete G.ruinInfo[id]; } logEvent('rebuilt', [], { b: id, blessed: !!blessed }, ['assault'], 0.3, 0.4, PLAZA); }
+function rebuildBless(id) { if (!G.ruins || !G.ruins[id] || G.faith < 15) return false; G.faith -= 15; faithLog('rebuild', -15); finishRepair(+id, true); G.stats.casts = (G.stats.casts || 0) + 1; return true; }
+/* the fallen get a grave in the churchyard (west of the church) */
+const GRAVE_SLOTS = []; for (let y = 8; y <= 12; y += 2) for (let x = 19; x <= 23; x += 2) GRAVE_SLOTS.push([x, y]);
+function addGrave(h) { G.graves = G.graves || []; const used = G.graves.length; const s = GRAVE_SLOTS[used % GRAVE_SLOTS.length]; G.graves.push({ x: s[0] + (used >= GRAVE_SLOTS.length ? 1 : 0), y: s[1], id: h.id, name: h.name, t: G.tick }); if (G.graves.length > 24) G.graves.shift(); }
+/* AI: homeless sleep at the church (or inn), the ruined inn / church / shop do not serve; for a day after a defeat people clear rubble */
+const _actTarget0 = actTarget; actTarget = function (h, k) {
+  const alt = kind => { const b = pickBld(kind); return b && !bldRuined(b) ? b : null; };
+  if ((k === 'sleep' || k === 'hide_home') && G.ruins && W.blds[h.home] && bldRuined(W.blds[h.home])) { const b = alt('church') || alt('inn'); if (b) return bldDoor(b); const p = randWalkableIn(25, 17, 31, 22); return { tx: p.x, ty: p.y, range: 0 }; }
+  if (k === 'rest' && isRuined('inn')) { const b = W.blds[h.home]; return bldDoor(b && !bldRuined(b) ? b : (alt('church') || pickBld('house'))); }
+  if (k === 'shopG' && isRuined(h.gear % 2 ? 'armor' : 'shop')) return null;
+  if (k === 'repair') { const ids = Object.keys(G.ruins || {}); if (!ids.length) return null; const b = W.blds[ids[(h.id + G.tick) % ids.length]]; const p = randWalkableIn(b.x - 1, b.y + b.h, b.x + b.w, b.y + b.h + 1); return { tx: p.x, ty: p.y, range: 0 }; }
+  return _actTarget0(h, k);
+};
+ACT_DUR.repair = 14;
+const _updRuin = updateHuman; updateHuman = function (h) {
+  if (G.ruinWorkUntil > G.tick && !h.act && !h.party && h.alive && h.age >= ADULT_AGE && !isAdv(h) && h.needs.energy < 75 && h.needs.hunger < 70 && (G.tick + h.id) % 5 === 0 && hourOf(G.tick) >= 6 && hourOf(G.tick) < 20 && rchance(0.5)) startAct(h, 'repair');
+  return _updRuin(h);
+};
 
 /* ---- 08_faith.js ---- */
 /* ================= faith / divine powers / counsel / policy ================= */
@@ -1659,6 +1709,7 @@ function resolvePrayer(pr, outcome, pid, h) {
   pr.state = outcome === 'twist' ? 'twisted' : 'answered'; pr.by = pid; pr.out = outcome;
   const c0 = G._castCost || 10; const gain = Math.round(c0 * (outcome === 'crit' ? 2 : outcome === 'success' ? 1.3 : 0.6) * 10) / 10; // V4.1-A14: a good god earns faith back
   G.faith = Math.min(G.faithMax, G.faith + gain); faithLog('ans', gain); G.lastAnswer = G.tick; G.stats.answered++; G.ansN = (G.ansN || 0) + 1; G._gain = gain; G._pk = pr.kind;
+  if (outcome !== 'twist') { G.favor = Math.min(FAVOR_MAX, (G.favor || 0) + (outcome === 'crit' ? 1.5 : 1)); const ph = hById(pr.hid); if (ph) ph.favored = G.tick; } // V4.1 fix A-1: answered prayers build divine favour (神眷) -> battle bonus
   h.needs.faith = Math.max(0, h.needs.faith - 40); h.disappoint = Math.max(0, (h.disappoint || 0) - 1);
   if (G.onPrayerEnd) G.onPrayerEnd(pr);
   if (!G.tut.prayer) G.tut.prayer = true;

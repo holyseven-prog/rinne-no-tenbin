@@ -276,7 +276,7 @@ function addPrayer(h, kind, urg) {
   if (h.prayCd > 0 || hasPrayer(h) || h.inside && false) return null;
   if (openPrayers().length >= 8) return null;
   const p = { id: G.nid++, hid: h.id, kind, urg: clamp(urg, 0.1, 1), t: G.tick, exp: G.tick + 2 * TICK_DAY, state: 'open', v: rint(0, 1) };
-  G.prayers.push(p); h.prayCd = rint(420, 880); // V4.1-A6: about 30% fewer prayers G.stats.prayers++;
+  G.prayers.push(p); h.prayCd = rint(420, 880); G.stats.prayers++; // V4.1-A6: about 30% fewer prayers
   logEvent('prayer', [h.id], { kind }, ['prayer'], 0.3 + urg * 0.3, 0.5, h);
   if (G.fxOn) G.fx.push({ t: 'pray', x: h.x, y: h.y });
   if (G.onPrayer) G.onPrayer(p);

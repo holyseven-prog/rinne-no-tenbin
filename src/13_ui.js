@@ -20,7 +20,7 @@ Object.assign(S, {
   faith: ['信仰力', '信仰力'], eye: ['神眼', '神眼'], counsel: ['顧問', '顧問'], chronicle: ['史官の書庫', '史官書庫'], prayers: ['祈り', '祈禱'], favored: ['眷顧者', '眷顧者'],
   no_prayers: ['（いまは祈りがありません）', '（目前沒有祈禱）'], no_fav: ['（★で眷顧者を指定）', '（以★指定眷顧者）'], minimap: ['地図', '地圖'],
   light: ['光', '光'], dark: ['闇', '暗'], pause: ['一時停止', '暫停'], speed: ['速度', '速度'], menu: ['メニュー', '選單'],
-  cost: ['消費', '消耗'], faith_short: ['信仰力が足りません', '信仰力不足'], pick_target: ['{p}：対象を選んでください（Esc／右クリックで解除）', '{p}：請選擇對象（Esc／右鍵取消）'],
+  cost: ['消費', '消耗'], faith_short: ['信仰力が足りません', '信仰力不足'], card_short: ['信仰力が足りない（あと{n}）', '信仰力不足（還差 {n}）'], not_for_prayer: ['この祈りには使えない', '這個祈禱用不了這個神力'], pick_target: ['{p}：対象を選んでください（Esc／右クリックで解除）', '{p}：請選擇對象（Esc／右鍵取消）'],
   fatigue: ['干渉疲労', '干涉疲勞'], succ: ['成功率', '成功率'], key_hint: ['H 書庫　R 住人　S 魂の河　G 顧問　N 注目　Space 停止　Q/E 速度　M 消音　Esc メニュー', 'H 書庫　R 居民　S 靈魂之河　G 顧問　N 關注　Space 暫停　Q/E 速度　M 靜音　Esc 選單'],
   out_crit: ['大成功！', '大成功！'], out_success: ['成功', '成功'], out_twist: ['曲解…', '曲解…'], out_fail: ['失敗', '失敗'],
   side_lostgold: ['お告げは取り違えられ、金貨が失われた。', '神諭被誤解，金幣遺失了。'], side_hubris: ['恩寵は慢心を生み、無謀な気を起こさせた。', '恩寵招來傲慢，讓對方衝動起來。'], side_famine: ['試煉は飢饉となって町を襲った。', '試煉化為飢荒襲向小鎮。'],
@@ -184,7 +184,7 @@ const UI = {
     this.drawBalance();
     { const b = Math.round(G.balance); E.balNum.textContent = b === 0 ? t('bal_even') : (b > 0 ? t('light') : t('dark')) + t('bal_lead') + ' ' + Math.abs(b); E.balNum.style.color = b >= 0 ? '#ffd860' : '#d0a0ff'; }
     // power buttons
-    POWERS.forEach((p, i) => { const b = E.powBtns[i]; const c = powerCost(p.id); const ok = G.faith >= c; b._cost.textContent = t('cost') + ' ' + c + (fs[i] ? ' ▼' + fs[i] : ''); b.classList.toggle('dis', !ok); b.classList.toggle('on', Game.power === p.id); b.firstChild.lastChild.textContent = p.n[li()]; });
+    POWERS.forEach((p, i) => { const b = E.powBtns[i]; const c = powerCost(p.id); const ok = G.faith >= c; b._cost.textContent = t('cost') + ' ' + c + (fs[i] ? ' ▼' + fs[i] : ''); const sp = selPrayerObj(); const na = !!sp && (PRAYER_ANS[sp.kind] || []).indexOf(p.id) < 0; b.classList.toggle('dis', !ok || na); b.classList.toggle('on', Game.power === p.id || (!!sp && !na && ok)); b.title = na ? t('not_for_prayer') : ''; b.firstChild.lastChild.textContent = p.n[li()]; });
     E.eyeBtn.classList.toggle('on', Game.power === 'eye'); E.eyeBtn.classList.toggle('dis', G.eye < 1);
     E.targetBar.style.display = Game.power ? 'block' : 'none';
     if (Game.power) E.targetBar.textContent = fmt(t('pick_target'), { p: Game.power === 'eye' ? t('eye') : POWER_BY_ID[Game.power].n[li()] });
@@ -208,13 +208,13 @@ const UI = {
   },
   refreshPrayers() {
     const E = this.el; const allP = openPrayers().sort((a, b) => b.urg - a.urg); const prs = allP.slice(0, 3); this.prayMore = allP.length - prs.length;
-    const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0)).join(',') + LANG + this.prayMore;
+    const sig = prs.map(p => p.id + ':' + (Game.selId === p.hid ? 1 : 0) + (UI.selPrayer === p.id ? 'p' : '')).join(',') + LANG + this.prayMore;
     if (sig !== this.lastPray) {
       this.lastPray = sig; E.prayList.innerHTML = '';
       if (!prs.length) E.prayList.appendChild(h('div', { class: 'sm dim', style: 'padding:6px 0' }, t('no_prayers')));
       prs.forEach(p => {
         const hh = hById(p.hid); if (!hh) return;
-        const rc = recommendFor(p); const fresh = !(this.seenP || (this.seenP = {}))[p.id]; this.seenP[p.id] = 1; const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : '') + (fresh && G.tick > START_TICK + 30 ? ' fresh' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
+        const rc = recommendFor(p); const fresh = !(this.seenP || (this.seenP = {}))[p.id]; this.seenP[p.id] = 1; const card = h('div', { class: 'card u' + (p.urg > 0.75 ? 2 : p.urg > 0.5 ? 1 : 0) + (Game.selId === p.hid ? ' sel' : '') + (UI.selPrayer === p.id ? ' psel' : '') + (fresh && G.tick > START_TICK + 30 ? ' fresh' : ''), style: 'padding:2px 6px', onclick: () => Screens.prayerClick(p.id), onmouseenter: () => { Game.flashId = p.hid; }, onmouseleave: () => { if (Game.flashId === p.hid) Game.flashId = 0; } },
           h('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, h('b', null, hh.name[li()] + ' ', h('span', { class: 'sm' }, JOBS[hh.job].n[li()])), h('span', { class: 'gold sm', style: 'display:flex;align-items:center;gap:3px' }, Ico(p.kind, 14), t('pk_' + p.kind))),
           h('div', { class: 'sm', style: 'line-height:1.22;height:32px;overflow:hidden;font-size:13px' }, pr(S['pray_' + p.kind][p.v % S['pray_' + p.kind].length])),
           h('div', { style: 'font-size:12px;color:#9affb0;margin-top:1px' }, t('rec_label') + '：' + POWER_BY_ID[rc.pid].n[li()] + ' ' + rc.mark + ' ' + Math.round(rc.p * 100) + '%'),
@@ -286,7 +286,9 @@ S.f_full = ['眷顧者は最大5人です', '眷顧者最多5人'];
 function selectPower(i) {
   if (!G || G.ending || Game.scene !== 'play') return;
   const p = POWERS[i]; const cost = powerCost(p.id);
+  const sp = selPrayerObj(); if (sp) { if ((PRAYER_ANS[sp.kind] || []).indexOf(p.id) < 0) { UI.toast(t('not_for_prayer'), '#ffb060'); Snd.se('fail'); return; } }
   if (G.faith < cost) { UI.toast(t('faith_short'), '#ff8a8a'); Snd.se('fail'); return; }
+  if (sp) { castOn(p.id, sp.hid); return; } // B2: prayer selected first -> cast at once
   if (p.id === 'force') { Screens.menu([[t('force_light'), () => doCast('force', 0, 'light')], [t('force_dark'), () => doCast('force', 0, 'dark')]], p.n[li()]); return; }
   Game.power = Game.power === p.id ? null : p.id; Snd.se('cursor'); UI.refresh(true);
 }
@@ -295,8 +297,9 @@ function castOn(pid, tid) {
   else if (pid === 'soul') Screens.menu(['good', 'evil', 'deed', 'attach'].map(k => [t('dir_' + k), () => doCast('soul', tid, k)]), POWER_BY_ID.soul.n[li()]);
   else doCast(pid, tid);
 }
+function selPrayerObj() { if (!UI.selPrayer || !G) return null; const p = openPrayers().find(q => q.id === UI.selPrayer); if (!p) UI.selPrayer = 0; return p || null; }
 function doCast(pid, tid, dir) {
-  Game.power = null;
+  Game.power = null; UI.selPrayer = 0; UI.lastPray = '';
   const res = castPower(pid, tid, dir);
   UI.lastPray = ''; UI.lastFav = ''; Screens.closeMenu();
   if (!res.ok) { UI.toast(res.err === 'faith' ? t('faith_short') : '…', '#ff8a8a'); Snd.se('fail'); UI.refresh(true); return; }

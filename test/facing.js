@@ -1,7 +1,7 @@
 /* Facing test: every job x sex x look, plus children and elders, must face the way it walks.
    dir 2 = moving left, dir 3 = moving right. On the real sprite canvas, the eye pixels must sit on the walking side of the head.
    env CHROME_PATH overrides the browser (Linux CI). */
-const puppeteer = require('puppeteer-core'); const path = require('path'), fs = require('fs');
+const puppeteer = (() => { const pth = require('path'); for (const p of [process.env.PUPPETEER_CORE, 'puppeteer-core', pth.join(__dirname, '..', 'test', 'node_modules', 'puppeteer-core'), pth.join(__dirname, 'node_modules', 'puppeteer-core')]) { if (!p) continue; try { return require(p); } catch (e) { } } throw new Error('puppeteer-core not found: run npm i puppeteer-core in test/ or set PUPPETEER_CORE'); })(); /* env PUPPETEER_CORE / CHROME_PATH for Linux CI */ const path = require('path'), fs = require('fs');
 const CHROME = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].filter(Boolean).find(p => { try { return fs.existsSync(p); } catch (e) { return false; } });
 if (!CHROME) { console.error('No Chrome found. Set CHROME_PATH.'); process.exit(2); }
 (async () => {

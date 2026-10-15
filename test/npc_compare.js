@@ -1,6 +1,6 @@
 /* Part A acceptance: test/out/visual/npc/compare_<job>.png (left: design crop, right: implementation M/F x front/back/left/right, x4),
    silhouettes.png (all jobs black), sheet.png (all jobs, design-sheet order). node test/npc_compare.js */
-const puppeteer = require('puppeteer-core'); const path = require('path'), fs = require('fs');
+const puppeteer = (() => { const pth = require('path'); for (const p of [process.env.PUPPETEER_CORE, 'puppeteer-core', pth.join(__dirname, '..', 'test', 'node_modules', 'puppeteer-core'), pth.join(__dirname, 'node_modules', 'puppeteer-core')]) { if (!p) continue; try { return require(p); } catch (e) { } } throw new Error('puppeteer-core not found: run npm i puppeteer-core in test/ or set PUPPETEER_CORE'); })(); /* env PUPPETEER_CORE / CHROME_PATH for Linux CI */ const path = require('path'), fs = require('fs');
 const CHROME = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean).find(p => fs.existsSync(p));
 const OUT = path.join(__dirname, 'out', 'visual', 'npc'); fs.mkdirSync(OUT, { recursive: true });
 const JOBS = [['01_hero', 'hero', 'swordsman'], ['02_swordsman', 'warrior', 'swordsman'], ['03_thief', 'thief', 'thief'], ['04_mage', 'mage', 'mage'], ['05_priest', 'priest', 'priest'], ['06_farmer', 'farmer', 'farmer'], ['07_merchant', 'merchant', 'merchant'], ['08_smith', 'smith', 'smith'], ['09_herbalist', 'herbalist', 'herbalist'], ['10_weaponer', 'weaponer', 'weaponer'], ['11_armorer', 'armorer', 'armorer']];

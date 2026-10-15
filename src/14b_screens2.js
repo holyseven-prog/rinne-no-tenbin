@@ -83,7 +83,7 @@ Screens.settings = function () {
       opts(t('advisor_label'), [[true, t('on')], [false, t('off')]], st.advisor !== false, v => { st.advisor = v; }),
       opts(t('mute') + ' (M)', [[true, t('on')], [false, t('off')]], !!Snd.muted, v => { Snd.setMuted(v); }),
       opts(t('easy_mode'), [[true, t('on')], [false, t('off')]], !!(G && G.easy), v => { st.easy = v; if (G) G.easy = v; }),
-      LANG === 'ja' ? opts('ふりがな', [[true, t('on')], [false, t('off')]], st.ruby !== false, v => { st.ruby = v; UI.dutySig = ''; }) : null,
+      LANG === 'ja' ? opts('ふりがな', [[true, t('on')], [false, t('off')]], st.ruby === true, v => { st.ruby = v; UI.dutySig = ''; }) : null,
       h('div', { style: 'margin:6px 0' }, h('span', { class: 'btn', onclick: () => { st.hintsSeen = {}; Game.saveSettings(); UI.toast(t('hint_reset')); } }, t('hint_reset'))),
       h('div', { style: 'text-align:center;margin-top:12px' }, h('span', { class: 'btn big', onclick: () => Screens.pop() }, t('close')))], 'glass');
   });

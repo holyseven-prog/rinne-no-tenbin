@@ -1,5 +1,5 @@
 /* Part E acceptance: test/out/visual/enemy/compare_<name>.png (left: design crop; right: map sprites F/B/L/R x frames (x3) and battle pose (x1.5)) */
-const puppeteer = require('puppeteer-core'); const path = require('path'), fs = require('fs');
+const puppeteer = (() => { const pth = require('path'); for (const p of [process.env.PUPPETEER_CORE, 'puppeteer-core', pth.join(__dirname, '..', 'test', 'node_modules', 'puppeteer-core'), pth.join(__dirname, 'node_modules', 'puppeteer-core')]) { if (!p) continue; try { return require(p); } catch (e) { } } throw new Error('puppeteer-core not found: run npm i puppeteer-core in test/ or set PUPPETEER_CORE'); })(); /* env PUPPETEER_CORE / CHROME_PATH for Linux CI */ const path = require('path'), fs = require('fs');
 const CHROME = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean).find(p => fs.existsSync(p));
 const OUT = path.join(__dirname, 'out', 'visual', 'enemy'); fs.mkdirSync(OUT, { recursive: true });
 const E = [['e01_mush', 'mush'], ['e02_bat', 'bat'], ['e03_turtle', 'turtle'], ['e04_goblin', 'goblin'], ['e05_skel', 'skel'], ['e06_wolf', 'wolf'], ['e07_dragon', 'dragon'], ['e08_verna', 'verna'], ['e09_garum', 'garum'], ['e10_serene', 'serene'], ['e11_king', 'king']];

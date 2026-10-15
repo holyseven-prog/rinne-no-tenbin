@@ -28,7 +28,9 @@ const Screens = {
     const m = $('modal'); Game.modals = this.stack.map(s => s.name);
     if (!this.stack.length) { m.style.display = 'none'; m.innerHTML = ''; Snd.setPaused(false); return; }
     const top = this.stack[this.stack.length - 1]; m.style.display = 'block'; m.innerHTML = ''; m.style.background = top.opts.clear ? 'transparent' : 'rgba(0,0,0,.55)';
-    m.appendChild(top.build()); if (this._anim) { const el = m.lastChild; if (el && el.classList && !top.opts.clear) el.classList.add('winopen'); this._anim = false; } Snd.setPaused(this.stack.some(s => s.name === 'pause'));
+    let el; try { el = top.build(); } catch (e) { ERRS.push('screen ' + top.name + ': ' + e.message); el = null; } // A suggestion 3: a screen that fails must not leave an empty dark backdrop
+    if (!el) { this.stack.pop(); if (top.opts.onClose) try { top.opts.onClose(); } catch (e) { } this.render(); return; }
+    m.appendChild(el); if (this._anim) { const el = m.lastChild; if (el && el.classList && !top.opts.clear) el.classList.add('winopen'); this._anim = false; } Snd.setPaused(this.stack.some(s => s.name === 'pause'));
   },
   rerender() { if (this.stack.length) this.render(); },
   key(e) { if (!this.stack.length) return false; const top = this.stack[this.stack.length - 1]; if (top.onKey && top.onKey(e) === true) return true; if (e.key === 'Escape' && !top.opts.noEsc) { Snd.se('cancel'); this.pop(); return true; } return true; },
@@ -129,7 +131,7 @@ const Screens = {
   prayerClick(pid) {
     const p = G.prayers.find(x => x.id === pid); if (!p) return; const hh = hById(p.hid);
     if (Game.power && Game.power !== 'eye') { castOn(Game.power, p.hid); return; }
-    this.focusHuman(p.hid);
+    UI.selPrayer = UI.selPrayer === pid ? 0 : pid; this.focusHuman(p.hid); // B2: the selected prayer is answered by the next power press
   },
   eyeOn(id) {
     const r = useEye(hById(id)); if (!r) { UI.toast(t('faith_short'), '#ff8a8a'); return; }

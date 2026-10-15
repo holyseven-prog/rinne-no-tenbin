@@ -31,6 +31,7 @@ function resolvePrayer(pr, outcome, pid, h) {
   pr.state = outcome === 'twist' ? 'twisted' : 'answered'; pr.by = pid; pr.out = outcome;
   const c0 = G._castCost || 10; const gain = Math.round(c0 * (outcome === 'crit' ? 2 : outcome === 'success' ? 1.3 : 0.6) * 10) / 10; // V4.1-A14: a good god earns faith back
   G.faith = Math.min(G.faithMax, G.faith + gain); faithLog('ans', gain); G.lastAnswer = G.tick; G.stats.answered++; G.ansN = (G.ansN || 0) + 1; G._gain = gain; G._pk = pr.kind;
+  if (outcome !== 'twist') { G.favor = Math.min(FAVOR_MAX, (G.favor || 0) + (outcome === 'crit' ? 1.5 : 1)); const ph = hById(pr.hid); if (ph) ph.favored = G.tick; } // V4.1 fix A-1: answered prayers build divine favour (神眷) -> battle bonus
   h.needs.faith = Math.max(0, h.needs.faith - 40); h.disappoint = Math.max(0, (h.disappoint || 0) - 1);
   if (G.onPrayerEnd) G.onPrayerEnd(pr);
   if (!G.tut.prayer) G.tut.prayer = true;

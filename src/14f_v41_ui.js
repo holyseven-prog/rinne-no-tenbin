@@ -4,7 +4,7 @@ Object.assign(S, {
   fc_now: ['いま', '現在'], fc_then: ['その時', '屆時'], tip_fc: ['予測勝率', '預測勝率'],
   tip_fc_d: ['「いま」＝今すぐ戦ったら。「その時」＝このまま育てば、攻防の日にこのくらい。どちらも神が手助けした場合です。', '「現在」＝如果現在開戰；「屆時」＝照目前的成長，攻防那天大約是這樣。兩者都假設神會出手幫忙。'],
   fl_title: ['信仰力の出入り（今日）', '信仰力收支（今天）'], fl_inc: ['信徒の祈り（{n}人）', '信徒的祈禱（{n} 人）'], fl_ans: ['祈りにこたえた', '回應祈禱'], fl_cast: ['神の力を使った', '使用神力'], fl_sab: ['安息日の礼拝', '安息日禮拜'], fl_war: ['攻防の勝利', '攻防勝利'], fl_exp: ['急ぎの祈りを放置', '放置緊急祈禱'], fl_over: ['あふれた分は糧食に', '溢出的部分變成糧食'], fl_next: ['次の日の収入まで {n}時間', '距離下次日結 {n} 小時'], fl_yday: ['きのうの合計 {n}', '昨天合計 {n}'],
-  pray_more: ['ほかに {n} 件の祈り', '還有 {n} 件祈禱'], pray_all: ['おすすめで全部こたえる（信仰{n}）', '依建議全部回應（信仰 {n}）'], pray_listen: ['傾聴', '傾聽'], pray_listen_d: ['期限を1日のばす。がっかりさせない。信仰は使わない（1日3回）', '期限延長 1 天，不讓祈禱者失望；不花信仰（每天 3 次）'], pray_listen_left: ['のこり{n}回', '剩 {n} 次'],
+  pray_more: ['ほかに {n} 件の祈り', '還有 {n} 件祈禱'], pray_all: ['おすすめで全部に応える（信仰{n}）', '依建議全部回應（信仰 {n}）'], pray_listen: ['傾聴', '傾聽'], pray_listen_d: ['期限を1日のばす。がっかりさせない。信仰は使わない（1日3回）', '期限延長 1 天，不讓祈禱者失望；不花信仰（每天 3 次）'], pray_listen_left: ['のこり{n}回', '剩 {n} 次'],
   skip_btn: ['⏭', '⏭'], tip_skip: ['次の大事件まで早送り', '快轉到下一個重要事件'], tip_skip_d: ['×64で進み、重要な出来事や予兆が起きたら止まります。', '以 ×64 前進，發生重要事件或預兆時停下。'], skip_stop: ['早送りを止めた：{s}', '停止快轉：{s}'], auto_back: ['速度を元にもどした', '速度已恢復'],
   hero_t: ['勇者', '勇者'], hero_none: ['勇者 まだいない（候補{n}）', '勇者 尚未誕生（候補 {n}）'], hero_cands: ['勇者の候補', '勇者候補'], tip_hero: ['勇者', '勇者'],
   tip_hero_d: ['この世に勇者は1人だけ。剣士がLv8以上になり、攻防で生き残って称号を得るか、恩寵を3回受けると選ばれます。勇者は最後の決戦で敵の大将と戦います。勇者が強いほど決戦に勝ちやすくなります。', '這一世只有 1 位勇者。劍士 Lv8 以上，並在攻防中活下來得到稱號，或受過 3 次恩寵，就會被選上。勇者會在最後的決勝階段對抗敵方首領；勇者越強，決勝越容易贏。'],
@@ -118,8 +118,8 @@ function optEffect(o) { const B = G.battle; if (!B) return 0; const base = sigm(
 function godDidLines(B, a) {
   const L = li(); const out = []; const win = isWin(B.grade);
   if (B.prepGain > 0.005) out.push(fmt(t('rp_prep'), { n: Math.round(B.prepGain * 100) }));
-  if (B.bonus > 0) out.push(fmt(t('rp_help'), { n: Math.round((sigm((B.D - B.T + B.bonus + 3) / WIN_K) - sigm((B.D - B.T + 3) / WIN_K)) * 100) }));
-  if (!out.length) out.push(t('rp_nohelp'));
+  { const fv = B.favor || 0; if (B.bonus - fv > 0.05) out.push(fmt(t('rp_help'), { n: Math.round((sigm((B.D - B.T + B.bonus + 3) / WIN_K) - sigm((B.D - B.T + fv + 3) / WIN_K)) * 100) })); }
+  if (!out.length || (out.length === 0)) out.push(t('rp_nohelp'));
   const lv = G.godLv || 1; const nx = GOD_LV_XP[lv] !== undefined ? GOD_LV_XP[lv] - (G.godXp || 0) : 0; if (B.xp) out.push(fmt(t('rp_xp'), { n: B.xp, l: lv, r: Math.max(0, nx) }));
   (B.decrees || []).forEach(d => out.push(fmt(t('rp_dec'), { n: DECREES[d.id].n[L], m: d.ok ? '✔' : '✘' })));
   return out;
