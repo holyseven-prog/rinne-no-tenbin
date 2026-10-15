@@ -107,7 +107,7 @@ const _tutShow0 = Tut.show; Tut.show = function () {
   if (s.art) { const art = tutArt(s.art); this.txt.parentNode.insertBefore(art, this.txt); }
   this._rbSig = ''; this.layout(true);
   if (s.stamp) { const st = h('div', { class: 'tut-stamp' }, t('stamp')); this.box.appendChild(st); Snd.se('level'); }
-  if (s.grad) { const row = h('div', { style: 'display:flex;gap:8px;justify-content:center;margin-top:8px;clear:both' }, h('span', { class: 'btn on', onclick: () => Tut.graduate(true) }, t('gr_easy')), h('span', { class: 'btn', onclick: () => Tut.graduate(false) }, t('gr_norm'))); this.box.appendChild(row); this.box.appendChild(h('div', { class: 'sm', style: 'text-align:center' }, t('gr_easy_d'))); }
+  if (s.grad) { const row = h('div', { style: 'display:flex;gap:8px;justify-content:center;margin-top:8px;clear:both' }, h('span', { class: 'btn' + (Game.settings.easy !== false ? ' on' : ''), onclick: () => Tut.graduate(true) }, t('gr_easy')), h('span', { class: 'btn' + (Game.settings.easy === false ? ' on' : ''), onclick: () => Tut.graduate(false) }, t('gr_norm'))); this.box.appendChild(row); this.box.appendChild(h('div', { class: 'sm', style: 'text-align:center' }, t('gr_easy_d'))); }
   // the old "next" button calls next(); route onNext hooks
   const nb = Array.from(this.box.querySelectorAll('.btn.on')).find(b => b.textContent === t('next') || b.textContent === t('close')); if (nb && s.onNext) { const nb2 = nb.cloneNode(true); nb2.onclick = () => { s.onNext(); this.next(); }; nb.replaceWith(nb2); }
 };

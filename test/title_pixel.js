@@ -1,0 +1,17 @@
+/* 視覺 part 2 §6-2: every drawn asset is exact 2x2 blocks; nine-slice corners equal the source corner x2 (no blur, no half pixels). node test/title_pixel.js */
+const puppeteer = require('puppeteer-core'); const path = require('path'), fs = require('fs');
+const CHROME = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean).find(p => fs.existsSync(p));
+(async () => { const br = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--no-sandbox'] }); const pg = await br.newPage(); const logs = []; pg.on('pageerror', e => logs.push(e.message));
+  await pg.goto('file:///' + path.resolve(__dirname, '../index.html').split(path.sep).join('/')); await new Promise(r => setTimeout(r, 1500));
+  const r = await pg.evaluate(() => { const out = []; const blocks = cv => { const c = cv.getContext('2d'), d = c.getImageData(0, 0, cv.width, cv.height).data, w = cv.width; let bad = 0; for (let y = 0; y + 1 < cv.height; y += 2) for (let x = 0; x + 1 < w; x += 2) { const i = (y * w + x) * 4; for (const [dx, dy] of [[1, 0], [0, 1], [1, 1]]) { const j = ((y + dy) * w + x + dx) * 4; if (d[i] !== d[j] || d[i + 1] !== d[j + 1] || d[i + 2] !== d[j + 2] || d[i + 3] !== d[j + 3]) { bad++; break; } } } return bad; };
+    // plain images at x2
+    ['title/title_logo_ja_plain', 'title/title_logo_zh_plain', 'title/title_bg_0_scene', 'ui/ui_btn_menu_normal', 'opening/opening_01_balance', 'god/god_card_normal'].forEach(k => { const cv = assetEl(k, 0, 0); out.push([k, 'x2 blocks', blocks(cv), cv.width + 'x' + cv.height]); });
+    // nine slices: blocks + corners == source corner x2
+    [['ui/ui_btn_menu_normal', 320, 64], ['ui/ui_frame_window', 1056, 616], ['title/title_frame_menu', 348, 296], ['save/save_slot_normal', 464, 188], ['god/god_card_selected', 336, 488], ['mode/mode_card_easy_normal', 384, 500], ['ui/ui_btn_small_hover', 160, 56], ['settings/settings_tab_selected', 150, 56], ['mode/mode_badge_recommended', 160, 48], ['settings/settings_slider_track', 384, 24], ['ui/ui_frame_dialog_dark', 1216, 140]].forEach(([k, w, h]) => {
+      const cv = nineSlice(k, w, h); const im = asset(k); const [T, R, B, L] = nineCut(k + '.png'); const src = document.createElement('canvas'); src.width = im.width * 2; src.height = im.height * 2; const sc = src.getContext('2d'); sc.imageSmoothingEnabled = false; sc.drawImage(im, 0, 0, src.width, src.height);
+      const a = cv.getContext('2d'), b = sc; let diff = 0; const cmp = (ax, ay, bx, by, cw, ch) => { if (cw <= 0 || ch <= 0) return; const da = a.getImageData(ax, ay, cw, ch).data, db = b.getImageData(bx, by, cw, ch).data; for (let i = 0; i < da.length; i++) if (da[i] !== db[i]) { diff++; break; } };
+      cmp(0, 0, 0, 0, L * 2, T * 2); cmp(w - R * 2, 0, src.width - R * 2, 0, R * 2, T * 2); cmp(0, h - B * 2, 0, src.height - B * 2, L * 2, B * 2); cmp(w - R * 2, h - B * 2, src.width - R * 2, src.height - B * 2, R * 2, B * 2);
+      out.push([k, 'nine ' + w + 'x' + h, blocks(cv) + diff, 'corners differ ' + diff]); });
+    return out; });
+  let fail = 0; r.forEach(([k, what, bad, info]) => { const ok = bad === 0; if (!ok) fail++; console.log((ok ? 'PASS ' : 'FAIL ') + k + ' ' + what + ' ' + info + (ok ? '' : ' bad=' + bad)); });
+  if (logs.length) { fail++; console.log('FAIL page errors', JSON.stringify(logs.slice(0, 3))); } await br.close(); process.exit(fail ? 1 : 0); })();

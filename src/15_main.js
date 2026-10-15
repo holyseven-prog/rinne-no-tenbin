@@ -201,7 +201,7 @@ function boot() {
   $('stage').addEventListener('mouseleave', () => { Game.mouseCanvas = false; });
   $('stage').addEventListener('click', e => { Snd.unlock(); const b = e.target.closest && e.target.closest('.btn,.card'); if (b && !b.classList.contains('dis')) Snd.se('ok'); }, true);
   document.addEventListener('visibilitychange', () => { if (document.hidden) { Snd.setPaused(true); } else Snd.setPaused(Screens.stack.some(s => s.name === 'pause')); });
-  Game.demo(); Mini.build(); Screens.boot();
+  Game.demo(); Mini.build(); loadAssets().then(() => Screens.boot());
   Game.last = performance.now();
   const loop = ts => { requestAnimationFrame(loop); try { const dt = Math.min(0.1, Math.max(0.001, (ts - Game.last) / 1000)); Game.last = ts; Game.frame(dt); } catch (err) { ERRS.push('frame:' + (err && err.stack ? err.stack.split('\n').slice(0, 3).join('|') : err)); } };
   requestAnimationFrame(loop);

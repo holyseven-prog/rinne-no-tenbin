@@ -22,13 +22,15 @@ const out = [];
   await pg.mouse.click(640, 360); await wait(500);
   let s = await state(); await ck('title scene', s.scene === 'title');
   await shot('01_title');
-  await ev(() => document.querySelectorAll('.btn.big')[0].click()); await wait(300); s = await state(); await ck('god select', s.scene === 'godsel');
+  // 視覺 part 2: title -> mode select (new) -> god select (pick, then confirm) -> opening
+  await key('Enter'); await wait(400); s = await state(); await ck('mode select', s.scene === 'modesel');
+  await key('Enter'); await wait(400); s = await state(); await ck('god select', s.scene === 'godsel');
   await shot('02_god');
-  await key('1'); await wait(600); s = await state(); await ck('opening via key 1', s.scene === 'opening');
+  await key('1'); await key('Enter'); await wait(600); s = await state(); await ck('opening via key 1 + Enter', s.scene === 'opening');
   await pg.mouse.click(640, 300); await wait(200); await pg.mouse.click(640, 300); await wait(300); await shot('03_opening');
   await key('Escape'); await wait(800); s = await state(); await ck('play after skip', s.scene === 'play');
   // V4: the opening council (time stops until decrees are chosen)
-  await wait(600); s = await state(); await ck('V4 council opens', s.modals === 'council', s.modals); await shot('12_council'); await ev(() => { autoCouncil(); __RT.ui.Screens.closeAll(); }); await wait(200); s = await state(); await ck('council resolved', s.modals === '');
+  for (let i = 0; i < 20; i++) { await wait(300); s = await state(); if (s.modals === 'council') break; } await ck('V4 council opens', s.modals === 'council', s.modals); await shot('12_council'); await ev(() => { autoCouncil(); __RT.ui.Screens.closeAll(); }); await wait(200); s = await state(); await ck('council resolved', s.modals === '');
   // keys
   await key('h'); s = await state(); await ck('H opens chron', s.modals === 'chron'); await shot('05_chron'); await key('Escape');
   await key('r'); s = await state(); await ck('R opens residents', s.modals === 'residents'); await shot('06_res'); await key('Escape');
@@ -55,7 +57,7 @@ const out = [];
   if (k1) { await ck('key 1 answers the selected prayer (direction menu)', s.modals === 'menu', s.modals + ' kind=' + kind); await clickBtn(lang === 'ja' ? '勇気' : '勇氣'); await wait(300); s = await state(); }
   await ck('oracle cast', s.casts === 1, 'faith ' + f0 + '->' + s.faith + ' kind=' + kind); await shot('10_cast');
   // save/load roundtrip
-  await key('Escape'); await clickBtn(lang === 'ja' ? 'セーブ' : '存檔'); await wait(200); await ev(() => Array.from(document.querySelectorAll('#modal .card'))[0].click()); await wait(300);
+  await key('Escape'); await clickBtn(lang === 'ja' ? 'セーブ' : '存檔'); await wait(200); await key('ArrowRight'); await key('Enter'); await wait(300); // 2x2 save screen: slot 1 is right of the autosave
   const saved = await ev(() => !!localStorage.getItem('rinne_tenbin_v1_slot1')); await ck('manual save slot1', saved);
   const before = await ev(() => JSON.stringify({ t: __RT.G().tick, f: Math.round(__RT.G().faith * 10), n: __RT.G().humans.length }));
   await ev(() => __RT.ui.Screens.closeAll());

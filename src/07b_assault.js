@@ -3,7 +3,7 @@ const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
   wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 49.5, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
   wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 48, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 53, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 55, kind: 'dragon', mon: 'dragon', scale: 1.3 },
   wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41.5, kind: 'wave', mon: 'wolf', scale: 1.2 },
   king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 44, kind: 'king', mon: 'boss', scale: 1.6 },
 };
@@ -66,7 +66,7 @@ function adaptT(D, a) { if (a && a.adRef != null) return 0.8 * Math.max(0, a.adR
 const FAVOR_MAX = 8; function favorBonus() { return Math.min(3, (G.favor || 0) * 0.45); }
 function winProb(a, extra) { if (!a) return 0; const D = defenseScore(); return sigm((D - threatOf(a) - adaptT(D, a) + 3 + favorBonus() + (extra || 0)) / WIN_K); }
 /* V4.1-A1: expected help from the god in the 3 phases (best affordable option per phase, sequential budget) */
-function expHelp(faith) { const f0 = faith === undefined ? G.faith : faith; let f = G.tutMode ? Math.max(60, f0) : f0, /* A-2: the real faith (the practice world assumes 60) */ aw = G.awe || 0, b = 0; for (let ph = 0; ph < 3; ph++) { const o = battleOptions(ph).filter(x => x.cost ? f >= x.cost : aw >= (x.awe || 0)).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.cost) f -= o.cost; else aw -= o.awe; } } return b; }
+function expHelp(faith) { const f0 = faith === undefined ? G.faith : faith; let f = G.tutMode ? Math.max(60, f0) : f0, /* A-2: the real faith (the practice world assumes 60) */ aw = G.awe || 0, b = 0, vp = false; for (let ph = 0; ph < 3; ph++) { const l = (INTERVENE[ph] || []).filter(o => (G.godLv || 1) >= o.lv); if (f < 15 && !vp) l.push(VPRAYER); const o = l.filter(x => x.free || (x.cost ? f >= x.cost : aw >= (x.awe || 0))).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.free) vp = true; else if (o.cost) f -= o.cost; else aw -= o.awe || 0; } } return b; }
 /* defense trend -> projected defense when the assault arrives */
 function defSample() { G.defHist = G.defHist || []; G.defHist.push([G.tick, defenseScore()]); if (G.defHist.length > 40) G.defHist.shift(); }
 function defSlope() { const h = (G.defHist || []).filter(x => G.tick - x[0] <= TICK_YEAR * 1.5); if (h.length < 4) return 0.012; let sx = 0, sy = 0, sxx = 0, sxy = 0; for (const [x, y] of h) { sx += x; sy += y; sxx += x * x; sxy += x * y; } const n = h.length, den = n * sxx - sx * sx; return den ? (n * sxy - sx * sy) / den : 0; }
@@ -75,7 +75,9 @@ function winForecast(a) {
   const fb = favorBonus(); const now = sigm((D - T - adaptT(D, a) + 3 + fb + expHelp()) / WIN_K);
   const Dp = clamp(D + clamp(defSlope(), -0.004, 0.03) * left * 0.8 + (left > SEASON_T ? 3 : 0), D - 5, D + 30);
   const faithThen = Math.min(G.faithMax, G.faith + left / TICK_DAY * 3);
-  const then = sigm((Dp - T - adaptT(a.adRef != null ? D : Dp, a) + 3 + fb + expHelp(faithThen)) / WIN_K);
+  // A-2: the enemy only adapts until the half-year scout report; growth after that counts (x0.35 adaptation)
+  let adT; if (a.adRef != null) adT = adaptT(Dp, a); else { const tf = Math.max(0, left - TICK_YEAR / 2); const Df = clamp(D + clamp(defSlope(), -0.004, 0.03) * tf * 0.8, D - 5, Dp); adT = 0.8 * Math.max(0, Df - 36) + 0.35 * Math.max(0, Dp - Df); }
+  const then = sigm((Dp - T - adT + 3 + fb + expHelp(faithThen)) / WIN_K);
   // V4.1 fix A-2 (fit on basic + engaged runs): players prepare more when the outlook is poor, more so when they keep answering prayers -> the far forecast leans toward the usual outcome
   const k = left > SEASON_T ? 0.15 : 0.05; const then2 = then < 0.75 ? then + (0.75 - then) * k : then;
   return { now, then: then2, thenRaw: then, nowNoHelp: winProb(a), left };
@@ -147,7 +149,7 @@ const INTERVENE = { // V4.1-A2: every phase has a Lv1 option that helps the huma
 const PHASE_N = [['前哨戦', '前哨戰'], ['本戦', '主戰'], ['決戦', '決勝']];
 function startBattle(a) {
   a.state = 'battle'; const D0 = defenseScore(); const D = D0 - adaptT(D0, a), T = threatOf(a); const L = WIN_K * Math.log(1 / Math.max(1e-6, rnd()) - 1) * -1; // logistic noise
-  a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
+  a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + favorBonus() + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
   G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: favorBonus(), favor: favorBonus(), choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
   if (a.id === 'dragon' && G.dragonPact) { G.battle.pact = true; }
   logEvent('assault_start', [], { a: a.id, p: a.pred, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 1, 0.9, a.id === 'king' ? PLAZA : { x: FIELD_X0, y: 23 });

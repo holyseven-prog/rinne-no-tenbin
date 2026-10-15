@@ -192,7 +192,7 @@ function policyBasic() {
   if (G.tick % 6 !== 0) return;
   if (G.assaults && policyPrep()) return;
   const yr = yearOf(G.tick);
-  const bank = G.awakened ? 120 : yr >= 5 ? 100 : 26;
+  const bank = G.assaults ? (nextAssault() && nextAssault().t - G.tick <= SEASON_T ? 40 : 26) : G.awakened ? 120 : yr >= 5 ? 100 : 26; // V4: no boss sortie to save for; keep a small reserve before an assault
   let n = 0;
   const can = (pid, res) => G.faith >= powerCost(pid) + (res === undefined ? bank : res);
   const bp = G.parties.find(p => p.boss && p.state !== 'done');

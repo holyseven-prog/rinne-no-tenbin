@@ -1,0 +1,7 @@
+/* 視覺 part 2 §6-4: button states normal / hover / press / disabled (menu, small, back) in one picture. node test/title_states.js */
+const puppeteer = require('puppeteer-core'); const path = require('path'), fs = require('fs'); const OUT = path.join(__dirname, 'out', 'visual', 'title'); fs.mkdirSync(OUT, { recursive: true });
+(async () => { const br = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--no-sandbox'] }); const pg = await br.newPage(); await pg.setViewport({ width: 1280, height: 360 });
+  await pg.goto('file:///' + path.resolve(__dirname, '../index.html').split(path.sep).join('/')); await new Promise(r => setTimeout(r, 1500));
+  await pg.evaluate(() => { const s = __RT.ui.Screens.scr; s.innerHTML = ''; s.style.display = 'block'; s.appendChild(assetEl('god/god_bg', 0, 0));
+    ['normal', 'hover', 'press', 'disabled'].forEach((st, i) => { const x = 40 + i * 310; s.appendChild(aText(st, x, 20, 280, 0, 'font-size:20px')); s.appendChild(aBtn('ui/ui_btn_menu', LANG === 'ja' ? 'はじめから' : '新遊戲', x, 60, 280, 64, () => {}, { state: st, dis: st === 'disabled' })); s.appendChild(aBtn('ui/ui_btn_small', 'OK', x, 150, 160, 56, () => {}, { state: st, dis: st === 'disabled' })); s.appendChild(aBtn('ui/ui_btn_back', t('back'), x, 230, 160, 56, () => {}, { state: st, dis: st === 'disabled' })); }); });
+  await new Promise(r => setTimeout(r, 300)); await pg.screenshot({ path: path.join(OUT, 'button_states.png') }); console.log('ok'); await br.close(); })();

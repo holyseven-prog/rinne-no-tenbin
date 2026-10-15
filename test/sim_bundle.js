@@ -1289,7 +1289,7 @@ const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
   wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 49.5, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
   wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 48, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 53, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 55, kind: 'dragon', mon: 'dragon', scale: 1.3 },
   wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41.5, kind: 'wave', mon: 'wolf', scale: 1.2 },
   king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 44, kind: 'king', mon: 'boss', scale: 1.6 },
 };
@@ -1352,7 +1352,7 @@ function adaptT(D, a) { if (a && a.adRef != null) return 0.8 * Math.max(0, a.adR
 const FAVOR_MAX = 8; function favorBonus() { return Math.min(3, (G.favor || 0) * 0.45); }
 function winProb(a, extra) { if (!a) return 0; const D = defenseScore(); return sigm((D - threatOf(a) - adaptT(D, a) + 3 + favorBonus() + (extra || 0)) / WIN_K); }
 /* V4.1-A1: expected help from the god in the 3 phases (best affordable option per phase, sequential budget) */
-function expHelp(faith) { const f0 = faith === undefined ? G.faith : faith; let f = G.tutMode ? Math.max(60, f0) : f0, /* A-2: the real faith (the practice world assumes 60) */ aw = G.awe || 0, b = 0; for (let ph = 0; ph < 3; ph++) { const o = battleOptions(ph).filter(x => x.cost ? f >= x.cost : aw >= (x.awe || 0)).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.cost) f -= o.cost; else aw -= o.awe; } } return b; }
+function expHelp(faith) { const f0 = faith === undefined ? G.faith : faith; let f = G.tutMode ? Math.max(60, f0) : f0, /* A-2: the real faith (the practice world assumes 60) */ aw = G.awe || 0, b = 0, vp = false; for (let ph = 0; ph < 3; ph++) { const l = (INTERVENE[ph] || []).filter(o => (G.godLv || 1) >= o.lv); if (f < 15 && !vp) l.push(VPRAYER); const o = l.filter(x => x.free || (x.cost ? f >= x.cost : aw >= (x.awe || 0))).sort((x, y) => y.b - x.b)[0]; if (o) { b += o.b; if (o.free) vp = true; else if (o.cost) f -= o.cost; else aw -= o.awe || 0; } } return b; }
 /* defense trend -> projected defense when the assault arrives */
 function defSample() { G.defHist = G.defHist || []; G.defHist.push([G.tick, defenseScore()]); if (G.defHist.length > 40) G.defHist.shift(); }
 function defSlope() { const h = (G.defHist || []).filter(x => G.tick - x[0] <= TICK_YEAR * 1.5); if (h.length < 4) return 0.012; let sx = 0, sy = 0, sxx = 0, sxy = 0; for (const [x, y] of h) { sx += x; sy += y; sxx += x * x; sxy += x * y; } const n = h.length, den = n * sxx - sx * sx; return den ? (n * sxy - sx * sy) / den : 0; }
@@ -1361,7 +1361,9 @@ function winForecast(a) {
   const fb = favorBonus(); const now = sigm((D - T - adaptT(D, a) + 3 + fb + expHelp()) / WIN_K);
   const Dp = clamp(D + clamp(defSlope(), -0.004, 0.03) * left * 0.8 + (left > SEASON_T ? 3 : 0), D - 5, D + 30);
   const faithThen = Math.min(G.faithMax, G.faith + left / TICK_DAY * 3);
-  const then = sigm((Dp - T - adaptT(a.adRef != null ? D : Dp, a) + 3 + fb + expHelp(faithThen)) / WIN_K);
+  // A-2: the enemy only adapts until the half-year scout report; growth after that counts (x0.35 adaptation)
+  let adT; if (a.adRef != null) adT = adaptT(Dp, a); else { const tf = Math.max(0, left - TICK_YEAR / 2); const Df = clamp(D + clamp(defSlope(), -0.004, 0.03) * tf * 0.8, D - 5, Dp); adT = 0.8 * Math.max(0, Df - 36) + 0.35 * Math.max(0, Dp - Df); }
+  const then = sigm((Dp - T - adT + 3 + fb + expHelp(faithThen)) / WIN_K);
   // V4.1 fix A-2 (fit on basic + engaged runs): players prepare more when the outlook is poor, more so when they keep answering prayers -> the far forecast leans toward the usual outcome
   const k = left > SEASON_T ? 0.15 : 0.05; const then2 = then < 0.75 ? then + (0.75 - then) * k : then;
   return { now, then: then2, thenRaw: then, nowNoHelp: winProb(a), left };
@@ -1433,7 +1435,7 @@ const INTERVENE = { // V4.1-A2: every phase has a Lv1 option that helps the huma
 const PHASE_N = [['前哨戦', '前哨戰'], ['本戦', '主戰'], ['決戦', '決勝']];
 function startBattle(a) {
   a.state = 'battle'; const D0 = defenseScore(); const D = D0 - adaptT(D0, a), T = threatOf(a); const L = WIN_K * Math.log(1 / Math.max(1e-6, rnd()) - 1) * -1; // logistic noise
-  a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
+  a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + favorBonus() + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
   G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: favorBonus(), favor: favorBonus(), choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
   if (a.id === 'dragon' && G.dragonPact) { G.battle.pact = true; }
   logEvent('assault_start', [], { a: a.id, p: a.pred, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 1, 0.9, a.id === 'king' ? PLAZA : { x: FIELD_X0, y: 23 });
@@ -1870,7 +1872,7 @@ function policyBasic() {
   if (G.tick % 6 !== 0) return;
   if (G.assaults && policyPrep()) return;
   const yr = yearOf(G.tick);
-  const bank = G.awakened ? 120 : yr >= 5 ? 100 : 26;
+  const bank = G.assaults ? (nextAssault() && nextAssault().t - G.tick <= SEASON_T ? 40 : 26) : G.awakened ? 120 : yr >= 5 ? 100 : 26; // V4: no boss sortie to save for; keep a small reserve before an assault
   let n = 0;
   const can = (pid, res) => G.faith >= powerCost(pid) + (res === undefined ? bank : res);
   const bp = G.parties.find(p => p.boss && p.state !== 'done');
@@ -2287,7 +2289,7 @@ function makeChapter(scene, ev, over) {
   }
   ch.pk = computePicks(ch, rg);
   if (mainH && ids[0] && ids[0] !== G.main && G.idx[ids[0]]) ch.relMain = relKey(mainH, G.idx[ids[0]]);
-  { const pc = G.chapters[G.chapters.length - 1]; ch.cont = !!(pc && pc.who && who[0] && pc.who[0] === who[0]); const kk = ch.cont ? 'c' : (ch.relMain ? 'r' : 'p'); ch.trI = pickUniq(rg, 'TR.' + kk + '.' + (ids[0] || 0), kk === 'c' ? 6 : 8); }
+  { const pc = G.chapters[G.chapters.length - 1]; ch.cont = !!(pc && pc.who && who[0] && pc.who[0] === who[0]); const kk = ch.cont ? 'c' : (ch.relMain ? 'r' : 'p'); ch.trI = pickUniq(rg, 'TR.' + kk + '.' + (ids[0] || 0), kk === 'c' ? 12 : 8); }
   if ((scene === 'depart' || scene === 'eve') && ids.length >= 2 && SCN[scene]) { const k = SCN[scene].talk.indexOf('promise'); if (k >= 0 && ch.pk['l' + k] >= 0) { ch.promised = true; memOf(G.idx[ids[0]]).promise = { who: ids[1], ref: ch.id, t: G.tick }; if (G.idx[ids[1]]) memOf(G.idx[ids[1]]).promise = { who: ids[0], ref: ch.id, t: G.tick }; G.fores.push({ id: G.nid++, type: 'promise', hid: ids[0], partner: ids[1], planted: G.tick, state: 'open', v: { pn: an[ids[1]] || null, lab: (info[ids[1]] && info[ids[1]].rel) || (G.idx[ids[1]] && JOBS[G.idx[ids[1]].job] ? JOBS[G.idx[ids[1]].job].n : null) } }); } }
   G.chapters.push(ch); if (G.chapters.length > 400) G.chapters.splice(0, 40);
   if (ev) { ev.used = true; ev.ch = ch.id; }
@@ -2413,7 +2415,7 @@ function chronRecap() {
 const SC_CD = { funeral: 420, betrayal: 500, depart: 700, return: 700, unanswered: 900, doubt: 650, answered: 650, g_gear: 900, birth: 300 };
 const TRANS_REL = [['ここで、{MN}の{R}にあたる{A}の話に移る。', '這裡先換成{MN}的{R}——{A}的故事。'], ['{A}は、{MN}の{R}だ。今度は{A}のほうを見てみよう。', '{A}是{MN}的{R}，這次來看看{A}這邊。'], ['{MN}のそばをはなれて、{R}の{A}のことを書く。', '先離開{MN}身邊，來寫{MN}的{R}{A}。'], ['{MN}と関わりの深い{A}にも、{A}だけの一日がある。', '和{MN}關係很深的{A}，也有自己的一天。'], ['{MN}の{R}である{A}は、このとき別の場所にいた。', '身為{MN}的{R}，{A}這時人在別處。'], ['{A}の話をしよう。{A}は{MN}の{R}にあたる人だ。', '來說說{A}的事，是{MN}的{R}。'], ['ここからしばらく、{MN}の{R}、{A}の目で町を見る。', '接下來一小段，用{MN}的{R}——{A}的眼睛來看這座城鎮。'], ['{MN}の話から少しはなれて、{R}の{A}を追う。', '暫時離開{MN}的故事，追著{R}{A}。']];
 const TRANS_PLAIN = [['{MN}のそばを少しはなれて、{A}の一日を見てみよう。', '先暫時離開{MN}身邊，來看看{A}的一天。'], ['同じころ、{MN}のいる町の別の場所では、{A}が動いていた。', '同一時間，在{MN}所在城鎮的另一處，{A}正在行動。'], ['{MN}の話はひと休みして、{A}のことを書いておく。', '先把{MN}的故事放一邊，記下{A}的事。'], ['この町には、{MN}のほかにも、{A}という人がいる。', '這座城鎮裡，除了{MN}，還有一個叫{A}的人。'], ['{MN}とは別に、{A}にも語るべき一日があった。', '除了{MN}之外，{A}也有值得記下的一天。'], ['場面をかえて、{A}の話をしよう。{A}は、{MN}とは別の人だ。', '換個場景，來說{A}的事，這是和{MN}不同的人的故事。'], ['{MN}のいない場所で、{A}は自分の一日を生きていた。', '在沒有{MN}的地方，{A}過著自己的一天。'], ['少しだけ、{MN}から目をはなして、{A}のほうを見る。', '稍微把目光從{MN}移開，看向{A}。']];
-const TRANS_CONT = [['{MN}の話からはなれたまま、{A}の話がつづく。', '離開{MN}的故事，{A}的故事繼續。'], ['まだ{MN}のそばにはもどらず、{A}の話がつづく。', '還不回到{MN}身邊，繼續{A}的故事。'], ['{A}の話は、まだ終わっていない。{A}のあとで、{MN}にもどる。', '{A}的故事還沒結束，{MN}的事稍後再說。'], ['引きつづき{A}を追いつつ、{MN}の話はあとにまわす。', '繼續追著{A}，{MN}的故事先請它等一等。'], ['{MN}ではなく、{A}のほうで話が進んでいた。', '這次是{A}這邊的故事在進展，不是{MN}。'], ['つづけて{A}の話をする（この章に{MN}は出てこない）。', '接著是{A}的故事，{MN}不在這一章出現。']];
+const TRANS_CONT = [['{MN}の話からはなれたまま、{A}の話がつづく。', '離開{MN}的故事，{A}的故事繼續。'], ['まだ{MN}のそばにはもどらず、{A}の話がつづく。', '還不回到{MN}身邊，繼續{A}的故事。'], ['{A}の話は、まだ終わっていない。{A}のあとで、{MN}にもどる。', '{A}的故事還沒結束，{MN}的事稍後再說。'], ['引きつづき{A}を追いつつ、{MN}の話はあとにまわす。', '繼續追著{A}，{MN}的故事先請它等一等。'], ['{MN}ではなく、{A}のほうで話が進んでいた。', '這次是{A}這邊的故事在進展，不是{MN}。'], ['つづけて{A}の話をする（この章に{MN}は出てこない）。', '接著是{A}的故事，{MN}不在這一章出現。'], ['{MN}の話はひと休みして、{A}の話をつづけよう。','{MN}的故事先休息一下，繼續說{A}的故事。'], ['{A}の物語はまだ途中なので、{MN}のことはもう少し待とう。','{A}的故事還在途中，{MN}的事再等一等。'], ['ふたたび{A}に目を向けるが、{MN}はまだ出てこない。','再次把目光放到{A}身上，{MN}還不會出場。'], ['{MN}から目をはなしたまま、{A}を見つめつづける。','視線離開{MN}，繼續看著{A}。'], ['この章も{A}が主役で、{MN}の話はまた今度だ。','這一章的主角依然是{A}，{MN}的故事下次再說。'], ['{A}の歩みをもう少し追いかけ、{MN}はそのあとにしよう。','再多追一下{A}的腳步，{MN}的事之後再說。']];
 const TUNE_STORY = { gap: 105, slow: 250, interlude: 480 };
 
 /* ---------- rendering ---------- */
@@ -2908,10 +2910,10 @@ defScene('unanswered', {
 /* ---- 09tz_cb2.js ---- */
 /* ================= callbacks v2 (F0): every line states the fact it recalls, so a reader who skipped the old chapter still understands ================= */
 Object.assign(CB, {
-  god_crit: [['{A}は、前に神さまから「{PW}」を受けて、奇跡を見たことがある。', '{A}以前從神那裡得到「{PW}」，親眼見過奇蹟。'], ['神さまの「{PW}」をいただいてから、{A}の体は不思議なほど軽かった。', '得到神的「{PW}」之後，{A}的身體輕得不可思議。'], ['{A}は、神さまの「{PW}」のおかげで、今日も立っていられる。', '多虧神的「{PW}」，{A}今天才能站在這裡。'], ['「{PW}」を受けた日の光を、{A}はまだ覚えていた。', '{A}還記得得到「{PW}」那天的光。']],
-  god_success: [['{A}は、少し前に神さまから「{PW}」をもらった。それ以来、前向きになれた。', '{A}不久前從神那裡得到了「{PW}」，從那之後變得積極了些。'], ['神さまに「{PW}」をもらったことを、{A}は忘れていない。', '{A}沒有忘記自己曾被神賜予「{PW}」。'], ['「{PW}」のあと、{A}は少し元気になった。「また祈ってみよう」と思った。', '得到「{PW}」之後，{A}稍微有了精神，心想「再去祈禱看看吧」。'], ['祈りが届いて、神さまから「{PW}」を受けた。{A}はそれを胸にしまっている。', '祈禱傳達出去，從神那裡得到了「{PW}」，{A}把這件事放在心裡。']],
-  god_twist: [['{A}は、神さまから「{PW}」を受けた。けれど、思ったとおりにはならなかった。', '{A}從神那裡得到了「{PW}」，但結果和想的不一樣。'], ['「{PW}」の意味を取りちがえたのかもしれない。{A}はそう考えていた。', '也許是自己會錯了「{PW}」的意思，{A}這麼想。'], ['神さまの「{PW}」は、むずかしい。{A}はためいきをついた。', '神的「{PW}」很難懂，{A}嘆了口氣。'], ['「{PW}」のあと、{A}の調子は少しおかしかった。', '得到「{PW}」之後，{A}的狀況有點不對勁。']],
-  god_fail: [['{A}は、神さまに「{PW}」を願ったが、うまくいかなかった。', '{A}向神祈求了「{PW}」，卻沒有成功。'], ['「{PW}」が届かなかったことを、{A}は少し引きずっていた。', '{A}還在意著「{PW}」沒有傳達出去的事。'], ['神さまは忙しいんだ、と{A}は自分に言い聞かせていた。「{PW}」は届かなかった。', '{A}告訴自己神一定很忙。「{PW}」沒有傳達。'], ['それでも{A}は、「{PW}」が届かなかったあとも、祈るのをやめなかった。', '即使「{PW}」沒有傳達，{A}也沒有放棄祈禱。']],
+  god_crit: [["{A}は前に、神さまの「{PW}」によって奇跡を見たことがある。","{A}親眼見過的奇蹟，來自神的「{PW}」。"],["{A}は、神さまの「{PW}」に触れてから、体が不思議なほど軽かった。","{A}的身體輕得不可思議，多虧了神的「{PW}」。"],["{A}は今日も、神さまの「{PW}」に支えられて立っている。","{A}今天還能站在這裡，是多虧神的「{PW}」。"],["{A}は、「{PW}」に照らされた日の光をまだ覚えていた。","{A}還記得那天的光，那天得到了「{PW}」。"]],
+  god_success: [["{A}は少し前に神さまの「{PW}」に助けられ、それ以来前向きになれた。","{A}從那之後變得積極了些，因為不久前得到神的「{PW}」。"],["{A}は「{PW}」と神さまのことを、今も忘れていない。","{A}沒有忘記，自己曾被神賜予「{PW}」。"],["{A}は「{PW}」に元気をもらい、また祈ってみようと思った。","{A}稍微有了精神，想再去祈禱看看，因為得到了「{PW}」。"],["祈りが届き、神さまの「{PW}」に包まれた日のことを、{A}は胸にしまっている。","{A}一直記得那天：祈禱傳達了，神賜下「{PW}」。"]],
+  god_twist: [["{A}は神さまの「{PW}」に期待したが、思ったとおりにはならなかった。","{A}期待的結果沒有出現，雖然得到了神的「{PW}」。"],["{A}は、「{PW}」と言われた意味を取りちがえたのかもしれない。","{A}心想，也許自己會錯了「{PW}」。"],["{A}は、むずかしい神さまの「{PW}」にためいきをついた。","{A}嘆了口氣，實在看不懂神的「{PW}」。"],["{A}の調子は、「{PW}」と関係があるのか、少しおかしかった。","{A}的狀況有點不對勁，大概是因為「{PW}」。"]],
+  god_fail: [["神さまへの願い「{PW}」に、{A}は答えをもらえなかった。","{A}沒有得到回應，雖然向神祈求了「{PW}」。"],["{A}は、届かなかった「{PW}」に、まだ心を残していた。","{A}還在意著，沒能傳達的「{PW}」。"],["{A}は、神さまが忙しくて「{PW}」に気づかなかったのだと自分に言い聞かせていた。","{A}告訴自己神太忙了，才沒能傳達「{PW}」。"],["{A}は、届かなかった「{PW}」にもめげず、祈るのをやめなかった。","{A}沒有放棄祈禱，即使沒能傳達「{PW}」。"]],
   inj: [['このあいだの戦いで{BP}に傷を負った{A}は、まだ痛みを引きずっていた。', '前陣子的戰鬥中，{A}的{BP}受了傷，至今仍隱隱作痛。'], ['{A}は、戦いで傷めた{BP}をかばいながら歩いていた。', '{A}一邊護著在戰鬥中受傷的{BP}一邊走。'], ['戦いで受けた{BP}の傷に、まだ包帯が巻いてあった。', '戰鬥中{BP}受的傷，還纏著繃帶。'], ['雨の日になると、戦いで傷めた{BP}がうずく。{A}はもう慣れてきた。', '一到下雨天，戰鬥中受傷的{BP}就會痛，{A}也漸漸習慣了。']],
   promise: [['{A}は、出発の前に{B}と交わした約束を覚えていた。', '{A}記得出發之前和{B}立下的約定。'], ['「必ず戻る」。{A}は、{B}とそう約束していた。', '「我一定回來」，{A}曾這樣和{B}約定。'], ['{B}との約束が、{A}の足を前に進めた。', '和{B}的約定，推著{A}往前走。'], ['{A}の胸には、約束を交わした{B}の顔が浮かんでいた。', '{A}心中浮現了立下約定的{B}的臉。']],
   loss: [['{B}が亡くなってから、{A}の家は少し広くなった。', '自從{B}過世之後，{A}的家好像變大了一點。'], ['{A}は、亡くなった{B}の名前を、今でも呼びそうになる。', '{A}到現在還是偶爾會差點喊出過世的{B}的名字。'], ['{B}がいなくなった日から、{A}は朝ごはんをひとりで食べている。', '從{B}不在的那天起，{A}都是一個人吃早餐。'], ['{B}の席は、まだ空いたままだった。{A}はそこを見ないようにした。', '{B}的位子，仍然空著。{A}儘量不去看那裡。']],
