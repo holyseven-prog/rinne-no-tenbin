@@ -27,11 +27,12 @@ function shadowPx(c, cx, cy, rx, ry) { mulDo(c, () => ell(c, SHADOW_MUL, Math.ro
 function shadowRect(c, x, y, w, h) { mulDo(c, () => fr(c, SHADOW_MUL, x, y, w, h)); }
 
 /* ---------- ground: painted into a pixel buffer (fast), then decorated with canvas ops ---------- */
-function groundKind(tp) { switch (tp) { case T.PATH: case T.DOOR: case T.BRIDGE: return 'path'; case T.PLAZA: return 'plaza'; case T.WATER: return 'water'; case T.SAND: return 'sand'; case T.FIELD: return 'field'; case T.DARK: return 'dark'; case T.ROCK: return null; case T.CLIFF: return 'cliff'; case T.LEDGE: return 'ledge'; default: return 'grass'; } }
-const RANK = { water: 0, grass: 1, ledge: 1, field: 1, dark: 1, cliff: 1, sand: 2, path: 3, plaza: 4 };
+function groundKind(tp) { switch (tp) { case T.SWAMP: return 'swamp'; case T.POISON: return 'poison'; case T.SNOW: return 'snow'; case T.ICE: return 'ice'; case T.LAVA: return 'lava'; case T.VOLC: return 'volc'; case T.CAVE: return 'cave'; case T.CHASM: return 'chasm'; case T.WILD: return 'wild'; case T.PATH: case T.DOOR: case T.BRIDGE: return 'path'; case T.PLAZA: return 'plaza'; case T.WATER: return 'water'; case T.SAND: return 'sand'; case T.FIELD: return 'field'; case T.DARK: return 'dark'; case T.ROCK: return null; case T.CLIFF: return 'cliff'; case T.LEDGE: return 'ledge'; default: return 'grass'; } }
+const RANK = { swamp: 1, poison: 1, snow: 1, ice: 1, lava: 0, volc: 1, cave: 2, chasm: 0, wild: 1, water: 0, grass: 1, ledge: 1, field: 1, dark: 1, cliff: 1, sand: 2, path: 3, plaza: 4 };
 const U32 = {}; function u32(hex) { if (U32[hex]) return U32[hex]; const [r, g, b] = hexRgb(hex); return (U32[hex] = ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0); }
 function tileAt(x, y) { return (x < 0 || y < 0 || x >= MW || y >= MH) ? -1 : W.tiles[y * MW + x]; }
-function baseKindAt(x, y) { let tp = tileAt(x, y); if (tp < 0) return null; if (tp === T.BLD || tp === T.TREE || tp === T.FENCE || tp === T.FLOWER || tp === T.ROCK) tp = (x >= PLATEAU_X0 ? T.DARK : T.GRASS); return groundKind(tp); }
+const DECO_T = t => t === T.BLD || t === T.TREE || t === T.FENCE || t === T.FLOWER || t === T.ROCK || t === T.DOOR;
+function baseKindAt(x, y) { let tp = tileAt(x, y); if (tp < 0) return null; if (tp === T.BLD || tp === T.TREE || tp === T.FENCE || tp === T.FLOWER || tp === T.ROCK) { tp = x >= PLATEAU_X0 ? T.DARK : T.GRASS; if (x > VIL_X1) for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1]]) { const n = tileAt(x + dx, y + dy); if (n >= 0 && !DECO_T(n) && n !== T.PATH && n !== T.BRIDGE && n !== T.CLIFF && n !== T.LAVA && n !== T.CHASM && n !== T.WATER) { tp = n; break; } } } return groundKind(tp); } // V4.2: rocks / trees sit on the surrounding ground
 function snoise(x, y, sc, seed) { const gx = Math.floor(x / sc), gy = Math.floor(y / sc), fx = x / sc - gx, fy = y / sc - gy; const sm = t => t * t * (3 - 2 * t); const a = hsh(gx, gy, seed), b = hsh(gx + 1, gy, seed), c = hsh(gx, gy + 1, seed), d = hsh(gx + 1, gy + 1, seed); const u = sm(fx), v = sm(fy); return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v; }
 function paintGround(c, sea) {
   const WD = MW * TS, HD = MH * TS; const img = c.createImageData(WD, HD); const buf = new Uint32Array(img.data.buffer);
@@ -77,6 +78,7 @@ function paintGround(c, sea) {
       for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) { const n = hsh(tx * 8 + i, ty * 8 + j, 70) * 0.5 + hsh((tx * 8 + i) >> 2, (ty * 8 + j) >> 2, 71) * 0.5; const col = n < 0.3 ? Dk.d : n < 0.75 ? Dk.b : Dk.l; for (let q = 0; q < 4; q++) P(x0 + i * 2 + (q & 1), y0 + j * 2 + (q >> 1), col); }
       if (hsh(tx, ty, 72) < 0.2) { const px = x0 + 3 + Math.floor(hsh(tx, ty, 73) * 9), py = y0 + 3 + Math.floor(hsh(tx, ty, 74) * 9); P(px, py, '#6a3a9a'); P(px + 1, py, '#9a58d0'); P(px + 2, py + 1, '#6a3a9a'); P(px + 1, py + 1, '#2a1a3a'); }
     } else if (kind === 'cliff') paintCliffPx(P, tx, ty, sea, Cl, G);
+    else paintWildPx(P, kind, tx, ty, x0, y0, sea, G);
   }
   // irregular road / plaza / sand edges (autotile bites + rounded corners), and soft multiply shadows at the foot of cliffs
   for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
@@ -95,7 +97,7 @@ function paintGround(c, sea) {
     if (tp === T.WATER) c.drawImage(waterTile(sea, 0, waterMask(tx, ty), tx, ty), tx * TS, ty * TS);
     else if (tp !== T.CLIFF && tp !== T.LEDGE && tileAt(tx, ty - 1) === T.CLIFF) shadowRect(c, tx * TS, ty * TS, 16, 2 + (hsh(tx, ty, 160) < 0.5 ? 1 : 0));
     else if (tp !== T.CLIFF && tp !== T.LEDGE && tileAt(tx - 1, ty) === T.CLIFF && tx === PLATEAU_X0) shadowRect(c, tx * TS, ty * TS, 4, 16);
-    if (tp === T.BRIDGE) { fr(c, '#784c2c', tx * TS, ty * TS, 16, 16); for (let i = 0; i < 4; i++) fr(c, '#523420', tx * TS, ty * TS + i * 4 + 3, 16, 1); }
+    if (tp === T.BRIDGE) drawBridge(c, tx, ty, sea);
     if (tp === T.PATH && tx === PLATEAU_X0 - 1) drawStairs(c, tx, ty, sea);
   }
 }
@@ -294,6 +296,7 @@ function drawBuilding(c, b, sea) {
   mulDo(c, () => { for (let r = 0; r < h - 4; r++) fr(c, SHADOW_MUL, px + w + 4, py + 6 + r, Math.min(6, Math.floor(r / 1.5) + 1), 1); fr(c, SHADOW_MUL, px + 2, py + h, w + 4, 2); });
   if (k === 'church') { drawChurch(c, b, sea, px, py, w, h, RR, WR, Wd); return; }
   if (k === 'mill') { drawMillTower(c, px, py, w, h, sea); SPINNERS.push({ x: px + w / 2, y: py + 10, r: 22 }); return; }
+  if (k === 'cemetery' || k === 'watchtower' || k === 'market' || k === 'manor' || k === 'library' || k === 'itemshop' || k === 'barracks') { drawNewBuilding(c, b, sea, px, py, w, h); return; }
   drawWall(c, k, px + 1, wy0, w - 2, wallH - 4, WR, Wd);
   const FD = seaRamp('stone', 0); fr(c, FD.o, px, py + h - 4, w, 4); fr(c, FD.b, px + 1, py + h - 4, w - 2, 3); fr(c, FD.l, px + 1, py + h - 4, w - 2, 1); for (let xx = 4; xx < w - 2; xx += 7) fr(c, FD.d, px + xx, py + h - 3, 1, 2);
   mulDo(c, () => fr(c, SHADOW_MUL, px + 1, wy0, w - 2, 3)); // eave shadow on the wall
@@ -388,6 +391,7 @@ function townProps() {
 }
 function getWorldCanvas(sea) {
   if (worldCache[sea]) return worldCache[sea];
+  for (const k in worldCache) { delete worldCache[k]; delete overlayCache[k]; delete groundCache[k]; } // V4.2: only the current season stays cached
   LAMPS = []; FLAGS = []; CHIMS = []; SPRAYS = []; WIN_RECTS.length = 0; SPINNERS = [];
   const cv = mkCanvas(MW * TS, MH * TS), c = cv.getContext('2d'); const ov = mkCanvas(MW * TS, MH * TS), oc = ov.getContext('2d');
   c.drawImage(getGroundCanvas(sea), 0, 0);
@@ -419,3 +423,52 @@ function drawThatch(c, px, py, w, roofH, sea, hex) { const R = mkRamp(hex); cons
 function drawMillTower(c, px, py, w, h, sea) { const S = mkRamp('#a8a4a0'), cx = px + w / 2; for (let y = py + 10; y < py + h - 4; y++) { const hw = Math.round(w / 2 - 6 + (y - py) / h * 6); fr(c, S.o, cx - hw - 1, y, hw * 2 + 2, 1); fr(c, S.b, cx - hw, y, hw * 2, 1); fr(c, S.l, cx - hw, y, 3, 1); fr(c, S.d, cx + hw - 3, y, 3, 1); if ((y - py) % 5 === 0) fr(c, S.d, cx - hw, y, hw * 2, 1); }
   const RR = mkRamp('#7a4a2a'); for (let r = 0; r < 14; r++) { const hw = Math.round(3 + r * 0.9); fr(c, RR.o, cx - hw - 1, py - 2 + r, hw * 2 + 2, 1); fr(c, r % 3 ? RR.b : RR.l, cx - hw, py - 2 + r, hw * 2, 1); }
   fr(c, '#3a2a1a', cx - 3, py + h - 16, 6, 12); fr(c, '#7a4a24', cx - 2, py + h - 15, 4, 11); fr(c, '#2a4a7a', cx - 2, py + 18, 4, 5); if (sea === 3) fr(c, '#f4f8fc', cx - 6, py - 2, 12, 3); }
+
+/* ---------- V4.2 field terrain (Part C): swamp, poison bog, snow, ice, lava, volcanic rock, cave floor, chasm, rocky grass ---------- */
+const WILD_PAL = { swamp: ['#1e3a2a', '#2e5a3a', '#3e7448', '#5a8a58', '#7aa070'], poison: ['#2a1438', '#4a2a5a', '#6a3a8a', '#8a58b0', '#b080d8'], snow: ['#7a8ca0', '#b4c4d6', '#d4e0ec', '#eaf0f8', '#ffffff'], ice: ['#3a6a9a', '#6a9ac8', '#9ac4e8', '#c4e2f8', '#eaf8ff'],
+  lava: ['#5a1008', '#a02010', '#e04818', '#f88a20', '#ffd860'], volc: ['#1e1414', '#3a2420', '#54342c', '#6e463a', '#8a5a48'], cave: ['#1a1620', '#2e2834', '#443c4a', '#5a5262', '#787080'], chasm: ['#000000', '#0a0810', '#141020', '#1e1830', '#2a2440'], wild: ['#2a4a1e', '#4a6a2a', '#6a8a3a', '#8aa04a', '#a8b85a'] };
+function paintWildPx(P, kind, tx, ty, x0, y0, sea, G) {
+  const pal = WILD_PAL[kind]; if (!pal) return; const R = R5(sea === 3 && (kind === 'wild' || kind === 'swamp') ? WILD_PAL.snow : pal);
+  for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) { const gx = tx * 8 + i, gy = ty * 8 + j; const n = snoise(gx, gy, 4, 70 + kind.length) * 0.6 + hsh(gx, gy, 71) * 0.4; const col = n < 0.3 ? R.d : n < 0.7 ? R.b : n < 0.88 ? R.l : R.h; for (let q = 0; q < 4; q++) P(x0 + i * 2 + (q & 1), y0 + j * 2 + (q >> 1), col); }
+  if (kind === 'swamp' || kind === 'poison') for (let k = 0; k < 3; k++) { const px = x0 + 2 + Math.floor(hsh(tx, ty, 72 + k) * 11), py = y0 + 2 + Math.floor(hsh(tx, ty, 75 + k) * 11); P(px, py, R.h); P(px + 1, py, R.l); P(px, py + 1, R.o); if (kind === 'swamp') { P(px + 3, py - 2, '#3a6a2a'); P(px + 3, py - 3, '#5a8a3a'); } }
+  if (kind === 'wild') for (let k = 0; k < 2; k++) { const px = x0 + 2 + Math.floor(hsh(tx, ty, 78 + k) * 11), py = y0 + 3 + Math.floor(hsh(tx, ty, 80 + k) * 10); P(px, py, '#6a6458'); P(px + 1, py, '#8a8478'); P(px, py + 1, '#3a342c'); P(px + 1, py + 1, '#4a443c'); }
+  if (kind === 'volc') for (let k = 0; k < 3; k++) { const px = x0 + 1 + Math.floor(hsh(tx, ty, 82 + k) * 13), py = y0 + 1 + Math.floor(hsh(tx, ty, 85 + k) * 13); P(px, py, '#e0481a'); P(px + 1, py, '#a02010'); }
+  if (kind === 'cave') for (let k = 0; k < 2; k++) { const px = x0 + 2 + Math.floor(hsh(tx, ty, 88 + k) * 11), py = y0 + 2 + Math.floor(hsh(tx, ty, 90 + k) * 11); P(px, py, R.o); P(px + 1, py + 1, R.o); P(px + 2, py + 1, R.l); }
+  if (kind === 'chasm') for (let j = 0; j < 16; j++) { if (tileAt(tx - 1, ty) !== T.CHASM) { P(x0, y0 + j, '#6c6034'); P(x0 + 1, y0 + j, '#4a4226'); } if (tileAt(tx + 1, ty) !== T.CHASM) { P(x0 + 15, y0 + j, '#4a4226'); P(x0 + 14, y0 + j, '#2a2618'); } }
+  if (kind === 'lava') for (let k = 0; k < 4; k++) { const px = x0 + 1 + Math.floor(hsh(tx, ty, 92 + k) * 13), py = y0 + 1 + Math.floor(hsh(tx, ty, 96 + k) * 13); P(px, py, R.h); P(px + 1, py, R.l); P(px - 1, py, R.l); }
+}
+function drawBridge(c, tx, ty, sea) {
+  const x = tx * TS, y = ty * TS; const rope = tx >= 118 && tx <= 135; const stone = tx < 56;
+  if (rope) { fr(c, '#141020', x, y, 16, 16); for (let i = 0; i < 16; i += 3) { fr(c, '#8a6038', x + i, y + 4, 2, 9); fr(c, '#5a3a20', x + i + 1, y + 4, 1, 9); } fr(c, '#c8a060', x, y + 3, 16, 1); fr(c, '#c8a060', x, y + 13, 16, 1); fr(c, '#3a2a1a', x, y + 2, 16, 1); fr(c, '#3a2a1a', x, y + 14, 16, 1); return; }
+  if (stone) { const S = seaRamp('stone', sea); fr(c, S.b, x, y, 16, 16); for (let i = 0; i < 16; i += 4) fr(c, S.d, x + i, y, 1, 16); fr(c, S.o, x, y, 16, 2); fr(c, S.o, x, y + 14, 16, 2); fr(c, S.l, x, y + 2, 16, 1); return; }
+  const Wd = R5(PAL5.wood[0]); fr(c, Wd.b, x, y, 16, 16); for (let i = 0; i < 16; i += 3) { fr(c, Wd.d, x + i, y, 1, 16); fr(c, Wd.l, x + i + 1, y, 1, 16); } fr(c, Wd.o, x, y, 16, 2); fr(c, Wd.o, x, y + 14, 16, 2); fr(c, Wd.l, x, y + 2, 16, 1);
+}
+/* ---------- the 7 new village buildings (Part B, expanded sheet) ---------- */
+function drawNewBuilding(c, b, sea, px, py, w, h) {
+  const k = b.kind; const Wd = R5(PAL5.wood[0]);
+  if (k === 'cemetery') { // fenced yard: statue headstone, small graves, dead tree, pink flowers
+    const G0 = seaRamp('grass', sea); fr(c, G0.b, px, py, w, h); for (let x = px; x < px + w; x += 4) { fr(c, Wd.o, x, py + 2, 2, 8); fr(c, Wd.o, x, py + h - 9, 2, 8); } fr(c, Wd.b, px, py + 4, w, 2); fr(c, Wd.b, px, py + h - 6, w / 2 - 10, 2); fr(c, Wd.b, px + w / 2 + 10, py + h - 6, w / 2 - 10, 2); for (let y = py; y < py + h; y += 4) { fr(c, Wd.o, px, y, 2, 3); fr(c, Wd.o, px + w - 2, y, 2, 3); }
+    const S = mkRamp('#a8a8b4'); const cx = px + w / 2; fr(c, S.o, cx - 6, py + 12, 12, 26); fr(c, S.b, cx - 5, py + 13, 10, 24); fr(c, S.l, cx - 5, py + 13, 2, 24); fr(c, S.o, cx - 3, py + 6, 6, 8); fr(c, S.l, cx - 2, py + 7, 4, 6); fr(c, S.o, cx - 1, py + 18, 2, 10); fr(c, S.o, cx - 4, py + 21, 8, 2);
+    [[12, 26], [24, 44], [w - 22, 24], [w - 14, 44], [14, 52]].forEach(([gx, gy]) => PROPS.grave(c, px + gx - 8, py + gy - 12));
+    drawDeadTree(c, px + w - 20, py + 46, sea); for (let i = 0; i < 6; i++) fr(c, '#ff9ab8', px + 6 + Math.floor(hsh(b.id, i, 3) * (w - 12)), py + 30 + Math.floor(hsh(i, b.id, 4) * 40), 2, 2); return; }
+  if (k === 'watchtower') { const blue = b.roof === 0; const S = mkRamp('#c8b08a'); const tx0 = px + 8, tw = w - 16;
+    drawWall(c, 'church', tx0, py + 30, tw, h - 34, S, Wd); fr(c, '#3a2a1a', px + w / 2 - 5, py + h - 18, 10, 14); fr(c, '#7a4a24', px + w / 2 - 4, py + h - 17, 8, 13);
+    fr(c, '#181020', tx0 - 4, py + 24, tw + 8, 8); for (let i = 0; i < tw + 8; i += 6) { fr(c, S.b, tx0 - 3 + i, py + 25, 4, 6); fr(c, S.l, tx0 - 3 + i, py + 25, 4, 1); }
+    fr(c, '#2a3a5a', px + w / 2 - 3, py + 40, 6, 8); WIN_RECTS.push({ x: px + w / 2 - 3, y: py + 40, w: 6, h: 8 });
+    if (blue) { const R = mkRamp('#2a5ab1'); for (let r = 0; r < 26; r++) { const hw = Math.max(1, Math.round((tw / 2 + 4) * r / 26)); fr(c, R.o, px + w / 2 - hw - 1, py - 2 + r, hw * 2 + 2, 1); fr(c, r % 4 === 0 ? R.l : R.b, px + w / 2 - hw, py - 2 + r, hw * 2, 1); fr(c, R.d, px + w / 2 + 1, py - 2 + r, Math.max(0, hw - 1), 1); } fr(c, '#e8c030', px + w / 2 - 1, py - 8, 2, 7); }
+    else { fr(c, '#5a3a22', px + w / 2, py - 16, 2, 40); FLAGS.push({ x: px + w / 2 + 2, y: py - 15, col: '#2a5ab1' }); }
+    return; }
+  if (k === 'market') { // striped awnings and stalls
+    const WR = mkRamp('#c8a070'); drawWall(c, 'shop', px + 1, py + 26, w - 2, h - 30, WR, Wd); drawRoof(c, px, py, w, 24, mkRamp('#ca3b3b'), 12, sea);
+    for (let i = 0; i < 3; i++) { const sx = Math.round(px + 6 + i * (w - 12) / 3), sw = Math.round((w - 12) / 3 - 4); for (let s2 = 0; s2 < sw; s2 += 4) fr(c, (s2 / 4) % 2 ? '#f0d040' : '#ca3b3b', sx + s2, py + 30, 4, 8); fr(c, '#181020', sx, py + 38, sw, 1); fr(c, Wd.b, sx, py + 46, sw, 6); fr(c, Wd.o, sx, py + 52, sw, 1); [['#e04a2a', 2], ['#f0c040', 6], ['#5aa83a', 10]].forEach(([col, ox]) => fr(c, col, sx + ox, py + 43, 3, 3)); }
+    return; }
+  const conf = { manor: { wall: '#e8e4ec', kind: 'stone', roof: '#2a5ab1', icon: 'scale' }, library: { wall: '#b89a6a', kind: 'timber', roof: '#2a5ab1', icon: 'historian' }, itemshop: { wall: '#c09060', kind: 'plank', roof: '#ca3b3b', icon: 'potion' }, barracks: { wall: '#c8a878', kind: 'stone', roof: '#4e5676', icon: 'battle' } }[k];
+  if (!conf) return; const WR = mkRamp(conf.wall); const roofH = Math.round(h * 0.55); const wy0 = py + roofH;
+  WALL_KIND[k] = conf.kind; drawWall(c, k, px + 1, wy0, w - 2, h - roofH - 4, WR, Wd); const FD = seaRamp('stone', 0); fr(c, FD.o, px, py + h - 4, w, 4); fr(c, FD.b, px + 1, py + h - 4, w - 2, 3); fr(c, FD.l, px + 1, py + h - 4, w - 2, 1);
+  drawRoof(c, px, py, w, roofH, mkRamp(conf.roof), 12, sea);
+  if (k === 'manor') { const tw = 28, tx0 = px + w / 2 - tw / 2; drawWall(c, 'church', tx0, py - 10, tw, roofH + 10, mkRamp('#dcd8e4'), Wd); const R = mkRamp('#2a5ab1'); for (let r = 0; r < 16; r++) { const hw = Math.round(16 * r / 16); fr(c, R.o, px + w / 2 - hw - 1, py - 26 + r, hw * 2 + 2, 1); fr(c, R.b, px + w / 2 - hw, py - 26 + r, hw * 2, 1); } fr(c, '#e8c030', px + w / 2 - 6, py + 4, 12, 14); fr(c, '#2a5ab1', px + w / 2 - 4, py + 6, 8, 10); fr(c, '#f4f0e0', px + w / 2 - 1, py + 7, 2, 8); }
+  if (k === 'barracks') { fr(c, '#181020', px + w / 2 - 9, py + h - 26, 18, 22); fr(c, '#2a2034', px + w / 2 - 8, py + h - 25, 16, 21); fr(c, '#181020', px + w / 2 - 7, py + h - 28, 14, 3); }
+  else drawDoor(c, b.door.x * TS, b.door.y * TS, k, Wd, k === 'manor' || k === 'library');
+  for (let xx = px + 10; xx + 10 < px + w - 6; xx += 22) { if (Math.abs(xx + 5 - (b.door.x * TS + 8)) < 14) continue; drawWindow(c, xx, wy0 + 8, 10, 9, Wd, false); }
+  if (k === 'itemshop' || k === 'library') { const ic = iconCanvas(conf.icon); const bx = Math.round(px + w / 2 - 13), by = py + Math.max(4, roofH - 30); fr(c, '#1c1626', bx - 1, by - 1, 28, 26); fr(c, '#f4e8c0', bx, by, 26, 24); fr(c, conf.roof, bx + 1, by + 1, 24, 2); if (ic) c.drawImage(ic, bx + 5, by + 4, 16, 16); }
+}

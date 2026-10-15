@@ -98,7 +98,7 @@ function resolveCard(c, opt) {
 }
 function decideCard(n, opt) { const i = (G.cards || []).findIndex(c => c.n === n); if (i < 0) return false; const c = G.cards.splice(i, 1)[0]; resolveCard(c, opt); return true; }
 /* ---------- event tiers (S: stop & show, A: highlight, B: routine summary) ---------- */
-const FEED_S = { assault_start: 1, assault_end: 1, hero_born: 1, boss_awaken: 1, dragon_pact: 1, council: 1, boss_slain: 1, ending_doom: 1, ending_victory: 1, ending_godleft: 1 };
+const FEED_S = { new_king: 1, king_slain_exp: 1, captive_lost: 1, retaliation: 1, exp_end: 1, lord_slain: 1, assault_start: 1, assault_end: 1, hero_born: 1, boss_awaken: 1, dragon_pact: 1, council: 1, boss_slain: 1, ending_doom: 1, ending_victory: 1, ending_godleft: 1 };
 const FEED_A = { death: 1, marriage: 1, betrayal: 1, birth: 1, love_start: 1, dev_change: 1, festival: 1, promotion: 1, god_lv: 1, decree_settle: 1, master_farewell: 1, destined_reunion: 1, miracle: 1, reincarnation: 1 };
 const FEED_B = { party_formed: 1, quest_clear: 1, quest_fail: 1, first_battle: 1, prep: 1, walls_up: 1, rebuilt: 1, coming_of_age: 1, migrant: 1, gear: 1, quarrel: 1, reconcile: 1, love_notice: 1, divine_act: 1, prayer_expired: 1, monster_raid: 1 };
 function feedClass(ev) { if (ev.type === 'assault_omen') return ev.payload && ev.payload.step === 3 ? 'S' : 'A'; if (FEED_S[ev.type]) return 'S'; if (FEED_A[ev.type]) return 'A'; if (FEED_B[ev.type]) return 'B'; return ev.tension >= 0.6 ? 'A' : null; }

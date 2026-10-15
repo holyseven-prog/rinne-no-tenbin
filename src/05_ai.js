@@ -19,6 +19,7 @@ function pathTo(e, tx, ty, range) {
 }
 
 function updateHuman(h) {
+  if (h.away) { h.needs.hunger = Math.max(0, h.needs.hunger - 1); return; } // on an expedition / in the temple / captive
   const n = h.needs;
   h.age += AGING / TICK_YEAR;
   const sleeping = h.act && h.act.k === 'sleep' && h.act.st === 1;
@@ -126,7 +127,7 @@ function actTarget(h, k) {
     case 'muster': { const p = randWalkableIn(34, 21, 38, 25); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'train': { const p = randWalkableIn(18, 24, 26, 25); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'learn': { if (rchance(0.5)) return bldDoor(pickBld('church')); const p = randWalkableIn(25, 17, 31, 22); return { tx: p.x, ty: p.y, range: 0 }; }
-    case 'hunt': { const p = randWalkableIn(FIELD_X0 + 1, 8, FIELD_X0 + 3 + Math.min(3, yearOf(G.tick) >> 1), 36); return { tx: p.x, ty: p.y, range: 0 }; }
+    case 'hunt': { const z = huntZone(h); const p = randWalkableIn(z.x0 + 1, 6, Math.min(z.x1 - 1, z.x0 + 10), MH - 8); return { tx: p.x, ty: p.y, range: 0 }; } // V4.2: hunt in the zone that fits the level
     case 'work': return workTarget(h);
   }
   return null;
@@ -258,6 +259,7 @@ function socialInteract(h) {
 /* ---------- exp ---------- */
 function addExp(h, v) {
   if (!v || h.lvl >= 25) return;
+  if (h.growthUntil > G.tick) v *= 1.5; // divine training: growth grace
   h.exp += v;
   let need = 30 * h.lvl;
   while (h.exp >= need && h.lvl < 25) {
@@ -312,3 +314,5 @@ function expirePrayers() {
   }
   if (G.prayers.length > 120) G.prayers = G.prayers.filter(p => p.state === 'open' || G.tick - p.t < TICK_YEAR);
 }
+/* V4.2 W1: adventurers pick a hunting zone by level (and courage / greed) */
+function huntZone(h) { const L = h.lvl || 1; const bold = (h.traits || []).indexOf('brave') >= 0 ? 1 : 0; let best = ZONES[0]; for (const z of ZONES) if (L + bold >= z.lv[0] + 1 + (z.star >= 4 ? 3 : 0)) best = z; return best; }

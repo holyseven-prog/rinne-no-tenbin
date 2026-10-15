@@ -27,7 +27,7 @@ const out = []; const ck = (n, c, x) => out.push((c ? 'PASS ' : 'FAIL ') + n + (
   // 4: clamp
   await pg.mouse.move(100, 100); await pg.mouse.down(); await pg.mouse.move(1200, 700, { steps: 6 }); await pg.mouse.move(1270, 715, { steps: 2 }); await pg.mouse.up(); await wait(100);
   for (let i = 0; i < 3; i++) { await pg.mouse.move(100, 100); await pg.mouse.down(); await pg.mouse.move(1250, 700, { steps: 4 }); await pg.mouse.up(); }
-  const c4 = await cam(); ck('4 clamped at map edge', c4.x >= 0 && c4.y >= 0 && c4.x <= 64 * 16 - 640 && c4.y <= 40 * 16 - 360, JSON.stringify(c4));
+  const c4 = await cam(); ck('4 clamped at map edge', c4.x >= 0 && c4.y >= 0 && c4.x <= 160 * 16 - 640 && c4.y <= 64 * 16 - 360, JSON.stringify(c4));
   // 5: release outside window
   const c5a = await cam(); await pg.mouse.move(600, 300); await pg.mouse.down(); await pg.mouse.move(700, 350, { steps: 3 });
   await pg.evaluate(() => window.dispatchEvent(new MouseEvent('mouseup', { button: 0, clientX: -50, clientY: -50, bubbles: true }))); await wait(100);

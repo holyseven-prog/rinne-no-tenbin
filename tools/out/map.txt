@@ -1,0 +1,64 @@
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""^        o     
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ o    o  o    
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      o     o 
+..fffff.fffff.^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              
+..fffff.fffff......T^^.T^^^^..^.^...T..^,.To^^..^.^^^^^o..,..,.^.^..^^..,.^.:~~...TT^TT^TTT.T.^T^^TT^ss^T.....^.....^.;^;;;^;^*|^****^^^vv^^vv^vv^        o     
+.,fffff.fffff....,..,.......................T..,.......T.....;,.....,........~~.T.TTTT..T..TTT..T....T.........ppp....;;;o;;;**||*******vvvvvvvvv^              
+..fffff,fffff.....................,...............o,.,........,....T;.,......~~..TTT........TT.T.T.TT.....T.TTppTpp...;;;;;;;*o||*******vvvovvvvv^          oo  
+,.fffff.fffff.........,..BBBBBBB.....................T......,.......,....,...~~..TTTTT.T...TTTT.TT....T......ppppppp..;;;;;;***||*******vovvvvovv^     o  o     
+...,.....................BBBBBBB...,.......................,.;...T...;...To.:~~.TT.T..T.T.T.T......T........ppppppppp.;;;;o;***||****o*ovvvvvvvvv^ o            
+..fffff.fffff...BBBBB....BBBBBBBBBBBBBBBBBB.....,.........;...,.o.....,.,....~~..TTTTTT.T.TTT.....TT........ppppppTpT.;ooo;;;**||***o**oovvvvvvvv^ o   o  o  o  
+..fffff.fffff...BBBBB....BBBBBBBBBBBBBBBBBB......TT........T..T.T..........;.~~..T.TTT..TTT...............T..ppppppp..;o;;;;;o*||**o*o**vvvLvvvvv^    o         
+..fffff.fffff.,,BBBBB....BBBBBBBBBBBBBBBBBBT..T.........,...o.......,;....,..~~.TTT.......TTT.....TT..........ppppp...;;^^^^^^^||^^^^^**vvLLLvvvv^  oo          
+..fffff.fffff...BBDBB...,BBBDBBBBBBDBBBBDBB.........o..T.,.,.................~~.T.T...............TTT..........ppp....;;^^^;^;^||^^^^^**vLLLLLovv^          o   
+..fffff.fffff,....=.,,......=......=....=...T..........T...,,.,.........,....~~.TTT.........TTT....TsssssT............;;o;;;;;o||*******vvLLLvvvv^o             
+,.............=============================......................T..,...o....~~,TT....=....T.TT..T..sssssssT..........;;;;;;;;;||***o***vvvLvvvvv^              
+..fffffffffff.=.......,.....=....,............T....To...;.,.o......,....;.,.:~~.TT....=...T...T..TT.sssTsss..........T;;;o;;;o;||*o****ovvvvvvvvv^              
+..fffffffffff.=.............=..,..............................,....T.,;.....:~~..TT...=...TT...TTTTTsssssssT.........s;;;;;;;;;||oo*****vvvvvvvov^              
+..fffffffffff,=......,...PPP=PPP............,T............;.;.........T.....~~,.T.....=..TTTTTTTTTT.ssssssss.........s;;;;;;;;o||**o**o*vvvvvvvvo^              
+...........,,.=.BBBBBBB..PPP=PPP.BBBBBBB.........,..............;....T.....:~~..TTTT.T=.T..T.TT..TT.ssssssss........Ts;;;;;;;;;||;;;;;;;vvvvvvvvv^   BBBBBBB    
+BBBBB...BBBBB.=.BBBBBBB..PPPBPPP.BBBBBBB...........,,...,......;,...........~~.;TT.T..=TTTTTTTTT..TTsssTsss.......T...;;;;;;;;;||;;;;;;;vvvvvvvvv^ o BBBBBBB    
+BBBBB...BBBBB.=.BBBBBBB..PPP=PPP.BBBBBBB.,..T......TT....T......,..,.....T..~~..TT.T..=TTT...T...TT.sTssss...........T;oo;;o;;;||;;;;;;;vvvvvovov^   BBBBBBB    
+BBBBB...BBBBB.=.BBBBBBB..BPP=PPB.BBBBBBB................;.;..,.T,....,.....~~..T..TTTT=TT..TTTTTTTTTsssssT.....T......;;;;;o;o;||;;;;;;;vvvvvvvvv^   BBBBBBB    
+BBDBB...BBDBB.=.BBBDBBB..PPP=PPP.BBBDBBB..........,...............T.....;..~~...TTTTTT=TTTT.TT.T..T............ppp...T;;;;;;;;;||o;o;;;;vvvvvovvv=   BBBBBBB    
+===========================================================================++==================================================++====================BBBBBBB    
+..............=........,....=.,.............................,.........,...:~~...TT.TTTTT..TT=TTTTTT..........T=pppppT.;;;;;;;;;||;;;o;;;vvvvvvvvo=   BBBBBBB    
+...,.BBBBB....=.............=......,............:::...............;....,..:~~...TT.T.TT..TTT=...TTTT..T.....pp=pppppTT;;;;;;;;;||;;;;;;;vvvvvvvvv^   BBBDBBB    
+.....BBBBB....=.............=BBBBBBB...........:~~~:..,.,o,,...,...;.......~~..,T.T..T.TT.T.=TTT.TTT........pp=pppppp.;;;;o;;;;||;;;;;;;vvvoovvvv^      =       
+.....BBBBB....=.BBBBBBBBBBBB=BBBBBBB.BBBBBB.,,:~~~~~:.,...,.T.o............~~....T.T..TTTT..=T.T.TTT.........p=ppppp.T;;;;;o;;;||o;;;;;;vvvvvvvvv^              
+.....BBBBB....=.BBBBBBBBBBBB=BBBBBBB.BBBBBBT.:~~~~~~~:TT........T....,....:~~..,TTTTTT..TTT.=TT.T.TT...T.T....=pppp...;;;;;;;;;||;;;;;;;vvvvvvvvv^              
+TT.TTBBBBB.TTT=.BBBBBBBBBBBB=BBBBBBB.BBBBBB..:~~~~~~~:........o....;....,..~~...TTT.TT.T...T=TT...TT..........=ppp....o;;;;;o;;||;;;;;o;vvvvvvvvv^              
+..T.TBBBBBT...=.BBBDBBBBBDBB=BBBDBBB.BBBDBB..:~~~~~~~:....;.fffffff....T..:~~;..T..T.TTTT...=...TTT.sssssT...T=.......;;;;;o;;o||;o;;;o;vvvvvovvv^              
+T.T..BBDBB....=============================..:~~~~~~~:.,..,.fffffff........~~;...TTTT.TT....=....TT.sssssss.T.=.......o;;;;;;o;||*******vvvvvvvvv^oo        o   
+.T.T.TT========.BBBBB.BBBBB.=.BBBBB.BBBBB....:~~~~~~~:..o...fffffff.T..,,..~~..,..TTT.......=....T.Tsssssss..T=.......;;;;;;;o;||*******vvvovvvvv^              
+TT.T.T...TT.TTT,BBBBB.BBBBB.=.BBBBB.BBBBB.....:~~~~~:o......fffffff....,..:~~....T..T..T....=....TTTssssTsss..=..T...s;;^^;^^^^||*^^^^o*vvvvvLvvv^             o
+.T.TT.T...TTTT..BBBBB.BBBBB.=.BBBBB.BBBBB......:~~~:..,...;...............:~~....TT..TT.....=.....T.ssssssss..=....T.s;;^;^^^^^||^^^^^**vovLLLLLv^  o       o   
+.T....T.TT..,...BBDBB.BBDBB.=.BBDBB.BBDBB.......:::......;....T..;...,...;.~~;...TT.TTTT...........TssssTsTs..=.T....so;;;o;;;*||*o*****vvvLLLLLv^   o          
+TTT,.TTT.T.TTT==============================..T....,,....;.offfffff......,.,~~T.TT.TTTT............Tssssoooooo=oooooo.o;;o;;;**||*o***o*vvLLLLLLL^o             
+BBBBB..,......=,............=..............=.......BBBBB....fffffff.;.......~~...TT.TTTT.........TTTssssoococccccccco.;;;;;;;**||**o****vvoLLLLLv^  o    o  o  o
+BBBBB.........=.........BBBBBBBB...........=...,...BBBBB....fffffff......,..~~..TT.T....T.......T...ssssocccccccoccco.;;;;;;;**||o******vvvLLLLLv^              
+BBBBB.........=BBBBBBB..BBBBBBBB.,BBBBBBB..=BBBBBBBBBBBB....fffffff.;......:~~...T.T.TTTT.TT..TTTT.T...Toccocococccco.;;;;;;**o||*******vvvvvLovv^   oo   o     
+BBBBB,BBBBBB..=BBBBBBB..BBBBBBBB..BBBBBBB..=BBBBBBBBBBBB...,...;.......;.....~~,..TTTT.T.T.T.T..TT......occccccccccoo.;;;;;;***||****o**vvvvvvvvv^              
+BBBBB.BBBBBB..=BBBBBBB..BBBBBBBB..BBBBBBB..=BBBBBBBBBBBB...T.......,....o,.,.~~...TT.TTT.TTT..T.........occccccccccco.;;;;;;;**||****oo*vvvvvvvvv^  oo          
+BBBBB.BBBBBB,.=BBBBBBB..BBBBBBBB..BBBBBBB..=BBBBBBBBBBBB..........T.......o.:~~.TTTT..TT.T.T.T.T..T.....occcccccccoco.;;;;;;;*o||***oo**vvvvvvvvv^  o           
+BBDBB.BBBDBB..=BBBDBBB..BBBBDBBB..BBBDBBB..=BBBDBBBBBDBBT;....T.,.,......T...~~.T......T.T.TTTT.T.T..T.Toccccccccccco.o;;;;;;*o||*oo****vovvovvvv^   oo         
+.,=====================================================...T...,.....,..,..T.:~~.T.......TTT.TTTTTT......occcccccoccco.oo^^^^^^^||*^^^^**vvvvvvvvv^           o  
+..............=.............=.............=,.............;T..;.........,...;.~~.T.......TTTT.TTTT.T....TocccccccccccoT;;^^^^^^*||^^^^^**vvvvvvvvv^          o o 
+..............=.BBBBB,BBBBB.=.............=,..,.............,........;......:~~;...........TTT.TTTT.....oocccccccccoo.;;;;;;;;;||*******vvLvvvvvv^            o 
+..,.,.,.......=.BBBBB.BBBBB.=....,........=..........,....T..;..........T...:~~.T............T.TTT.TssTToocccccccccco.;;;;;;o;;||*****o*vLLLvvvvv^  ooo         
+.....,........=.BBBBB.BBBBB.=......,......=..........,...........o......,....~~.........TTT..T.TTTT.ssssoccccccccccco.;;;;;;;;;||o***o**LLLLLvovv^ o            
+..,.....,.....=.BBDBB.BBDBB.=..,,.........=.,...........,..............T....:~~.TT......TTT..TTT.TT.ssssoccocccccccoos;;;o;;;;;||o***o**vLLLvvvvv^ o          o 
+..............=============================.,,.......,.........,......;.....:~~..TT...TTTTTT...T.TTTssssocccccccccocos;;;;;o;;;||;******vvLvovvvo^o             
+,.......,......,............=..,.BBBBBB..............,.....o.............;..:~~...TT.TT..TTTTT.T.T.Tssssocccccccccccos;;;;;o;;;||;o***o*vvvvovovv^              
+...........,....BBBBB.BBBBB,=....BBBBBB.....................o.......,.T,..;T.~~.TT.TTTTT..TTTTT.TT.Tssssoooooooooooooso;;;o;;;;||;;**oo*vvvvvvvvv^         o    
+...,............BBBBB.BBBBB.=....BBBBBB.....,............,...;......;........~~..T..TTTTTT..TTT..TTTssTssss...T.T.....;;;;;o;;;||;oo****ovvvvvvov^              
+................BBBBB.BBBBB.=....BBBBBB..........,.........T,o.,..o........,.~~.T.TT.TT.T.T..TTTTTT.ssTsTs......T.....;;o;;;;;;||;;***o*vvvvvvvvv^o o     o  oo 
+..............,.BBDBB.BBDBB.=....BBBDBB,.......................;............~~...T.TTTTTTTTTTT.TTT.T.ssss..........T..;;^;^^^^^||^^^^***vvvvvvvvv^      o       
+.............,=============================........,....;T..,........;..,...~~;,..T..TT.T..T..TTTTTT....T......ppp.T..;;;^^;;;^||^^****ovovvvvvvv^o     oo  o   
+T.TTTTT.TTTTT.TTTT.TTTTTT.TTT.TTTTTT.TTTTTTTTTTTTTTTTT.T.......,.,..To.T...:~~...T.....T..TTT.T.T.TTT........ppppppp..;o;;;;o;;||;;**o**vvvvvvvvv^              
+T.T.TT.,TTTTTTTTTTTTTT.TTTTTTTTTT.TTTTTT.TTTTTTTTTTTTTT..T,....,.......,..;.~~..TT.T.TTT..TT.TT...TT.....T..TppTpppp..o;;;;;o;;||;;**o**vvvvvvvvv^ o            
+TTTT...T.TTTTTTTTTT.TTTTTT,TTTTT.TTTTT.,TT..TT.TTTT.T.TT.T,,.;.;....,...;..~~..oT..T..T.TT..TT..T..T....T..Tppppppppp.;;;;o;;o;||;******vvvvvvvvv^   o   o    o 
+TTTTTTTTTTTTTT.TTTTT,.TTTTTTTTT..TTTTT.TTTTTTT.T.T..TTTT.;,........,...,..:~~...TTT..TTTT...TT.T..TT..T...T.ppppppppp.;oo;;;;;;||;******vvvvvvvvv^            o 
+T.TTTTTTTTTTTTTTTTTTTTTTTTTT.TT...TTTTTTTTTT.T.TTT..T.TT...,.T,......,..,,.~~..,TTTT...T.TTTTT.TT.TT......TT.ppppTpp..;;;;;;;;;||****o**vvvvvvvvv^              
+TTT.T.TTTT.TTTTTTTTTT.TTTT..T.TT..TTT.,T..T..TTT.TTTTT.T..,................~~T..T.T.TTTTT.TT...TTTTTTT.T.T....ppppp...o;;;;;o;;||****o**vvvvovvov^  o   o       
+TTTTTTTT.TTTTTTTTTT.TTTTTTTTTTTTTT..TTTTTTTT.TTTTT.TTTTT;.....;,...,...,..,~~.....T...TTTTTTT.TT..T.............p.....o;o;o;;;;||*******vovvvvvvv^    o         

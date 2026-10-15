@@ -47,7 +47,7 @@ const Render = {
     // entities
     const list = [];
     for (const h of G.humans) { if (!h.alive || h.inside) continue; const x = lerp(h.px, h.x, alpha), y = lerp(h.py, h.y, alpha); if (x * TS - cx < -20 || x * TS - cx > 660 || y * TS - cy < -20 || y * TS - cy > 380) continue; list.push({ e: h, x, y, k: 0 }); }
-    for (const m of G.monsters) { if (!m.alive || m.dormant) continue; const x = lerp(m.px, m.x, alpha), y = lerp(m.py, m.y, alpha); if (x * TS - cx < -40 || x * TS - cx > 680 || y * TS - cy < -40 || y * TS - cy > 400) continue; list.push({ e: m, x, y, k: 1 }); }
+    for (const m of G.monsters) { if (!m.alive || m.dormant || m.lord) continue; const x = lerp(m.px, m.x, alpha), y = lerp(m.py, m.y, alpha); if (x * TS - cx < -40 || x * TS - cx > 680 || y * TS - cy < -40 || y * TS - cy > 400) continue; list.push({ e: m, x, y, k: 1 }); }
     list.sort((a, b) => a.y - b.y);
     const prayers = {}; G.prayers.forEach(p => { if (p.state === 'open') prayers[p.hid] = p; });
     // prayer pillars (behind)
@@ -112,7 +112,7 @@ const Mini = {
   base: null,
   build() {
     const cv = mkCanvas(MW, MH), c = cv.getContext('2d');
-    const col = { [T.GRASS]: '#58a840', [T.FLOWER]: '#58a840', [T.PATH]: '#c8aa78', [T.DOOR]: '#c8aa78', [T.PLAZA]: '#a8a8b0', [T.WATER]: '#2f6ec8', [T.SAND]: '#e0cc90', [T.FIELD]: '#8a6038', [T.DARK]: '#3a3446', [T.TREE]: '#2f6a2a', [T.ROCK]: '#7a7a86', [T.BLD]: '#b84a3a', [T.FENCE]: '#8a6a3a', [T.CLIFF]: '#6c6034', [T.LEDGE]: '#2b6428' };
+    const col = { [T.GRASS]: '#58a840', [T.FLOWER]: '#58a840', [T.PATH]: '#c8aa78', [T.DOOR]: '#c8aa78', [T.PLAZA]: '#a8a8b0', [T.WATER]: '#2f6ec8', [T.SAND]: '#e0cc90', [T.FIELD]: '#8a6038', [T.DARK]: '#3a3446', [T.TREE]: '#2f6a2a', [T.ROCK]: '#7a7a86', [T.BLD]: '#b84a3a', [T.FENCE]: '#8a6a3a', [T.CLIFF]: '#6c6034', [T.LEDGE]: '#2b6428', [T.SWAMP]: '#3e7448', [T.POISON]: '#6a3a8a', [T.SNOW]: '#dce6f0', [T.ICE]: '#9ac4e8', [T.LAVA]: '#e04818', [T.VOLC]: '#54342c', [T.CAVE]: '#443c4a', [T.CHASM]: '#0a0810', [T.WILD]: '#7a9a46', [T.BRIDGE]: '#a07040' };
     for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) fr(c, col[W.tiles[y * MW + x]] || '#000', x, y, 1, 1);
     W.blds.forEach(b => { const k = b.kind === 'castle' ? '#7a30a0' : b.kind === 'guild' ? '#e8c030' : b.kind === 'church' ? '#fff' : '#b84a3a'; fr(c, k, b.x, b.y, b.w, b.h); });
     this.base = cv;
@@ -125,7 +125,7 @@ const Mini = {
     for (const m of G.monsters) if (m.alive && !m.dormant) { c.fillStyle = m.boss ? '#d040ff' : m.cad >= 0 ? '#ff80c0' : '#ff4040'; const s = m.boss || m.cad >= 0 ? 4 : 2; c.fillRect(m.x * sx - s / 2 + 1, m.y * sy - s / 2 + 1, s, s); }
     G.prayers.forEach(p => { if (p.state === 'open') { const h = hById(p.hid); if (h) { c.fillStyle = '#ffe060'; c.fillRect(h.x * sx - 1, h.y * sy - 1, 4, 4); } } });
     c.strokeStyle = '#fff'; c.lineWidth = 1; c.strokeRect(camx / TS * sx + 0.5, camy / TS * sy + 0.5, 640 / TS * sx, 360 / TS * sy);
-    if (!G.awakened) { c.fillStyle = '#7a30a0'; c.fillRect(60 * sx, 13 * sy, 3, 3); }
+    c.fillStyle = G.awakened ? '#ff40ff' : '#7a30a0'; c.fillRect(BOSS.home.x * sx - 1, (BOSS.home.y - 6) * sy, 4, 4);
   },
 };
 

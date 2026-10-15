@@ -117,8 +117,8 @@ const UI = {
         h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Screens.helpMenu() }, '?'),
         h('span', { class: 'btn', style: 'padding:0 7px;font-size:13px', onclick: () => Screens.pause() }, '☰')));
     // --- left: minimap + tutorial
-    E.miniWin = h('div', { class: 'win', style: 'left:8px;top:64px;width:214px;height:146px;padding:3px' }, E.miniCv = h('canvas', { width: 192, height: 120, style: 'display:block;margin:4px auto 0;cursor:pointer' }));
-    E.miniCv.addEventListener('mousedown', ev => { const r = E.miniCv.getBoundingClientRect(); const sc = Scale.s; const x = (ev.clientX - r.left) / sc / 3, y = (ev.clientY - r.top) / sc / 3; Render.centerOn(x, y); Game.follow = 0; });
+    E.miniWin = h('div', { class: 'win', style: 'left:8px;top:64px;width:214px;height:146px;padding:3px' }, E.miniCv = h('canvas', { width: 200, height: 80, style: 'display:block;margin:4px auto 0;cursor:pointer' }));
+    E.miniCv.addEventListener('mousedown', ev => { const r = E.miniCv.getBoundingClientRect(); const sc = Scale.s; const x = (ev.clientX - r.left) / sc / (200 / MW), y = (ev.clientY - r.top) / sc / (80 / MH); Render.centerOn(x, y); Game.follow = 0; });
     E.miniWin.appendChild(h('div', { class: 'sm', style: 'position:absolute;left:8px;top:-2px;display:none' }, t('minimap')));
     E.goalWin = UI.buildGoal();
     E.selWin = h('div', { class: 'win glass', style: 'left:8px;top:350px;width:300px;display:none;padding:5px 8px' });

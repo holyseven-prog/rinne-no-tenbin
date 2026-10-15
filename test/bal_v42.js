@@ -1,0 +1,4 @@
+const fs = require('fs'), vm = require('vm'); vm.runInThisContext(fs.readFileSync(__dirname + '/sim_bundle.js', 'utf8'), { filename: 'sim' });
+const R = globalThis.__RT; for (let s = 1; s <= 1; s++) { R.newGame({ seed: s * 7919 + 11, god: 'mercy', lang: 'ja' }); R.policy('basic'); const g = R.G(); let line = [], q0 = 0, k0 = 0;
+  for (let y = 0; y < 6; y++) { for (let i = 0; i < TICK_YEAR && !g.ending; i++) R.step(1); const q = g.events.filter(e => e.type === 'quest_done' || e.type === 'quest_end').length; line.push('y' + (y + 1) + ' eco ' + JSON.stringify(Object.values(g.eco).map(v => Math.round(typeof v === 'object' ? (v.n ?? v.E ?? 0) : v))) + ' advs ' + g.humans.filter(h => isAdv(h)).length + '/' + g.monsters.length + ' bal ' + Math.round(g.balance) + ' kills ' + ((g.stats.kills || 0) - k0) + ' quests ' + (q - q0)); q0 = q; k0 = g.stats.kills || 0; }
+  console.log(s, line.join(' | ')); }

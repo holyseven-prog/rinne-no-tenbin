@@ -1,0 +1,7 @@
+const fs = require('fs'), vm = require('vm'); vm.runInThisContext(fs.readFileSync(__dirname + '/sim_bundle.js', 'utf8'), { filename: 'sim' });
+const R = globalThis.__RT; function train(g) { if (dayIdx(g.tick) % 7) return; for (const id of ['artifact', 'skill', 'mark', 'temple', 'growth']) if (trainAvailable(id) && g.faith >= trainCost(id) + Math.max(60, g.faithMax * 0.4)) { doTrain(id); return; } }
+for (let s = 1; s <= 8; s++) { R.newGame({ seed: s * 7919 + 11, god: ['mercy', 'order', 'chaos'][s % 3], lang: 'ja' }); R.policy('basic'); const g = R.G(); let done = false, killed = null;
+  for (let i = 0; i < 20000 && !g.ending; i++) { R.step(1); const y = (g.tick - START_TICK) / TICK_YEAR; if (g.tick % 144) continue; if (y >= 2) train(g);
+    if (done || !expParty() || expMissing().length) continue; const P = expParty();
+    if (y >= 4 && y < 6.5 && floorWin(P, 4, 4) >= 0.5) { g.expTarget = 4; g.expRisk = 0.3; g.faith = Math.max(g.faith, 30); if (startExpedition().ok) { const k0 = g.castle.kingGen; autoExpedition(4); if (g.castle.kingGen > k0) killed = y.toFixed(1); done = true; } } }
+  const res = (g.assaultLog || g.events.filter(e => e.type === 'assault_end').map(e => (e.payload.a || '') + ':' + (e.payload.grade || e.payload.outcome || ''))); console.log(s, 'killed', killed, 'ending', g.ending && g.ending.kind, ((g.ending && g.ending.t - START_TICK) / TICK_YEAR).toFixed(1), 'anger', Math.round(g.castle.anger), 'bal', Math.round(g.balance), JSON.stringify(res).slice(0, 200)); }

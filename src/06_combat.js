@@ -74,7 +74,7 @@ function hideNearest(h) {
   h.path = p; h.act = { k: 'hide', tx: best.door.x, ty: best.door.y, range: 0, bld: best.id, st: 0, n: 0, dur: 8, t0: G.tick };
 }
 function humanAttack(h, tg, st) {
-  let atk = st.atk * rrange(0.85, 1.15);
+  let atk = st.atk * rrange(0.85, 1.15) * gearMul(h); if (h.named && h.named.w && ((h.named.w.trait === 'wolf' && /wolf/.test(tg.type || '')) || (h.named.w.trait === 'dragon' && /wyrm|dragon/.test(tg.type || '')))) atk *= 1.5;
   let crit = h.job === 'thief' ? 0.2 : 0.05; let cm = 1;
   if (rchance(crit)) cm = 1.7;
   if (h.mist && h.mist > G.tick) atk *= 0.75;
@@ -83,7 +83,7 @@ function humanAttack(h, tg, st) {
   damage(tg, dmg, h, cm > 1);
 }
 function monsterAttack(m, tg, mul) {
-  let atk = m.atk * rrange(0.85, 1.15) * (mul || 1);
+  let atk = m.atk * rrange(0.85, 1.15) * (mul || 1) * (G.eco && m.x >= VIL_X1 && !m.boss && !(m.cad >= 0) ? 0.7 : 1); // V4.2: field hunting is safer than village defence
   const st = hStats(tg);
   const dmg = Math.max(1, Math.round(atk - st.def * 0.5));
   fxAdd({ t: 'atk', x: m.x, y: m.y, tx: tg.x, ty: tg.y });
@@ -95,10 +95,11 @@ function damage(b, dmg, a, crit) {
   fxAdd({ t: 'dmg', x: b.x, y: b.y, v: dmg, crit: !!crit, human: !!b.job });
   if (b.job) { b.needs.safety = 100; if (!b.tgt && a && !a.job && canFight(b)) { b.tgt = a.id; } }
   else if (a && !b.tgt) { b.tgt = a.id; }
+  if (b.hp <= 0 && b.job && b.rare === 'sageStone' && !b.sageUsed) { b.sageUsed = 1; b.hp = Math.max(1, b.maxHp * 0.3); logEvent('sage_saved', [b.id], {}, ['growth'], 0.6, 0.7, b); }
   if (b.hp <= 0) { if (b.job) killHuman(b, 'battle', a); else killMonster(b, a); }
 }
 function killMonster(m, by) {
-  if (!m.alive) return; m.alive = false; m.hp = 0; G.stats.kills++; G.dayKills++;
+  if (!m.alive) return; m.alive = false; m.hp = 0; G.stats.kills++; G.dayKills++; onFieldKill(m, by);
   const tier = m.tier;
   if (!m.boss && G.killBal < 0.45) { const g = 0.02 * Math.min(tier, 4); G.balance = clamp(G.balance + g, -100, 100); G.killBal += g; }
   fxAdd({ t: 'poof', x: m.x, y: m.y });
@@ -119,7 +120,7 @@ function killMonster(m, by) {
   if (m.mode === 'raid') G.stats.raidKills = (G.stats.raidKills || 0) + 1;
 }
 function killHuman(h, cause, by) {
-  if (!h.alive) return; h.alive = false; h.hp = 0; h.cause = cause; h.diedAt = G.tick; G.stats.deaths++;
+  if (!h.alive) return; h.alive = false; h.hp = 0; h.cause = cause; h.diedAt = G.tick; G.stats.deaths++; inheritGear(h);
   if (h.party) leaveParty(h);
   h.act = null; h.path = []; h.tgt = 0; h.inside = 0;
   const s = soulOf(h); if (s) {
@@ -203,7 +204,7 @@ function tierForSpawn() {
 }
 function wildCount() { let c = 0; for (const m of G.monsters) if (m.alive && !m.boss && m.cad < 0 && m.mode !== 'raid') c++; return c; }
 function spawnTick() {
-  if (G.tick % 8 === 0 && wildCount() < monsterCap() && (G.forceMonsters || true)) { spawnMonster(tierForSpawn()); }
+  if (!G.eco && G.tick % 8 === 0 && wildCount() < monsterCap()) { spawnMonster(tierForSpawn()); } // V4.2: zone ecology spawns instead
   // cleanup the dead + old wild
   if (G.tick % 144 === 0) {
     G.monsters = G.monsters.filter(m => m.alive || m.boss || m.cad >= 0);
@@ -229,26 +230,27 @@ function spawnRaid(n, tier, withCad) {
 const QTYPES = ['hunt', 'hunt', 'gather', 'escort', 'search'];
 function mkQuest(type, tier) {
   const yr = yearOf(G.tick);
-  const lo = tier === 1 ? 44 : tier === 2 ? 46 : 48, hi = tier === 1 ? 47 : tier === 2 ? 50 : 52;
-  let p = randWalkableIn(lo, 5, hi, 38);
-  const q = { id: G.nid++, type, tier, day: dayIdx(G.tick), state: 'open', need: type === 'hunt' ? rint(3, 4) + tier : 0, got: 0, tx: p.x, ty: p.y, reward: 0, exp: 0, party: 0, t: G.tick, mon: rpick(MON_BY_TIER[Math.min(3, tier)]) };
+  const z = ZONES[Math.min(ZONES.length - 1, tier - 1)]; let p = randWalkableIn(z.x0 + 1, 6, Math.min(z.x1 - 1, z.x0 + 12), MH - 8); // V4.2: quests go to the zone of their tier
+  const q = { id: G.nid++, type, tier, day: dayIdx(G.tick), state: 'open', need: type === 'hunt' ? rint(3, 4) + tier : 0, got: 0, tx: p.x, ty: p.y, reward: 0, exp: 0, party: 0, t: G.tick, mon: rpick(ZONE_MONS[z.id] || MON_BY_TIER[Math.min(3, tier)]), zone: z.id };
   q.reward = Math.round((18 + 10 * tier * tier + (q.need || 4) * 4) * (1 + 0.04 * (yr - 1)));
   q.exp = 8 + tier * 8;
   G.quests.push(q); G.qidx[q.id] = q; return q;
 }
 function dailyQuests() {
+  if (G.noHunt) return; // test switch: nobody hunts in the field
   const open = G.quests.filter(q => q.state === 'open' && q.type !== 'boss').length;
   const want = G.awakened ? TUNE.warQuests : 2 + (yearOf(G.tick) >= 3 ? 1 : 0);
   for (let i = open; i < want; i++) {
     const yr = yearOf(G.tick); let tier = 1 + (yr >= 4 ? 1 : 0) + (yr >= 6 ? 1 : 0); if (G.awakened) tier = 3; if (rchance(0.3) && tier > 1) tier--;
+    { const top = G.humans.filter(o => o.alive && isAdv(o)).map(o => o.lvl).sort((a, b) => b - a).slice(0, 3); const lv = top.length ? top.reduce((a, b) => a + b, 0) / top.length : 1; if (lv >= 15 && rchance(0.2)) tier = 5; else if (lv >= 10 && rchance(0.25)) tier = Math.max(tier, 4); } // strong parties go deeper
     mkQuest(rpick(QTYPES), tier);
   }
   // expire old open quests
   G.quests = G.quests.filter(q => !(q.state === 'open' && G.tick - q.t > 6 * TICK_DAY) && !((q.state === 'done' || q.state === 'fail') && G.tick - q.t > 4 * TICK_DAY));
   G.qidx = {}; G.quests.forEach(q => G.qidx[q.id] = q);
 }
-function advPower(h) { const st = hStats(h); const J = JOBS[h.job]; return Math.sqrt(st.hp * st.atk) * (h.hp / h.maxHp + 0.2); }
-function freeAdvs() { return G.humans.filter(o => o.alive && isAdv(o) && !o.party && o.hp >= o.maxHp * 0.62 && !(o.act && o.act.k === 'sleep' && hourOf(G.tick) < 5) && !o.flee); }
+function advPower(h) { const st = hStats(h); const J = JOBS[h.job]; return Math.sqrt(st.hp * st.atk) * (h.hp / h.maxHp + 0.2) * (typeof gearMul === 'function' ? gearMul(h) : 1); }
+function freeAdvs() { return G.humans.filter(o => o.alive && isAdv(o) && !o.party && !o.away && o.hp >= o.maxHp * 0.62 && !(o.act && o.act.k === 'sleep' && hourOf(G.tick) < 5) && !o.flee); }
 function partyOk(tier, group) {
   const avg = group.reduce((a, o) => a + o.lvl + o.gear * 0.7, 0) / group.length;
   if (tier === 1) return avg >= 1.5 || group.length >= 2;

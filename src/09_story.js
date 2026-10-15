@@ -106,6 +106,8 @@ function sceneFor(ev) {
     case 'assault_omen': return p.step === 3 && (p.a === 'dragon' || p.a === 'king') ? 'omen' : null;
     case 'assault_start': return p.a === 'dragon' || p.a === 'king' ? 'eve' : null;
     case 'assault_end': return p.win ? 'battle' : 'siege';
+    case 'exp_depart': return 'depart'; case 'exp_end': return p.how === 'lost' ? 'defeat' : 'return'; case 'new_king': return 'omen'; case 'king_slain_exp': return 'revelation'; case 'captive_lost': return 'funeral'; case 'captive_saved': return 'reunion'; case 'divine_train': return 'trial';
+    case 'lord_slain': return 'promotion'; case 'named_gear': return 'g_gear'; case 'inherit_gear': return 'g_gear';
     case 'festival': return 'family_day'; case 'hero_born': return 'promotion'; case 'dragon_pact': return p.ok ? 'answered' : null;
     case 'ending_doom': return 'finale_doom'; case 'ending_godleft': return 'finale_godleft'; case 'ending_stagnant': return 'finale_stagnant';
   }

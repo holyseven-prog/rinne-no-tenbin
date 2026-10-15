@@ -1,7 +1,7 @@
 /* ---- 01_util.js ---- */
 'use strict';
 /* ================= util / constants ================= */
-const TICK_DAY = 144, DAYS_YEAR = 12, TICK_YEAR = 1728, MW = 64, MH = 40, TS = 16, START_TICK = 54; // V4.1-A7: the world starts at 9:00 (bright)
+const TICK_DAY = 144, DAYS_YEAR = 12, TICK_YEAR = 1728, MW = 160, MH = 64, TS = 16, START_TICK = 54; // V4.1-A7: the world starts at 9:00 (bright)
 const BOSS_BASE_TICK = 6 * TICK_YEAR;
 let G = null, LANG = 'ja';
 const TUNE = Object.assign({ bossHp: 1650, bossAtk: 38, bossDef: 22, bossGrow: 1.08, waveBase: 4, waveGrow: 2.2, waveInt: 8, waveDec: 1.1, drift: 1.2, cadMul: 1, pen: 1, disMul: 0, townDrain: 0.55, expDelay: 6, expRatio: 1.1, polRes: 60, warQuests: 0, scorch: 0.28 }, (typeof globalThis !== 'undefined' && globalThis.__TUNE) || {});
@@ -108,11 +108,11 @@ const MONS = {
 };
 const MON_BY_TIER = { 1: ['mush', 'bat'], 2: ['turtle', 'goblin'], 3: ['skel', 'wolf'] };
 const CADRES = [
-  { key: 'verna', n: ['霧の公爵ヴェルナ', '霧公爵 維爾娜'], hp: 380, atk: 19, def: 8, spd: 1.0, range: 4, home: { x: 50, y: 29 } },
-  { key: 'garum', n: ['骨の将軍ガルム', '骨將軍 加爾姆'], hp: 460, atk: 22, def: 11, spd: 0.9, range: 1.5, home: { x: 52, y: 11 } },
-  { key: 'serene', n: ['影の女王セレネ', '影之女王 瑟蕾娜'], hp: 340, atk: 21, def: 7, spd: 1.3, range: 1.5, home: { x: 46, y: 35 } },
+  { key: 'verna', n: ['霧の公爵ヴェルナ', '霧公爵 維爾娜'], hp: 380, atk: 19, def: 8, spd: 1.0, range: 4, home: { x: 150, y: 30 } },
+  { key: 'garum', n: ['骨の将軍ガルム', '骨將軍 加爾姆'], hp: 460, atk: 22, def: 11, spd: 0.9, range: 1.5, home: { x: 154, y: 30 } },
+  { key: 'serene', n: ['影の女王セレネ', '影之女王 瑟蕾娜'], hp: 340, atk: 21, def: 7, spd: 1.3, range: 1.5, home: { x: 157, y: 28 } },
 ];
-const BOSS = { key: 'noctal', n: ['黒冠の王ノクタール', '黑冠之王 諾克塔爾'], hp: TUNE.bossHp, atk: TUNE.bossAtk, def: TUNE.bossDef, spd: 1.0, range: 1.8, home: { x: 60, y: 17 } };
+const BOSS = { key: 'noctal', n: ['黒冠の王ノクタール', '黑冠之王 諾克塔爾'], hp: TUNE.bossHp, atk: TUNE.bossAtk, def: TUNE.bossDef, spd: 1.0, range: 1.8, home: { x: 152, y: 27 } };
 
 const POWERS = [
   { id: 'oracle', cost: 6, n: ['神託', '神諭'], d: ['住人に夢でお告げ。行動の傾向を一時的に変える', '以夢境向居民降下神諭，暫時改變其行動傾向'] },
@@ -150,16 +150,21 @@ const PLACES = { // key -> names
   guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], fountain: ['噴水', '噴泉'], well: ['井戸', '水井'], shop: ['武器屋', '武器店'], armor: ['防具屋', '防具店'],
   apothecary: ['薬屋', '藥鋪'], inn: ['宿屋', '旅店'], house: ['民家', '民宅'], mill: ['風車小屋', '風車小屋'], hut: ['農家', '農舍'], castle: ['魔王城', '魔王城'],
   plaza: ['広場', '廣場'], lake: ['湖のほとり', '湖畔'], wood: ['森の道', '森林小徑'],
+  plains: ['東の平原', '東方平原'], forest: ['森', '森林'], swamp: ['沼と洞窟', '沼澤與洞窟'], mountain: ['山岳', '山岳'], nest: ['竜の巣', '龍之巢'],
+  manor: ['領主館', '領主館'], market: ['市場', '市場'], library: ['図書館', '圖書館'], itemshop: ['道具屋', '道具店'], barracks: ['兵舎', '兵舍'], watchtower: ['見張り塔', '瞭望塔'], cemetery: ['墓地', '墓地'],
 };
 
 /* ---- 03_world.js ---- */
 /* ================= world / map / pathfinding ================= */
-const T = { GRASS: 0, PATH: 1, WATER: 2, TREE: 3, ROCK: 4, FENCE: 5, FLOWER: 6, BRIDGE: 7, FIELD: 8, DARK: 9, BLD: 10, PLAZA: 11, DOOR: 12, SAND: 13, CLIFF: 14, LEDGE: 15 };
-const BLOCK = new Uint8Array(16); BLOCK[T.WATER] = 1; BLOCK[T.TREE] = 1; BLOCK[T.ROCK] = 1; BLOCK[T.FENCE] = 1; BLOCK[T.BLD] = 1; BLOCK[T.CLIFF] = 1; BLOCK[T.LEDGE] = 1;
-const TOWN_X0 = 16, TOWN_X1 = 42, FIELD_X0 = 43, PLATEAU_X0 = 56;
+const T = { GRASS: 0, PATH: 1, WATER: 2, TREE: 3, ROCK: 4, FENCE: 5, FLOWER: 6, BRIDGE: 7, FIELD: 8, DARK: 9, BLD: 10, PLAZA: 11, DOOR: 12, SAND: 13, CLIFF: 14, LEDGE: 15, SWAMP: 16, POISON: 17, SNOW: 18, LAVA: 19, VOLC: 20, CAVE: 21, CHASM: 22, ICE: 23, WILD: 24 };
+const BLOCK = new Uint8Array(32); BLOCK[T.LAVA] = 1; BLOCK[T.CHASM] = 1; BLOCK[T.WATER] = 1; BLOCK[T.TREE] = 1; BLOCK[T.ROCK] = 1; BLOCK[T.FENCE] = 1; BLOCK[T.BLD] = 1; BLOCK[T.CLIFF] = 1; BLOCK[T.LEDGE] = 1;
+const TOWN_X0 = 16, TOWN_X1 = 42, FIELD_X0 = 43, VIL_X1 = 55, PLATEAU_X0 = 146;
+/* V4.2 W0: field zones east of the village (x ranges), each with a suggested level */
+const ZONES = [{ id: 'plains', x0: 56, x1: 79, lv: [1, 3], star: 1 }, { id: 'forest', x0: 80, x1: 99, lv: [3, 5], star: 2 }, { id: 'swamp', x0: 100, x1: 117, lv: [5, 7], star: 3 }, { id: 'mountain', x0: 118, x1: 135, lv: [7, 10], star: 4 }, { id: 'nest', x0: 136, x1: 145, lv: [10, 99], star: 5 }];
+function zoneAt(x) { return ZONES.find(z => x >= z.x0 && x <= z.x1) || null; }
 const PLAZA = { x: 28, y: 21 };
 
-function zoneOf(x) { return x < TOWN_X0 ? 'farm' : x <= TOWN_X1 ? 'town' : x < PLATEAU_X0 ? 'field' : 'plateau'; }
+function zoneOf(x) { if (x < TOWN_X0) return 'farm'; if (x <= TOWN_X1) return 'town'; if (x <= VIL_X1) return 'field'; const z = zoneAt(x); return z ? z.id : 'plateau'; }
 
 function buildWorld() {
   const tiles = new Uint8Array(MW * MH);
@@ -173,14 +178,39 @@ function buildWorld() {
   // lake
   for (let y = 25; y <= 35; y++) for (let x = 45; x <= 53; x++) { const dx = (x - 49) / 3.6, dy = (y - 30) / 4.2; if (dx * dx + dy * dy <= 1) set(x, y, T.WATER); }
   for (let y = 24; y <= 36; y++) for (let x = 44; x <= 54; x++) { if (get(x, y) !== T.WATER) { const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(d => get(x + d[0], y + d[1]) === T.WATER); if (n) set(x, y, T.SAND); } }
-  // trees: borders and field
-  for (let x = 14; x <= 44; x++) { if (rg.chance(0.5)) set(x, 4, T.TREE); for (let y = 37; y < MH; y++) if (rg.chance(0.75)) set(x, y, T.TREE); }
-  for (let x = FIELD_X0; x < PLATEAU_X0; x++) for (let y = 0; y < MH; y++) { if (get(x, y) === T.GRASS || get(x, y) === T.FLOWER) { if (y >= 21 && y <= 25) continue; if (rg.chance(0.11)) set(x, y, T.TREE); else if (rg.chance(0.02)) set(x, y, T.ROCK); } }
-  for (let x = PLATEAU_X0; x < MW; x++) for (let y = 0; y < MH; y++) { if (rg.chance(0.12) && !(y >= 9 && y <= 24 && x >= 56)) set(x, y, T.ROCK); }
-  for (let x = 0; x < 15; x++) for (let y = 29; y < MH; y++) if (rg.chance(0.55)) set(x, y, T.TREE);
+  // ---- village edges (original coordinates kept) ----
+  for (let x = 14; x <= 44; x++) { if (rg.chance(0.5)) set(x, 4, T.TREE); }
+  for (let x = FIELD_X0; x <= VIL_X1; x++) for (let y = 0; y < 37; y++) { if (get(x, y) === T.GRASS || get(x, y) === T.FLOWER) { if (y >= 21 && y <= 25) continue; if (rg.chance(0.09)) set(x, y, T.TREE); else if (rg.chance(0.02)) set(x, y, T.ROCK); } }
+  for (let x = 0; x < 15; x++) for (let y = 33; y < 37; y++) if (rg.chance(0.5)) set(x, y, T.TREE);
+  for (let x = 0; x <= VIL_X1; x++) for (let y = 57; y < MH; y++) if (rg.chance(0.8)) set(x, y, T.TREE); // southern tree belt
+  // ---- field zones (west -> east) ----
+  const rect = (x0, y0, x1, y1, v, p) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (!p || rg.chance(p)) set(x, y, v); };
+  // plains: open grass, flowers, a few trees/rocks, farm plots, a river with a bridge
+  for (let y = 0; y < MH; y++) for (let x = 56; x <= 79; x++) { const r = rg.next(); set(x, y, r < 0.1 ? T.FLOWER : r < 0.15 ? T.WILD : T.GRASS); if (rg.chance(0.04)) set(x, y, T.TREE); else if (rg.chance(0.015)) set(x, y, T.ROCK); }
+  rect(60, 30, 66, 33, T.FIELD); rect(60, 36, 66, 39, T.FIELD);
+  for (let y = 0; y < MH; y++) { const rx = 76 + Math.round(Math.sin(y / 6) * 1.5); set(rx, y, T.WATER); set(rx + 1, y, T.WATER); if (rg.chance(0.4)) set(rx - 1, y, T.SAND); }
+  // forest: dense trees with paths and clearings
+  for (let y = 0; y < MH; y++) for (let x = 80; x <= 99; x++) { set(x, y, rg.chance(0.62) ? T.TREE : T.GRASS); }
+  [[86, 14, 4], [92, 34, 5], [84, 46, 4], [95, 10, 3]].forEach(([cx, cy, r]) => { for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r) set(x, y, T.GRASS); });
+  // swamp & caves: wetland, poison bog, a cave mouth with rock walls and cave floor
+  for (let y = 0; y < MH; y++) for (let x = 100; x <= 117; x++) { const n = Math.sin(x / 3.1) + Math.cos(y / 2.7); set(x, y, n > 0.8 ? T.SWAMP : n < -1.2 ? T.POISON : T.GRASS); if (rg.chance(0.08)) set(x, y, T.TREE); }
+  for (let y = 36; y <= 52; y++) for (let x = 104; x <= 116; x++) { const edge = x === 104 || x === 116 || y === 36 || y === 52; set(x, y, edge ? T.ROCK : T.CAVE); if (!edge && rg.chance(0.07)) set(x, y, T.ROCK); }
+  for (let y = 23; y <= 36; y++) set(110, y, T.CAVE); set(110, 36, T.CAVE);
+  // mountains: rock fields, snow, cliffs, a chasm crossed by a rope bridge
+  for (let y = 0; y < MH; y++) for (let x = 118; x <= 135; x++) { const hgt = (x - 118) / 17 + Math.sin(y / 5) * 0.2; set(x, y, hgt > 0.55 && (y < 18 || y > 30) ? T.SNOW : T.WILD); if (rg.chance(0.12)) set(x, y, T.ROCK); }
+  for (let y = 0; y < MH; y++) { if (y >= 21 && y <= 25) continue; if ((y % 11) < 2) { for (let x = 120; x <= 133; x++) if (rg.chance(0.85)) set(x, y, T.CLIFF); } }
+  for (let y = 0; y < MH; y++) { set(127, y, T.CHASM); set(128, y, T.CHASM); }
+  // dragon nest: volcanic ground, lava pools
+  for (let y = 0; y < MH; y++) for (let x = 136; x <= 145; x++) { set(x, y, T.VOLC); if (rg.chance(0.08)) set(x, y, T.ROCK); }
+  [[139, 12, 2], [141, 36, 3], [138, 48, 2]].forEach(([cx, cy, r]) => { for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r) set(x, y, T.LAVA); });
+  // demon castle land
+  for (let y = 0; y < MH; y++) for (let x = PLATEAU_X0; x < MW; x++) { set(x, y, T.DARK); if (rg.chance(0.1) && !(y >= 14 && y <= 30 && x >= 148)) set(x, y, T.ROCK); }
+  for (let x = 0; x < 15; x++) for (let y = 29; y < 33; y++) if (rg.chance(0.55)) set(x, y, T.TREE);
   // roads
-  const road = (x0, y0, x1, y1) => { for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) { if (get(x, y) !== T.WATER) set(x, y, T.PATH); } };
-  road(0, 23, 60, 23); road(14, 14, 42, 14); road(14, 31, 42, 31); road(15, 36, 42, 36); road(28, 13, 28, 36); road(60, 17, 60, 23); road(14, 14, 14, 31);
+  const road = (x0, y0, x1, y1) => { for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) { const tp = get(x, y); if (tp === T.WATER || tp === T.CHASM) set(x, y, T.BRIDGE); else if (tp !== T.LAVA) set(x, y, T.PATH); } };
+  road(0, 23, 152, 23); road(14, 14, 42, 14); road(14, 31, 42, 31); road(15, 36, 42, 36); road(28, 13, 28, 37); road(14, 14, 14, 31);
+  road(2, 44, 54, 44); road(28, 44, 28, 56); road(14, 50, 42, 50); road(14, 44, 14, 50); road(42, 44, 42, 50); road(43, 36, 43, 44); road(14, 36, 14, 44);
+  road(86, 14, 86, 23); road(92, 23, 92, 34); road(110, 23, 110, 36); road(152, 23, 152, 26); road(14, 56, 42, 56);
   // plaza
   for (let y = 17; y <= 22; y++) for (let x = 25; x <= 31; x++) if (get(x, y) !== T.PATH || (x !== 28 && y !== 23)) set(x, y, T.PLAZA);
   // buildings
@@ -191,16 +221,21 @@ function buildWorld() {
     set(b.door.x, b.door.y, T.DOOR); if (get(b.appr.x, b.appr.y) !== T.PATH && get(b.appr.x, b.appr.y) !== T.PLAZA) set(b.appr.x, b.appr.y, T.PATH);
     blds.push(b); return b;
   };
-  // V3.4: bigger buildings (house 5x4, shops 6x4, guild/tavern/inn 7x5, church 7x6 + spire, castle 7x8)
+  // original town (unchanged positions)
   mk('church', 25, 7, 7, 6, 6);
   mk('house', 16, 9, 5, 4, 0); mk('shop', 32, 9, 6, 4, 1); mk('house', 38, 9, 5, 4, 2);
   mk('guild', 16, 18, 7, 5, 2); mk('tavern', 33, 18, 7, 5, 3);
   mk('smithy', 16, 27, 6, 4, 4); mk('apothecary', 22, 27, 6, 4, 5); mk('inn', 29, 26, 7, 5, 0); mk('armor', 37, 27, 6, 4, 5);
   [[16, 32], [22, 32], [30, 32], [36, 32]].forEach((p, i) => mk('house', p[0], p[1], 5, 4, (i + 1) % 4));
-  mk('hut', 0, 20, 5, 3, 1); mk('hut', 10, 20, 4, 3, 2); mk('mill', 6, 19, 3, 4, 7);
-  mk('castle', 57, 9, 7, 8, 8);
-  // cliffs: north band (2 tiers, ledge on top) and the east wall of the demon plateau with a stair gate on the main road
-  for (let x = 0; x < PLATEAU_X0; x++) { const top = 1; const bot = x < 14 ? 2 : 3 + (hsh01(x, 7) < 0.3 ? 1 : 0); for (let y = 0; y < top; y++) set(x, y, T.LEDGE); for (let y = top; y <= bot; y++) if (get(x, y) !== T.PATH) set(x, y, T.CLIFF); }
+  // farm: thatched huts 5x4, windmill 5x7 (Part B sizes)
+  mk('hut', 0, 19, 5, 4, 1); mk('hut', 8, 19, 5, 4, 2); mk('mill', 5, 25, 5, 7, 7); road(7, 32, 14, 32); road(14, 31, 14, 32);
+  // southern district (V4.2): manor, market, library, item shop, barracks, two watchtowers, cemetery, more houses
+  mk('manor', 24, 38, 8, 6, 0); mk('market', 15, 39, 7, 5, 0); mk('library', 34, 39, 7, 5, 0); mk('itemshop', 6, 40, 6, 4, 0);
+  mk('barracks', 44, 39, 7, 5, 0); mk('watchtower', 0, 37, 5, 7, 0); mk('watchtower', 51, 37, 5, 7, 1);
+  mk('cemetery', 33, 51, 6, 5, 0); [[16, 46], [22, 46], [16, 52], [22, 52]].forEach((p, i) => mk('house', p[0], p[1], 5, 4, i));
+  mk('castle', 149, 18, 7, 8, 8);
+  // cliffs: north band (2 tiers) for the whole map and the wall of the demon land with a stair gate
+  for (let x = 0; x < PLATEAU_X0; x++) { const top = 1; const bot = x < 14 ? 2 : 3 + (hsh01(x, 7) < 0.3 ? 1 : 0); for (let y = 0; y < top; y++) set(x, y, T.LEDGE); for (let y = top; y <= bot; y++) if (get(x, y) !== T.PATH && get(x, y) !== T.BRIDGE) set(x, y, T.CLIFF); }
   for (let y = 0; y < MH; y++) { if (Math.abs(y - 23) <= 1) { set(PLATEAU_X0 - 1, y, T.PATH); continue; } set(PLATEAU_X0 - 1, y, T.CLIFF); }
   // fountain & well (1x1 blocked deco)
   set(28, 19, T.BLD); set(25, 21, T.BLD); set(31, 21, T.BLD);
@@ -208,7 +243,8 @@ function buildWorld() {
   const bk = {}; blds.forEach(b => { (bk[b.kind] = bk[b.kind] || []).push(b); });
   const fields = []; for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (tiles[y * MW + x] === T.FIELD) fields.push({ x, y });
   const homes = blds.filter(b => b.kind === 'house' || b.kind === 'hut').map(b => b.id);
-  return { tiles, blds, bk, fields, homes, get, set };
+  const signs = ZONES.map(z => ({ x: z.x0, y: 21, zone: z.id })); // zone entrance signposts (north side of the main road)
+  return { tiles, blds, bk, fields, homes, signs, get, set };
 }
 function hsh01(x, s) { let n = Math.imul(x + 101, 374761393) ^ Math.imul(s + 7, 668265263); n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
 const W = buildWorld();
@@ -219,7 +255,7 @@ const _g = new Float32Array(MW * MH), _par = new Int16Array(MW * MH), _stamp = n
 let _st = 0;
 function findPath(sx, sy, tx, ty, range, maxN) {
   sx = Math.round(sx); sy = Math.round(sy); tx = Math.round(tx); ty = Math.round(ty);
-  range = range || 0; maxN = 2700;
+  range = range || 0; maxN = 12000; // V4.2: the map is 160x64
   const r2 = range * range + 0.001;
   if ((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty) <= r2) return [];
   _st++;
@@ -279,7 +315,7 @@ function newGame(o) {
   const seed = (o.seed === undefined ? (Date.now() & 0xffffff) : o.seed) >>> 0;
   const god = GODS.find(g => g.id === (o.god || 'mercy')) || GODS[0];
   G = {
-    ver: 1, tutMode: !!o.tut, easy: !!o.easy, learn: !!o.learn, seed, god: god.id, gen: o.gen || 1, tick: START_TICK, rng: new RNG(seed), nid: 1,
+    ver: 2, tutMode: !!o.tut, easy: !!o.easy, learn: !!o.learn, seed, god: god.id, gen: o.gen || 1, tick: START_TICK, rng: new RNG(seed), nid: 1,
     humans: [], monsters: [], souls: [], quests: [], parties: [], prayers: [], events: [], chapters: [], log: [],
     faith: god.faith0, faithMax: 150, balance: 20, balAcc: 0, balYear: [], hist: [],
     eye: 3, eyeT: 0, town: { food: 140, gold: 200, hp: 100, potions: 8, gearStock: 4 },
@@ -292,7 +328,7 @@ function newGame(o) {
   initWorldState();
   rebuildIdx();
   G.main = G.flags.kyle || 0; G.mainLocked = false;
-  initAssaults(); G.godXp = 0; G.godLv = 1; G.decrees = []; G.cards = []; G.stats.decisions = 0; startPeriod();
+  initAssaults(); initField(); initCastle(); G.godXp = 0; G.godLv = 1; G.decrees = []; G.cards = []; G.stats.decisions = 0; startPeriod();
   chronPrologue();
   return G;
 }
@@ -417,8 +453,7 @@ function spawnMonster(tier, near, mode) {
   let p;
   if (near) { p = nearestWalkable(near.x + rint(-3, 3), near.y + rint(-3, 3)); }
   else {
-    const lo = tier === 1 ? 45 : tier === 2 ? 47 : 49;
-    p = randWalkableIn(lo, 3, 55, 38);
+    const z = ZONES[Math.min(ZONES.length - 1, Math.max(0, tier - 1))]; p = randWalkableIn(z.x0 + 1, 5, z.x1 - 1, MH - 6); // V4.2: wild monsters live in the field zones
   }
   const m = mkMonster(type, p.x, p.y);
   const mm = monMul();
@@ -449,6 +484,7 @@ function pathTo(e, tx, ty, range) {
 }
 
 function updateHuman(h) {
+  if (h.away) { h.needs.hunger = Math.max(0, h.needs.hunger - 1); return; } // on an expedition / in the temple / captive
   const n = h.needs;
   h.age += AGING / TICK_YEAR;
   const sleeping = h.act && h.act.k === 'sleep' && h.act.st === 1;
@@ -556,7 +592,7 @@ function actTarget(h, k) {
     case 'muster': { const p = randWalkableIn(34, 21, 38, 25); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'train': { const p = randWalkableIn(18, 24, 26, 25); return { tx: p.x, ty: p.y, range: 0 }; }
     case 'learn': { if (rchance(0.5)) return bldDoor(pickBld('church')); const p = randWalkableIn(25, 17, 31, 22); return { tx: p.x, ty: p.y, range: 0 }; }
-    case 'hunt': { const p = randWalkableIn(FIELD_X0 + 1, 8, FIELD_X0 + 3 + Math.min(3, yearOf(G.tick) >> 1), 36); return { tx: p.x, ty: p.y, range: 0 }; }
+    case 'hunt': { const z = huntZone(h); const p = randWalkableIn(z.x0 + 1, 6, Math.min(z.x1 - 1, z.x0 + 10), MH - 8); return { tx: p.x, ty: p.y, range: 0 }; } // V4.2: hunt in the zone that fits the level
     case 'work': return workTarget(h);
   }
   return null;
@@ -688,6 +724,7 @@ function socialInteract(h) {
 /* ---------- exp ---------- */
 function addExp(h, v) {
   if (!v || h.lvl >= 25) return;
+  if (h.growthUntil > G.tick) v *= 1.5; // divine training: growth grace
   h.exp += v;
   let need = 30 * h.lvl;
   while (h.exp >= need && h.lvl < 25) {
@@ -742,6 +779,8 @@ function expirePrayers() {
   }
   if (G.prayers.length > 120) G.prayers = G.prayers.filter(p => p.state === 'open' || G.tick - p.t < TICK_YEAR);
 }
+/* V4.2 W1: adventurers pick a hunting zone by level (and courage / greed) */
+function huntZone(h) { const L = h.lvl || 1; const bold = (h.traits || []).indexOf('brave') >= 0 ? 1 : 0; let best = ZONES[0]; for (const z of ZONES) if (L + bold >= z.lv[0] + 1 + (z.star >= 4 ? 3 : 0)) best = z; return best; }
 
 /* ---- 06_combat.js ---- */
 /* ================= combat / monsters / quests / parties ================= */
@@ -820,7 +859,7 @@ function hideNearest(h) {
   h.path = p; h.act = { k: 'hide', tx: best.door.x, ty: best.door.y, range: 0, bld: best.id, st: 0, n: 0, dur: 8, t0: G.tick };
 }
 function humanAttack(h, tg, st) {
-  let atk = st.atk * rrange(0.85, 1.15);
+  let atk = st.atk * rrange(0.85, 1.15) * gearMul(h); if (h.named && h.named.w && ((h.named.w.trait === 'wolf' && /wolf/.test(tg.type || '')) || (h.named.w.trait === 'dragon' && /wyrm|dragon/.test(tg.type || '')))) atk *= 1.5;
   let crit = h.job === 'thief' ? 0.2 : 0.05; let cm = 1;
   if (rchance(crit)) cm = 1.7;
   if (h.mist && h.mist > G.tick) atk *= 0.75;
@@ -829,7 +868,7 @@ function humanAttack(h, tg, st) {
   damage(tg, dmg, h, cm > 1);
 }
 function monsterAttack(m, tg, mul) {
-  let atk = m.atk * rrange(0.85, 1.15) * (mul || 1);
+  let atk = m.atk * rrange(0.85, 1.15) * (mul || 1) * (G.eco && m.x >= VIL_X1 && !m.boss && !(m.cad >= 0) ? 0.7 : 1); // V4.2: field hunting is safer than village defence
   const st = hStats(tg);
   const dmg = Math.max(1, Math.round(atk - st.def * 0.5));
   fxAdd({ t: 'atk', x: m.x, y: m.y, tx: tg.x, ty: tg.y });
@@ -841,10 +880,11 @@ function damage(b, dmg, a, crit) {
   fxAdd({ t: 'dmg', x: b.x, y: b.y, v: dmg, crit: !!crit, human: !!b.job });
   if (b.job) { b.needs.safety = 100; if (!b.tgt && a && !a.job && canFight(b)) { b.tgt = a.id; } }
   else if (a && !b.tgt) { b.tgt = a.id; }
+  if (b.hp <= 0 && b.job && b.rare === 'sageStone' && !b.sageUsed) { b.sageUsed = 1; b.hp = Math.max(1, b.maxHp * 0.3); logEvent('sage_saved', [b.id], {}, ['growth'], 0.6, 0.7, b); }
   if (b.hp <= 0) { if (b.job) killHuman(b, 'battle', a); else killMonster(b, a); }
 }
 function killMonster(m, by) {
-  if (!m.alive) return; m.alive = false; m.hp = 0; G.stats.kills++; G.dayKills++;
+  if (!m.alive) return; m.alive = false; m.hp = 0; G.stats.kills++; G.dayKills++; onFieldKill(m, by);
   const tier = m.tier;
   if (!m.boss && G.killBal < 0.45) { const g = 0.02 * Math.min(tier, 4); G.balance = clamp(G.balance + g, -100, 100); G.killBal += g; }
   fxAdd({ t: 'poof', x: m.x, y: m.y });
@@ -865,7 +905,7 @@ function killMonster(m, by) {
   if (m.mode === 'raid') G.stats.raidKills = (G.stats.raidKills || 0) + 1;
 }
 function killHuman(h, cause, by) {
-  if (!h.alive) return; h.alive = false; h.hp = 0; h.cause = cause; h.diedAt = G.tick; G.stats.deaths++;
+  if (!h.alive) return; h.alive = false; h.hp = 0; h.cause = cause; h.diedAt = G.tick; G.stats.deaths++; inheritGear(h);
   if (h.party) leaveParty(h);
   h.act = null; h.path = []; h.tgt = 0; h.inside = 0;
   const s = soulOf(h); if (s) {
@@ -949,7 +989,7 @@ function tierForSpawn() {
 }
 function wildCount() { let c = 0; for (const m of G.monsters) if (m.alive && !m.boss && m.cad < 0 && m.mode !== 'raid') c++; return c; }
 function spawnTick() {
-  if (G.tick % 8 === 0 && wildCount() < monsterCap() && (G.forceMonsters || true)) { spawnMonster(tierForSpawn()); }
+  if (!G.eco && G.tick % 8 === 0 && wildCount() < monsterCap()) { spawnMonster(tierForSpawn()); } // V4.2: zone ecology spawns instead
   // cleanup the dead + old wild
   if (G.tick % 144 === 0) {
     G.monsters = G.monsters.filter(m => m.alive || m.boss || m.cad >= 0);
@@ -975,26 +1015,27 @@ function spawnRaid(n, tier, withCad) {
 const QTYPES = ['hunt', 'hunt', 'gather', 'escort', 'search'];
 function mkQuest(type, tier) {
   const yr = yearOf(G.tick);
-  const lo = tier === 1 ? 44 : tier === 2 ? 46 : 48, hi = tier === 1 ? 47 : tier === 2 ? 50 : 52;
-  let p = randWalkableIn(lo, 5, hi, 38);
-  const q = { id: G.nid++, type, tier, day: dayIdx(G.tick), state: 'open', need: type === 'hunt' ? rint(3, 4) + tier : 0, got: 0, tx: p.x, ty: p.y, reward: 0, exp: 0, party: 0, t: G.tick, mon: rpick(MON_BY_TIER[Math.min(3, tier)]) };
+  const z = ZONES[Math.min(ZONES.length - 1, tier - 1)]; let p = randWalkableIn(z.x0 + 1, 6, Math.min(z.x1 - 1, z.x0 + 12), MH - 8); // V4.2: quests go to the zone of their tier
+  const q = { id: G.nid++, type, tier, day: dayIdx(G.tick), state: 'open', need: type === 'hunt' ? rint(3, 4) + tier : 0, got: 0, tx: p.x, ty: p.y, reward: 0, exp: 0, party: 0, t: G.tick, mon: rpick(ZONE_MONS[z.id] || MON_BY_TIER[Math.min(3, tier)]), zone: z.id };
   q.reward = Math.round((18 + 10 * tier * tier + (q.need || 4) * 4) * (1 + 0.04 * (yr - 1)));
   q.exp = 8 + tier * 8;
   G.quests.push(q); G.qidx[q.id] = q; return q;
 }
 function dailyQuests() {
+  if (G.noHunt) return; // test switch: nobody hunts in the field
   const open = G.quests.filter(q => q.state === 'open' && q.type !== 'boss').length;
   const want = G.awakened ? TUNE.warQuests : 2 + (yearOf(G.tick) >= 3 ? 1 : 0);
   for (let i = open; i < want; i++) {
     const yr = yearOf(G.tick); let tier = 1 + (yr >= 4 ? 1 : 0) + (yr >= 6 ? 1 : 0); if (G.awakened) tier = 3; if (rchance(0.3) && tier > 1) tier--;
+    { const top = G.humans.filter(o => o.alive && isAdv(o)).map(o => o.lvl).sort((a, b) => b - a).slice(0, 3); const lv = top.length ? top.reduce((a, b) => a + b, 0) / top.length : 1; if (lv >= 15 && rchance(0.2)) tier = 5; else if (lv >= 10 && rchance(0.25)) tier = Math.max(tier, 4); } // strong parties go deeper
     mkQuest(rpick(QTYPES), tier);
   }
   // expire old open quests
   G.quests = G.quests.filter(q => !(q.state === 'open' && G.tick - q.t > 6 * TICK_DAY) && !((q.state === 'done' || q.state === 'fail') && G.tick - q.t > 4 * TICK_DAY));
   G.qidx = {}; G.quests.forEach(q => G.qidx[q.id] = q);
 }
-function advPower(h) { const st = hStats(h); const J = JOBS[h.job]; return Math.sqrt(st.hp * st.atk) * (h.hp / h.maxHp + 0.2); }
-function freeAdvs() { return G.humans.filter(o => o.alive && isAdv(o) && !o.party && o.hp >= o.maxHp * 0.62 && !(o.act && o.act.k === 'sleep' && hourOf(G.tick) < 5) && !o.flee); }
+function advPower(h) { const st = hStats(h); const J = JOBS[h.job]; return Math.sqrt(st.hp * st.atk) * (h.hp / h.maxHp + 0.2) * (typeof gearMul === 'function' ? gearMul(h) : 1); }
+function freeAdvs() { return G.humans.filter(o => o.alive && isAdv(o) && !o.party && !o.away && o.hp >= o.maxHp * 0.62 && !(o.act && o.act.k === 'sleep' && hourOf(G.tick) < 5) && !o.flee); }
 function partyOk(tier, group) {
   const avg = group.reduce((a, o) => a + o.lvl + o.gear * 0.7, 0) / group.length;
   if (tier === 1) return avg >= 1.5 || group.length >= 2;
@@ -1108,6 +1149,7 @@ function placeKey(pos) {
   const z = zoneOf(x);
   if (z === 'town' && x >= 24 && x <= 32 && y >= 16 && y <= 23) return 'plaza';
   if (z === 'field') { if (x >= 44 && x <= 54 && y >= 24 && y <= 36) return 'lake'; return 'field'; }
+  if (z === 'town' && y >= 37) return 'town';
   return z;
 }
 function logEvent(type, actors, payload, tags, tension, emotion, where) {
@@ -1194,7 +1236,7 @@ function dayUpdate() {
   if (rchance(0.12)) { const th = alive.filter(h => h.job === 'thief' && h.alive && h.age >= 16); if (th.length) { const t = rpick(th), v = rpick(alive.filter(h => h !== t && h.gold > 10 && h.age >= 14) || [t]); if (v && v !== t) { const amt = Math.min(v.gold, rint(8, 25)); v.gold -= amt; t.gold += amt; soulOf(t).k.evil += 1.5; t.guilt = 1; v.rel[t.id] = (v.rel[t.id] || 0) - 40; G.dayEvil += 0.5; logEvent('betrayal', [t.id, v.id], { amt }, ['crime'], 0.65, 0.8, t); } } }
   dailyQuests();
   if (d % 6 === 0 && G.humans.some(x => !x.alive && G.tick - (x.diedAt || 0) > TICK_YEAR)) { G.humans = G.humans.filter(x => x.alive || G.tick - (x.diedAt || 0) <= TICK_YEAR); rebuildIdx(); }
-  dailyDefense(); periodDaily();
+  dailyDefense(); periodDaily(); fieldDaily(); castleDaily();
   // monster raids (replaced by the assault timeline in V4)
   if (G.assaults) { } else if (!G.awakened) {
     if (yr >= 4 && d >= G.raidDay && rchance(0.5 + (0.5 - G.balance / 200) * 0.5)) { spawnRaid(2 + (yr >> 2), yr <= 5 ? 1 : 2, false); G.raidDay = d + rint(9, 15); }
@@ -1263,7 +1305,7 @@ function tick() {
   if (!G.assaults && G.town.hp < 70 && !G.sieged && G.awakened) { G.sieged = true; logEvent('siege', [], {}, ['raid'], 0.85, 0.8, PLAZA); } else if (G.town.hp > 95) G.sieged = false;
   if (G.raidAlive === 0) G.townAlert = 0; else G.townAlert = Math.max(G.townAlert, 12);
   if (tk % 6 === 0) { expirePrayers(); if (G.bossFight && !G.parties.some(p => p.boss && p.state !== 'done')) G.bossFight = false; if (G.awakened && !G.assaults) tryBossExpedition(); scripted(); }
-  assaultTick(); councilTick(); cardTick();
+  assaultTick(); councilTick(); cardTick(); fieldSpawnTick();
   if (tk % TICK_DAY === 0) dayUpdate();
   if (G.easy && tk % 12 === 0) easyAuto();
   if (G.policy === 'basic') policyBasic(); else if (G.policy === 'engaged') policyEngaged();
@@ -1287,11 +1329,11 @@ function scripted() {
 /* ================= V4-A1: assault timeline, village defense, 3-phase battles, consequences, chains ================= */
 const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
-  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
-  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 47, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 49, kind: 'dragon', mon: 'dragon', scale: 1.3 },
-  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 40, kind: 'wave', mon: 'wolf', scale: 1.2 },
-  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 45, kind: 'king', mon: 'boss', scale: 1.6 },
+  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 42, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
+  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 50, kind: 'wave', mon: 'skel', scale: 1 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 57, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41, kind: 'wave', mon: 'wolf', scale: 1.2 },
+  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 41.5, kind: 'king', mon: 'boss', scale: 1.6 },
 };
 const ASSAULT_ORDER = ['wave1', 'wave2', 'dragon', 'wave3', 'king'];
 const GRADES = ['crush', 'win', 'pyrrhic', 'loss', 'rout']; // 大勝 勝利 慘勝 敗北 潰滅
@@ -1329,11 +1371,11 @@ function heroDaily() {
 }
 /* ---------- defense (0..100, 5 parts) ---------- */
 function defenseParts() {
-  let pw = 0; for (const h of G.humans) { if (!isAdv(h)) continue; pw += lvlMul(h.lvl) * (1 + 0.07 * h.gear) * (0.55 + 0.45 * h.hp / Math.max(1, h.maxHp)); }
+  let pw = 0; for (const h of G.humans) { if (!isAdv(h) || h.away) continue; pw += lvlMul(h.lvl) * (1 + 0.07 * h.gear) * (0.55 + 0.45 * h.hp / Math.max(1, h.maxHp)); }
   if (G.flags.aid) pw += 6;
   const combat = clamp(pw / 40, 0, 1) * 100;
   const works = clamp(G.walls * 20 * (G.wallHp / 100) + (G.ruins && Object.keys(G.ruins).length ? -5 * Object.keys(G.ruins).length : 0), 0, 100);
-  const ans = (G.stats.answered || 0) / ((G.stats.prayers || 0) + 6); const morale = clamp(44 + ans * 36 + (G.moraleMod || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
+  const ans = (G.stats.answered || 0) / ((G.stats.prayers || 0) + 6); const morale = clamp(44 + ans * 36 + (G.moraleMod || 0) + (G.moralePerm || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
   const supply = clamp(Math.min(40, G.town.food / 700 * 40) + Math.min(30, G.town.potions / 30 * 30) + Math.min(30, G.town.gearStock / 10 * 30), 0, 100);
   const divine = clamp(G.prep || 0, 0, 100);
   return { combat, works, morale, supply, divine };
@@ -1342,9 +1384,11 @@ const DEF_W = { combat: 0.35, works: 0.2, morale: 0.2, supply: 0.15, divine: 0.1
 function defenseScore(p) { p = p || defenseParts(); let s = 0; for (const k in DEF_W) s += p[k] * DEF_W[k]; return s; }
 function threatOf(a) {
   const d = ASSAULT_DEF[a.id]; let t = d.base;
-  t += Math.max(0, -G.balance) / 8; t += (G.territory || 0) * 3; t -= a.provoked ? 8 : 0; if (G.easy) t -= 2.5; // V4.1-A12-6 easy mode: about +10pp
+  t += Math.max(0, -G.balance) / 12; t += (G.territory || 0) * 3; t -= a.provoked ? 8 : 0; if (G.easy) t -= 2.5; // V4.1-A12-6 easy mode: about +10pp
   if (a.id === 'dragon') { const ty = G.chain.dragonType; t += ty === 'village' ? 6 : ty === 'expedition' ? -4 : 0; t += G.chain.dragonAngry || 0; }
   if (a.id === 'king') { t += (G.chain.cadres || 2) * 4 - 8; const o = G.chain.dragonOutcome; t += o === 'slain' ? -8 : o === 'repelled' ? 6 : o === 'pact' ? -12 : o === 'lost' ? 12 : 0; }
+  if (G.eco && !G.noEco) t *= 1 + ecoMod();
+  if (G.castle) { t *= angerMul(); if (a.id === 'king') t *= 1 + (G.castle.kingPow - 1) * 0.3; } // the king is about half of his army's strength // W3: the army's anger; a new king is stronger // V4.2: more monsters in the field -> a stronger assault
   return t;
 }
 function adaptT(D, a) { if (a && a.adRef != null) return 0.8 * Math.max(0, a.adRef - 36) + 0.35 * Math.max(0, D - a.adRef); return 0.8 * Math.max(0, D - 36); } // V4.1-A3: the enemy answers a stronger village; it stops adapting at the half-year scout report, so late preparation counts fully
@@ -1432,6 +1476,7 @@ function startBattle(a) {
   a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
   G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: 0, choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
   if (a.id === 'dragon' && G.dragonPact) { G.battle.pact = true; }
+  { const hero = G.heroId && G.idx[G.heroId]; if (hero && hero.alive && !hero.away) { if (hero.crown) G.battle.bonus += 2.4; if ((hero.skills || []).indexOf('heroStrike') >= 0) G.battle.bonus += 2; } } // crown +10pt, hero's strike +8pt in the decisive phase
   logEvent('assault_start', [], { a: a.id, p: a.pred, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 1, 0.9, a.id === 'king' ? PLAZA : { x: FIELD_X0, y: 23 });
   if (G.onBattle) G.onBattle(G.battle);
 }
@@ -1468,8 +1513,8 @@ function applyConsequences(a, grade) {
   // experience
   advs.forEach((h, i) => { const n = win ? (i < 3 ? rint(2, 4) : rint(1, 2)) : rint(0, 1); for (let j = 0; j < n; j++) addExp(h, 30 * h.lvl); if (n) res.levels.push([h.id, n]); });
   // casualties
-  const nd = { crush: [0, 1], win: [1, 2], pyrrhic: [2, 4], loss: [4, 7], rout: [7, 11] }[grade]; let dn = Math.round(rint(nd[0], nd[1]) * (k.kind === 'wave' ? 1 : 1.25));
-  const pool = G.humans.filter(h => h.alive && h.age >= 6); const w = h => (isAdv(h) ? 4 : 1) * ((h.child || h.age >= 56) ? (G.flags.evac ? 0.15 : 1) : 1) * (h.job === 'historian' ? 0.2 : 1);
+  const nd = { crush: [0, 1], win: [1, 2], pyrrhic: [2, 4], loss: [4, 7], rout: [7, 11] }[grade]; let dn = Math.round(rint(nd[0], nd[1]) * (k.kind === 'wave' ? 1 : 1.25) * (G.humans.some(h => h.alive && (h.skills || []).indexOf('holyShield') >= 0) ? 0.8 : 1) * (G.humans.some(h => h.alive && (h.skills || []).indexOf('healPrayer') >= 0) ? 0.75 : 1));
+  const pool = G.humans.filter(h => h.alive && h.age >= 6 && !h.away); const w = h => (isAdv(h) ? 4 : 1) * ((h.child || h.age >= 56) ? (G.flags.evac ? 0.15 : 1) : 1) * (h.job === 'historian' ? 0.2 : 1);
   for (let i = 0; i < dn && pool.length > 6; i++) { let tot = 0; pool.forEach(h => tot += w(h)); let r = rnd() * tot; let pick = pool[0]; for (const h of pool) { r -= w(h); if (r <= 0) { pick = h; break; } } pool.splice(pool.indexOf(pick), 1); killHuman(pick, 'battle', null); res.deaths.push(pick.id); G.humans.forEach(o => { if (o.alive && o.parent === pick.id && o.age < 16) o.vengeful = 1; }); }
   res.levels = res.levels.filter(l => !res.deaths.includes(l[0]));
   // buildings & walls
@@ -1620,10 +1665,237 @@ function resolveCard(c, opt) {
 }
 function decideCard(n, opt) { const i = (G.cards || []).findIndex(c => c.n === n); if (i < 0) return false; const c = G.cards.splice(i, 1)[0]; resolveCard(c, opt); return true; }
 /* ---------- event tiers (S: stop & show, A: highlight, B: routine summary) ---------- */
-const FEED_S = { assault_start: 1, assault_end: 1, hero_born: 1, boss_awaken: 1, dragon_pact: 1, council: 1, boss_slain: 1, ending_doom: 1, ending_victory: 1, ending_godleft: 1 };
+const FEED_S = { new_king: 1, king_slain_exp: 1, captive_lost: 1, retaliation: 1, exp_end: 1, lord_slain: 1, assault_start: 1, assault_end: 1, hero_born: 1, boss_awaken: 1, dragon_pact: 1, council: 1, boss_slain: 1, ending_doom: 1, ending_victory: 1, ending_godleft: 1 };
 const FEED_A = { death: 1, marriage: 1, betrayal: 1, birth: 1, love_start: 1, dev_change: 1, festival: 1, promotion: 1, god_lv: 1, decree_settle: 1, master_farewell: 1, destined_reunion: 1, miracle: 1, reincarnation: 1 };
 const FEED_B = { party_formed: 1, quest_clear: 1, quest_fail: 1, first_battle: 1, prep: 1, walls_up: 1, rebuilt: 1, coming_of_age: 1, migrant: 1, gear: 1, quarrel: 1, reconcile: 1, love_notice: 1, divine_act: 1, prayer_expired: 1, monster_raid: 1 };
 function feedClass(ev) { if (ev.type === 'assault_omen') return ev.payload && ev.payload.step === 3 ? 'S' : 'A'; if (FEED_S[ev.type]) return 'S'; if (FEED_A[ev.type]) return 'A'; if (FEED_B[ev.type]) return 'B'; return ev.tension >= 0.6 ? 'A' : null; }
+
+/* ---- 07d_field.js ---- */
+/* ================= V4.2 W1/W2: field zones, monster ecology, zone lords, drops, storehouse, magic stones, named gear ================= */
+/* 20 monster kinds (12 base forms + colour variants). zone / star / stats / exp / gold / drops */
+Object.assign(MONS, {
+  slime: { n: ['スライム', '史萊姆'], hp: 18, atk: 4, def: 1, spd: 0.8, tier: 1, exp: 5, gold: 2, range: 1.5, star: 1, zone: 'plains', drop: [['meat', 0.3], ['stoneS', 0.15]] },
+  hornrab: { n: ['角うさぎ', '角兔'], hp: 22, atk: 6, def: 1, spd: 1.4, tier: 1, exp: 7, gold: 2, range: 1.5, star: 1, zone: 'plains', drop: [['meat', 0.5], ['hide', 0.3]] },
+  flower: { n: ['毒花', '毒花'], hp: 34, atk: 9, def: 2, spd: 0.4, tier: 2, exp: 11, gold: 3, range: 2.5, star: 2, zone: 'forest', drop: [['herb', 0.6]] },
+  mush2: { n: ['毒ぷくぷく茸', '毒噗噗菇'], hp: 30, atk: 8, def: 2, spd: 0.8, tier: 2, exp: 10, gold: 3, range: 1.5, star: 2, zone: 'forest', drop: [['mushroom', 0.5], ['herb', 0.2]] },
+  slimeK: { n: ['スライム王', '史萊姆王'], hp: 70, atk: 12, def: 4, spd: 0.7, tier: 3, exp: 22, gold: 8, range: 1.5, star: 3, zone: 'swamp', drop: [['stoneM', 0.35], ['ore', 0.2]] },
+  bat2: { n: ['沼こうもり', '沼蝠'], hp: 34, atk: 11, def: 2, spd: 1.4, tier: 3, exp: 16, gold: 5, range: 1.5, star: 3, zone: 'swamp', drop: [['bone', 0.3]] },
+  gargoyle: { n: ['ガーゴイル', '石像鬼'], hp: 95, atk: 17, def: 9, spd: 0.9, tier: 4, exp: 32, gold: 12, range: 1.5, star: 4, zone: 'mountain', drop: [['ore', 0.4], ['stoneM', 0.3], ['mithril', 0.08]] },
+  griffin: { n: ['グリフォン', '獅鷲'], hp: 110, atk: 20, def: 6, spd: 1.5, tier: 4, exp: 36, gold: 14, range: 1.5, star: 4, zone: 'mountain', drop: [['feather', 0.6], ['stoneL', 0.08]] },
+  snowwolf: { n: ['雪狼', '雪狼'], hp: 90, atk: 19, def: 5, spd: 1.5, tier: 4, exp: 30, gold: 10, range: 1.5, star: 4, zone: 'mountain', drop: [['hide', 0.5], ['fang', 0.4]] },
+  goblin2: { n: ['小鬼の戦士', '小鬼戰士'], hp: 80, atk: 18, def: 6, spd: 1.0, tier: 4, exp: 28, gold: 12, range: 1.5, star: 4, zone: 'mountain', drop: [['ore', 0.3], ['stoneM', 0.2]] },
+  wyrm: { n: ['幼竜', '幼龍'], hp: 180, atk: 28, def: 12, spd: 1.0, tier: 5, exp: 70, gold: 30, range: 1.8, star: 5, zone: 'nest', drop: [['scale', 0.5], ['dfang', 0.25], ['stoneL', 0.3]] },
+  skel2: { n: ['骸骨騎士', '骷髏騎士'], hp: 150, atk: 25, def: 12, spd: 1.0, tier: 5, exp: 55, gold: 20, range: 1.5, star: 5, zone: 'nest', drop: [['bone', 0.6], ['stoneL', 0.15]] },
+});
+Object.assign(MONS.mush, { star: 1, zone: 'plains', drop: [['mushroom', 0.4], ['stoneS', 0.1]] }); Object.assign(MONS.bat, { star: 1, zone: 'plains', drop: [['hide', 0.2], ['stoneS', 0.1]] });
+Object.assign(MONS.goblin, { star: 2, zone: 'forest', drop: [['fang', 0.3], ['wood', 0.4], ['stoneS', 0.15]] }); Object.assign(MONS.wolf, { star: 2, zone: 'forest', drop: [['fang', 0.5], ['hide', 0.4]] });
+Object.assign(MONS.turtle, { star: 3, zone: 'swamp', drop: [['ore', 0.4], ['stoneM', 0.2]] }); Object.assign(MONS.skel, { star: 3, zone: 'swamp', drop: [['bone', 0.6], ['stoneM', 0.15]] });
+const ZONE_MONS = {}; for (const k in MONS) { const z = MONS[k].zone; if (z) (ZONE_MONS[z] = ZONE_MONS[z] || []).push(k); }
+const ITEMS = { // W2: storehouse items
+  meat: { n: ['肉', '肉'], cat: 'food' }, mushroom: { n: ['きのこ', '蘑菇'], cat: 'food' }, herb: { n: ['薬草', '藥草'], cat: 'food' }, wood: { n: ['木材', '木材'], cat: 'mat' }, hide: { n: ['皮', '皮革'], cat: 'mat' }, fang: { n: ['獣の牙', '獸牙'], cat: 'mat' },
+  bone: { n: ['骨', '骨'], cat: 'mat' }, ore: { n: ['鉱石', '礦石'], cat: 'mat' }, mithril: { n: ['ミスリル', '秘銀'], cat: 'mat' }, feather: { n: ['羽根', '羽毛'], cat: 'mat' }, scale: { n: ['竜の鱗', '龍鱗'], cat: 'mat' }, dfang: { n: ['竜の牙', '龍牙'], cat: 'mat' },
+  stoneS: { n: ['魔石（小）', '魔石（小）'], cat: 'stone', faith: 4, gold: 12 }, stoneM: { n: ['魔石（中）', '魔石（中）'], cat: 'stone', faith: 10, gold: 30 }, stoneL: { n: ['魔石（大）', '魔石（大）'], cat: 'stone', faith: 25, gold: 80 },
+};
+const RARES = { fangClaw: { n: ['灰牙の爪', '灰牙之爪'], pow: 1.25, d: ['狼系に強い', '對狼系強'] }, holySword: { n: ['聖剣', '聖劍'], pow: 1.4, d: ['攻撃+40%', '攻擊 +40%'] }, sageStone: { n: ['賢者の石', '賢者之石'], pow: 1.1, guard: 1, d: ['一度だけ死を防ぐ', '免死 1 次'] }, dragonLance: { n: ['竜殺しの槍', '屠龍之槍'], pow: 1.3, d: ['竜に強い', '對龍強'] }, kingCrown: { n: ['魔王の冠', '魔王之冠'], pow: 1.3, d: ['全能力+30%・決戦+10pt', '全能力 +30%、決勝 +10pt'] } };
+const LORDS = { plains: { type: 'hornrab', names: [['大角のロッポ', '大角洛波'], ['跳ね王ピピン', '跳躍王皮平'], ['白耳のミル', '白耳米爾']], rare: 'fangClaw' }, forest: { type: 'wolf', names: [['灰牙', '灰牙'], ['黒爪', '黑爪'], ['月吠え', '月吠']], rare: 'fangClaw' },
+  swamp: { type: 'slimeK', names: [['沼の主ドロン', '沼之主多隆'], ['泡王ブクブク', '泡王咕嘟'], ['毒沼のヌル', '毒沼努魯']], rare: 'sageStone' }, mountain: { type: 'griffin', names: [['嵐翼', '嵐翼'], ['雪冠', '雪冠'], ['鉄嘴', '鐵喙']], rare: 'holySword' }, nest: { type: 'wyrm', names: [['紅鱗', '紅鱗'], ['熾牙', '熾牙'], ['煤の子', '煤之子']], rare: 'dragonLance' } };
+function initField() {
+  G.eco = {}; ZONES.forEach(z => G.eco[z.id] = 31); G.store = {}; G.lords = {}; G.ecoKill = {}; G.rares = {};
+  ZONES.forEach(z => spawnLord(z.id, 0));
+}
+/* ---------- ecology ---------- */
+function ecoTotal() { let s = 0; for (const k in G.eco || {}) s += G.eco[k]; return s; }
+function ecoMod() { const base = 32 * ZONES.length; return clamp((ecoTotal() - base) / base * 0.5, -0.15, 0.12); } // high -> threat +12%, low -> -15%
+function ecoLevel() { const m = ecoMod(); return m > 0.06 ? 'many' : m < -0.06 ? 'few' : 'normal'; }
+function fieldDaily() {
+  if (!G.eco) return; { const n = G.humans.filter(h => h.alive && isAdv(h) && !h.away && (h.party || h.x >= VIL_X1)).length; G.balance = clamp(G.balance + Math.min(0.45, n * 0.07), -100, 100); } // hunters keep the wild in check (V4.1 got this from kills next to the village)
+  const dark = Math.max(0, -G.balance) / 100, awe = (G.awe || 0) / 150;
+  ZONES.forEach((z, i) => { const E = G.eco[z.id]; G.eco[z.id] = clamp(E + 0.9 * (1 - E / 48) * (1 + dark * 0.8 + awe * 0.5), 0, 60); }); // logistic growth toward ~48
+  // overflow: long without hunting -> monsters drift to the village edge (minor harassment)
+  if (G.eco.plains > 42 && rchance(0.35)) { for (let i = 0; i < 2; i++) { const m = spawnMonster(1, { x: VIL_X1 + 2, y: 23 }, 'wander'); if (m) m.tgt = 0; } G.eco.plains -= 4; logEvent('overflow', [], {}, ['raid'], 0.35, 0.3, { x: VIL_X1 + 2, y: 23 }); }
+  // zone lords respawn every year with a new name
+  ZONES.forEach(z => { const L = G.lords[z.id]; if (L && !L.alive && G.tick - L.died >= TICK_YEAR) spawnLord(z.id, (L.gen || 0) + 1); });
+  // storehouse upkeep: food items feed the village, herbs become potions, the treasury upgrades the village
+  storeDaily();
+}
+function zoneMonsterType(zid) { const L = ZONE_MONS[zid] || ['mush']; return rpick(L); }
+function spawnInZone(zid) { const z = ZONES.find(q => q.id === zid); if (!z) return null; const p = randWalkableIn(z.x0 + 1, 6, z.x1 - 1, MH - 6); const m = mkMonster(zoneMonsterType(zid), p.x, p.y); m.zone = zid; G.monsters.push(m); G.idx[m.id] = m; return m; }
+function fieldSpawnTick() { // keep the visible population in step with the ecology number
+  if (!G.eco || G.tick % 12 !== 0) return; const live = {}; for (const m of G.monsters) if (m.alive && m.zone && !m.lord) live[m.zone] = (live[m.zone] || 0) + 1;
+  for (const z of ZONES) { const want = Math.min(7, Math.round(G.eco[z.id] / 5)); if ((live[z.id] || 0) < want) spawnInZone(z.id); }
+}
+function spawnLord(zid, gen) { const D = LORDS[zid]; const z = ZONES.find(q => q.id === zid); const p = randWalkableIn(z.x0 + 3, 8, z.x1 - 3, MH - 10); const m = mkMonster(D.type, p.x, p.y); m.lord = zid; m.zone = zid; m.hp = m.maxHp = Math.round(m.maxHp * 3); m.atk *= 1.5; m.def *= 1.3; m.mode = 'guard';
+  G.monsters.push(m); G.idx[m.id] = m; const nm = D.names[(gen || 0) % D.names.length]; m.lordName = nm; G.lords[zid] = { id: m.id, alive: true, gen: gen || 0, name: nm, died: 0 }; return m; }
+/* ---------- kills: ecology, drops, lords ---------- */
+function onFieldKill(m, by) {
+  if (!G.eco) return; if (m.zone) { G.eco[m.zone] = Math.max(0, G.eco[m.zone] - 1); G.ecoKill[m.zone] = (G.ecoKill[m.zone] || 0) + 1; }
+  if (!by || !by.job) return; const base = MONS[m.type] || {}; by.bag = by.bag || [];
+  (base.drop || []).forEach(([it, p]) => { if (rchance(p * (m.lord ? 3 : 1)) && by.bag.length < 10) by.bag.push(it); });
+  if (m.lord) { const L = G.lords[m.lord]; L.alive = false; L.died = G.tick; const D = LORDS[m.lord]; G.titles = G.titles || {}; G.titles[by.id] = [L.name[0] + '殺し', '討伐' + L.name[1] + '者']; by.rare = by.rare || D.rare; G.rares[D.rare] = by.id; by.bag.push('stoneL');
+    logEvent('lord_slain', [by.id], { zone: m.lord, name: L.name, rare: D.rare }, ['growth'], 0.85, 0.85, by); }
+}
+/* ---------- storehouse (deposit when back in the village) ---------- */
+function depositBag(h) {
+  if (!h.bag || !h.bag.length) return; G.store = G.store || {};
+  for (const it of h.bag) {
+    const I = ITEMS[it]; if (!I) continue;
+    if (I.cat === 'stone') { // offer to the church (faith) or sell (treasury): devout people offer
+      const devout = clamp(0.25 + (100 - h.needs.faith) / 160 + (soulOf(h).k.good || 0) / 40 + (h.job === 'priest' ? 0.3 : 0), 0.05, 0.95);
+      if (rchance(devout)) { G.faith = Math.min(G.faithMax, G.faith + I.faith * 0.7); faithLog('stone', I.faith * 0.7); G.store[it] = (G.store[it] || 0) + 1; /* the church keeps the stone for divine training */ G.stats.offered = (G.stats.offered || 0) + 1; logEvent('offering', [h.id], { it }, ['faith'], 0.3, 0.5, h); }
+      else { G.town.gold = (G.town.gold || 0) + I.gold; G.stats.sold = (G.stats.sold || 0) + 1; }
+    } else G.store[it] = (G.store[it] || 0) + 1;
+  }
+  h.bag = [];
+}
+function storeDaily() {
+  const S = G.store || {}; for (const h of G.humans) if (h.alive && h.bag && h.bag.length && h.x <= VIL_X1) depositBag(h);
+  const eat = k => { if (S[k] > 0) { S[k]--; return true; } return false; };
+  for (let i = 0; i < 3; i++) { if (eat('meat')) G.town.food = Math.min(400, G.town.food + 6); if (eat('mushroom')) G.town.food = Math.min(400, G.town.food + 3); }
+  if ((S.herb || 0) >= 2 && G.town.potions < 30) { S.herb -= 2; G.town.potions++; }
+  if ((G.town.gold || 0) >= 600 && G.assaults) { G.town.gold -= 600; G.devPts = (G.devPts || 0) + 1; logEvent('village_upgrade', [], { lv: devLevel() }, ['assault'], 0.4, 0.5, PLAZA); }
+  smithCraft();
+}
+/* ---------- named gear from the smith ---------- */
+const NAMED = { w: [['fang', 3, ['牙の剣', '獸牙劍'], 'wolf', 0.15], ['ore', 4, ['鋼の剣', '精鋼劍'], 'atk', 0.15], ['mithril', 1, ['ミスリルの剣', '秘銀劍'], 'atk', 0.3], ['dfang', 1, ['竜牙の剣', '龍牙劍'], 'dragon', 0.35]],
+  a: [['hide', 3, ['獣皮の鎧', '獸皮鎧'], 'def', 0.12], ['bone', 4, ['骨の鎧', '骨鎧'], 'def', 0.15], ['feather', 3, ['羽根のマント', '羽毛斗篷'], 'spd', 0.15], ['scale', 2, ['竜鱗の鎧', '龍鱗鎧'], 'fire', 0.35]] };
+function smithCraft() {
+  const S = G.store || {}; if (!G.humans.some(h => h.alive && h.job === 'smith' && h.age >= 16)) return;
+  const best = G.humans.filter(h => h.alive && isAdv(h)).sort((a, b) => (G.heroId === b.id) - (G.heroId === a.id) || advPower(b) - advPower(a));
+  for (const slot of ['w', 'a']) { const target = (G.smithFor && G.idx[G.smithFor] && G.idx[G.smithFor].alive ? [G.idx[G.smithFor]] : []).concat(best).find(h => !h.named || !h.named[slot] || h.named[slot].v < 0.3); if (!target) continue;
+    const opts = NAMED[slot].filter(r => (S[r[0]] || 0) >= r[1] && (!target.named || !target.named[slot] || target.named[slot].v < r[4])).sort((x, y) => y[4] - x[4]); const r = opts[0]; if (!r) continue;
+    S[r[0]] -= r[1]; target.named = target.named || {}; target.named[slot] = { n: r[2], trait: r[3], v: r[4] }; if (G.smithFor === target.id) G.smithFor = 0;
+    logEvent('named_gear', [target.id], { slot, n: r[2], trait: r[3] }, ['growth'], 0.5, 0.6, target); }
+}
+/* named gear / rare item: power multiplier used by combat and the defense score */
+function gearMul(h) { let m = 1; if (h.named) { if (h.named.w) m *= 1 + h.named.w.v * (h.named.w.trait === 'atk' ? 1 : 0.6); if (h.named.a) m *= 1 + h.named.a.v * 0.6; } if (h.rare && RARES[h.rare]) m *= RARES[h.rare].pow; if (h.crown) m *= RARES.kingCrown.pow; if (h.marks) m *= 1 + h.marks.length * 0.15 * 0.6; if (h.artifact) m *= 1 + h.artifact * 0.1; return m; }
+/* inheritance: apprentice -> family -> guild */
+function inheritGear(h) {
+  if (!h.named && !h.rare) return; const heir = G.humans.find(o => o.alive && o.master === h.id && isAdv(o)) || G.humans.find(o => o.alive && isAdv(o) && (o.id === h.spouse || o.parent === h.id || h.parent === o.id)) || G.humans.filter(o => o.alive && isAdv(o) && !o.rare).sort((a, b) => advPower(b) - advPower(a))[0];
+  if (!heir) return; if (h.named) { heir.named = heir.named || {}; for (const k in h.named) if (!heir.named[k] || heir.named[k].v < h.named[k].v) heir.named[k] = h.named[k]; } if (h.rare && !heir.rare) { heir.rare = h.rare; G.rares[h.rare] = heir.id; }
+  logEvent('inherit_gear', [heir.id, h.id], {}, ['growth'], 0.55, 0.7, heir); h.named = null; h.rare = null;
+}
+/* deep-zone monsters a little softer so that "deeper = riskier" without wiping parties out */
+['gargoyle', 'griffin', 'snowwolf', 'goblin2', 'wyrm', 'skel2'].forEach(k => { MONS[k].atk = Math.round(MONS[k].atk * 0.8); });
+
+/* ---- 07e_castle.js ---- */
+/* ================= V4.2 W3: demon castle (4 floors), expeditions, the army's anger, new king succession, captives, divine training ================= */
+const CFLOORS = [
+  { id: 1, n: ['1F 城門', '1F 城門'], base: 56, mons: ['skel2', 'gargoyle'], anger: 10 },
+  { id: 2, n: ['2F 大広間', '2F 大廳'], base: 63, mons: ['goblin2', 'wyrm', 'skel2'], anger: 15 },
+  { id: 3, n: ['3F 回廊（幹部の間）', '3F 迴廊（幹部房間）'], base: 68, mons: ['cad'], anger: 20 },
+  { id: 4, n: ['4F 玉座', '4F 王座'], base: 88, mons: ['boss'], anger: 30 },
+];
+const KING_NAMES = [['黒冠の王ノクタール', '黑冠之王 諾克塔爾'], ['紅蓮の王ヴァザル', '紅蓮之王 瓦札爾'], ['氷結の王イシュラ', '冰結之王 伊修拉'], ['深淵の王ゾルグ', '深淵之王 佐爾格'], ['災厄の王メギドラ', '災厄之王 梅吉德拉']];
+function initCastle() { G.castle = { anger: 0, kingGen: 0, kingPow: 1, kingName: KING_NAMES[0], captives: [], cool: 0, exp: null, log: [], angerSteps: {} }; G.moralePerm = 0; }
+/* anger: every assault gets stronger; thresholds bring the next assault forward and trigger a retaliation */
+function angerMul() { return 1 + (G.castle ? G.castle.anger : 0) * 0.003; }
+function addAnger(n, why) {
+  const C = G.castle; if (!C) return; const a0 = C.anger; C.anger = clamp(C.anger + n, 0, 100);
+  if (a0 < 50 && C.anger >= 50) { const a = nextAssault(); if (a && a.t - G.tick > SEASON_T * 2) { a.t -= SEASON_T; logEvent('anger_forward', [], { a: a.id }, ['assault'], 0.7, 0.6, BOSS.home); } }
+  if (a0 < 80 && C.anger >= 80) { for (let i = 0; i < 5; i++) { const m = spawnMonster(3, { x: VIL_X1 + 3, y: 23 }, 'wander'); if (m) m.tgt = 0; } G.chain.cadres = Math.min(3, (G.chain.cadres || 2) + 1); logEvent('retaliation', [], {}, ['raid'], 0.85, 0.8, { x: VIL_X1 + 3, y: 23 }); }
+  logEvent('anger_up', [], { n, why, v: C.anger }, ['assault'], 0.4, 0.4, BOSS.home);
+}
+/* ---------- expedition party / prediction ---------- */
+function expParty() { const hero = G.heroId && G.idx[G.heroId]; if (!hero || !hero.alive) return null; const mates = G.humans.filter(h => h.alive && isAdv(h) && h.id !== hero.id && h.lvl >= 6 && !h.away && !h.captive).sort((a, b) => advPower(b) - advPower(a)).slice(0, 3); return mates.length >= 3 ? [hero].concat(mates) : null; }
+function expMissing() { const out = []; if (!heroAlive()) out.push('hero'); else { const n = G.humans.filter(h => h.alive && isAdv(h) && h.id !== G.heroId && h.lvl >= 6 && !h.away).length; if (n < 3) out.push('mates:' + (3 - n)); } if (G.castle && G.tick < G.castle.cool) out.push('cool'); if (G.castle && G.castle.exp || G.heroId && G.idx[G.heroId] && G.idx[G.heroId].away) out.push('busy'); return out; }
+function partyPower(P) { return P.reduce((s, h) => s + advPower(h), 0); }
+function floorThreat(f) { const F = CFLOORS[f - 1]; let t = F.base * (f === 4 ? G.castle.kingPow : 1) * angerMul(); if (f === 3) t += ((G.chain && G.chain.cadres) || 2) * 3; if (!G.awakened && f === 4) t *= 0.85; return t; } // a sleeping king is weaker
+function floorD(P) { return 18 + Math.sqrt(partyPower(P)) * 2.4 + P.reduce((s, h) => s + ((h.skills || []).indexOf('heroStrike') >= 0 ? 2 : 0), 0); }
+function floorWin(P, f, help) { return sigm((floorD(P) - floorThreat(f) + 3 + (help || 0)) / WIN_K); }
+function earlyMul() { const y = (G.tick - START_TICK) / TICK_YEAR; return y <= 3 ? 1.5 : y <= 5 ? 1.5 - (y - 3) * 0.1 : y <= 7 ? 1.3 - (y - 5) * 0.075 : y <= 9 ? 1.15 - (y - 7) * 0.075 : 1; }
+function expCourage(P) { let c = 0.5 + (G.moraleMod || 0) / 100 + (G.moralePerm || 0) / 100; P.forEach(h => { if ((h.traits || []).indexOf('brave') >= 0) c += 0.06; if ((h.traits || []).indexOf('timid') >= 0) c -= 0.06; if (h.buffs && h.buffs.grace > G.tick) c += 0.05; if (h.courageUntil > G.tick) c += 0.12; }); return c; }
+/* ---------- start / step / finish ---------- */
+function startExpedition(cost) {
+  const P = expParty(); if (!P || expMissing().length) return { ok: false, why: expMissing() }; cost = cost === undefined ? 30 : cost; if (G.faith < cost) return { ok: false, why: ['faith'] };
+  if (expCourage(P) < 0.55) { logEvent('exp_refuse', P.map(h => h.id), {}, ['exp'], 0.5, 0.5, PLAZA); return { ok: false, why: ['courage'] }; }
+  G.faith -= cost; P.forEach(h => { h.away = 1; h.inside = 1; h.party = 0; h.act = null; h.path = []; });
+  G.castle.exp = { ids: P.map(h => h.id), floor: 1, t0: G.tick, back: G.tick + SEASON_T, cleared: 0, phase: 0, bonus: 0, results: [], done: false };
+  G.stats.expeditions = (G.stats.expeditions || 0) + 1; logEvent('exp_depart', P.map(h => h.id), {}, ['exp'], 0.8, 0.8, BOSS.home); return { ok: true };
+}
+function expBattleStep(choice) { // one floor = 2 phases with one intervention each; returns the expedition
+  const E = G.castle.exp; if (!E || E.done) return E; const P = E.ids.map(i => G.idx[i]).filter(h => h && h.alive);
+  const opt = (INTERVENE[E.phase] || []).find(o => o.id === choice); let b = 0; if (opt && (G.godLv || 1) >= opt.lv && canIntervene(opt)) { if (opt.cost) G.faith -= opt.cost; if (opt.awe) G.awe -= opt.awe; b = opt.b; } else if (choice === 'monsters') { b = -6; G.awe = clamp(G.awe + 15, 0, G.aweMax); }
+  E.bonus += b; E.phase++;
+  if (E.phase >= 2) { const f = E.floor; const L = WIN_K * Math.log(1 / Math.max(1e-6, rnd()) - 1) * -1; const m = floorD(P) - floorThreat(f) + E.bonus + L; const win = m >= -3; E.results.push({ f, win, m: Math.round(m) }); E.phase = 0; E.bonus = 0;
+    if (win) floorWon(E, f, P); else floorLost(E, f, P); }
+  return E;
+}
+function floorWon(E, f, P) {
+  const em = earlyMul(); E.cleared = f; addAnger(CFLOORS[f - 1].anger, 'floor' + f); const R = { f, levels: 0, items: [], title: null };
+  const lv = n => P.forEach(h => { for (let i = 0; i < n; i++) addExp(h, 30 * h.lvl); }); G.store = G.store || {};
+  if (f === 1) { lv(1); G.store.stoneM = (G.store.stoneM || 0) + Math.round(5 * em); G.store.mithril = (G.store.mithril || 0) + 1; R.levels = 1; }
+  if (f === 2) { lv(2); G.store.scale = (G.store.scale || 0) + Math.round(2 * em); G.store.dfang = (G.store.dfang || 0) + 1; G.moralePerm += Math.round(7 * em); R.levels = 2; rescueCaptives(); }
+  if (f === 3) { const best = P[0]; best.cadreWpn = 1; best.named = best.named || {}; best.named.w = { n: ['幹部の魔剣', '幹部魔劍'], trait: 'atk', v: 0.25 * em }; godXp(Math.round(60 * em)); }
+  if (f === 4) kingSlain(E, P, em);
+  logEvent('exp_floor', P.map(h => h.id), { f, win: 1 }, ['exp'], 0.85, 0.85, BOSS.home); E.results[E.results.length - 1].R = R;
+  if (f >= 4) finishExpedition(E, 'throne');
+}
+function floorLost(E, f, P) {
+  addAnger(10, 'fail'); G.moraleMod -= 10; G.awe = clamp(G.awe + 15, 0, G.aweMax); G.castle.cool = G.tick + TICK_YEAR;
+  const out = []; P.forEach(h => { const r = rnd(); if (r < 0.15 + f * 0.05) { killHuman(h, 'battle', null); out.push(['dead', h.id]); } else if (r < 0.4 + f * 0.05 && !G.castle.captives.some(c => c.id === h.id)) { h.captive = 1; h.away = 1; h.inside = 1; G.castle.captives.push({ id: h.id, until: G.tick + TICK_YEAR, f }); out.push(['captive', h.id]); } else { h.hp = Math.max(1, h.maxHp * 0.2); out.push(['hurt', h.id]); } });
+  E.results[E.results.length - 1].out = out; logEvent('exp_floor', P.map(h => h.id), { f, win: 0 }, ['exp'], 0.9, 0.9, BOSS.home); finishExpedition(E, 'lost');
+}
+function retreatExpedition() { const E = G.castle.exp; if (!E || E.done) return; finishExpedition(E, 'retreat'); }
+function finishExpedition(E, how) {
+  E.done = true; E.how = how; E.ids.forEach(i => { const h = G.idx[i]; if (h && h.alive && !h.captive) { h.away = 1; h.inside = 1; h.returnAt = Math.max(G.tick + TICK_DAY, E.back); } }); // the march home takes the rest of the season
+  G.castle.log.push({ t: G.tick, how, cleared: E.cleared }); logEvent('exp_end', E.ids.filter(i => G.idx[i] && G.idx[i].alive), { how, cleared: E.cleared }, ['exp'], 0.8, 0.8, PLAZA);
+  if (G.onExpEnd) G.onExpEnd(E); if (!G.uiAttached) G.castle.exp = null;
+}
+function kingSlain(E, P, em) {
+  const hero = G.idx[G.heroId]; const C = G.castle; const old = C.kingName;
+  if (hero) { hero.crown = 1; G.titles[hero.id] = ['弑王者', '弒王者']; } G.moralePerm += 15; G.devPts = (G.devPts || 0) + 5; G.town.gold = (G.town.gold || 0) + Math.round(800 * em);
+  G.faithMax += 50; G.faith = G.faithMax; godXp(Math.max(0, (GOD_LV_XP[Math.min(9, (G.godLv || 1))] || 0) - (G.godXp || 0)) + 1); P.forEach(h => { for (let i = 0; i < 3; i++) addExp(h, 30 * h.lvl); });
+  // a new king is crowned at once: stronger, angrier; the era goes on
+  C.kingGen++; C.kingPow *= 1.25; C.kingName = KING_NAMES[C.kingGen % KING_NAMES.length]; C.anger = Math.max(0, C.anger - 40); /* the leaderless army is in disarray */
+  if (!G.awakened) awaken(); G.stats.kingsSlain = (G.stats.kingsSlain || 0) + 1;
+  logEvent('king_slain_exp', hero ? [hero.id] : [], { old }, ['boss'], 1, 1, BOSS.home); logEvent('new_king', [], { n: C.kingName, gen: C.kingGen }, ['boss'], 1, 0.9, BOSS.home);
+}
+function rescueCaptives() { const C = G.castle; C.captives.forEach(c => { const h = G.idx[c.id]; if (h && h.alive) { h.captive = 0; h.away = 0; h.inside = 0; G.titles[h.id] = ['生還者', '生還者']; const d = homeDoor(h); const p = nearestWalkable(d.x, d.y); placeAt(h, p.x, p.y); logEvent('captive_saved', [h.id], {}, ['exp'], 0.85, 0.9, h); } }); C.captives = []; }
+function castleDaily() {
+  const C = G.castle; if (!C) return;
+  C.captives = C.captives.filter(c => { const h = G.idx[c.id]; if (!h || !h.alive) return false; if (G.tick >= c.until) { h.captive = 0; killHuman(h, 'execute', null); logEvent('captive_lost', [h.id], {}, ['exp'], 0.9, 0.9, BOSS.home); G.humans.forEach(o => { if (o.alive && (o.parent === h.id || o.spouse === h.id)) o.vengeful = 1; }); return false; } return true; });
+  if (C.exp && !C.exp.done && !G.uiAttached) autoExpedition();
+  G.humans.forEach(h => { if (h.returnAt && G.tick >= h.returnAt && h.alive && !h.captive) { h.returnAt = 0; h.away = 0; h.inside = 0; const d = homeDoor(h); const p = nearestWalkable(d.x, d.y); placeAt(h, p.x, p.y); } });
+  G.humans.forEach(h => { if (h.temple && G.tick >= h.temple) { h.temple = 0; h.away = 0; h.inside = 0; for (let i = 0; i < 2; i++) addExp(h, 30 * h.lvl); if (rchance(0.1)) h.hp = Math.max(1, h.maxHp * 0.4); } });
+}
+/* auto-play (no UI / tests): help each phase if affordable; continue while the next floor looks winnable */
+function autoExpedition(target) {
+  const E = G.castle.exp; if (!E) return; target = target || G.expTarget || 4;
+  while (!E.done) { const opts = battleOptions(E.phase).filter(canIntervene).sort((x, y) => y.b - x.b); expBattleStep(opts.length && G.policy !== 'none' ? opts[0].id : 'none');
+    if (!E.done && E.phase === 0 && E.cleared >= 1) { const P = E.ids.map(i => G.idx[i]).filter(h => h && h.alive); if (E.cleared >= target || floorWin(P, E.cleared + 1, 4) < (G.expRisk || 0.45)) { retreatExpedition(); break; } E.floor = E.cleared + 1; } }
+  G.castle.exp = null;
+}
+/* ---------- divine training (W3-4) ---------- */
+const TRAIN = {
+  mark: { n: ['祝福の刻印', '祝福刻印'], d: ['1人に永久の加護（攻・防・速・魔のどれか+15%）', '為 1 人刻上永久加護（攻防速魔其一 +15%）'], cost: 30, lv: 1 },
+  temple: { n: ['神殿修行', '神殿修行'], d: ['最大4人が1季のあいだ試練の間で修行。全員Lv+2（1割でけが）', '最多 4 人在試煉之間修行 1 季，每人保證 +2 Lv（1 成受傷）'], cost: 40, stones: ['stoneS', 3], lv: 2 },
+  growth: { n: ['成長の恩寵', '成長的恩寵'], d: ['1隊の狩りの経験値が1年間1.5倍', '1 隊 1 年內狩獵經驗 ×1.5'], cost: 25, lv: 2 },
+  skill: { n: ['神技の伝授', '傳授神技'], d: ['勇者の一撃（決戦+8pt）・聖盾（被害-20%）・癒しの祈り（戦後のけが人半分）', '勇者之一擊（決勝 +8pt）、聖盾（傷害 -20%）、癒之祈禱（戰後傷者減半）'], cost: 50, stones: ['stoneM', 2], lv: 3 },
+  artifact: { n: ['神器の授与', '授與神器'], d: ['勇者に神器：銅+10%→銀+20%→金+30%', '授與勇者神器：銅 +10% → 銀 +20% → 金 +30%'], cost: 60, stones: ['stoneL', 1], lv: 4 },
+};
+const SKILLS = ['heroStrike', 'holyShield', 'healPrayer'];
+function trainTarget(id) { const hero = G.heroId && G.idx[G.heroId]; const advs = G.humans.filter(h => h.alive && isAdv(h) && !h.away).sort((a, b) => (b.id === G.heroId) - (a.id === G.heroId) || advPower(b) - advPower(a));
+  if (id === 'mark') return advs.find(h => (h.marks || []).length < (h.id === G.heroId ? 3 : 1)); if (id === 'skill') return advs.find(h => (h.skills || []).length < 2); if (id === 'artifact') return hero && hero.alive && (hero.artifact || 0) < 3 && (G.godLv || 1) >= [4, 6, 8][hero.artifact || 0] ? hero : null;
+  if (id === 'temple') return advs.filter(h => !h.templeYear || yearOf(G.tick) > h.templeYear).slice(0, 4); if (id === 'growth') return advs.filter(h => !(h.growthUntil > G.tick)).slice(0, 4); return null; }
+function trainCost(id) { const T = TRAIN[id]; if (id === 'artifact') { const h = G.idx[G.heroId]; return [60, 90, 120][(h && h.artifact) || 0]; } return T.cost; }
+function trainAvailable(id) { const T = TRAIN[id]; if (!T || (G.godLv || 1) < T.lv || G.faith < trainCost(id)) return false; if (T.stones && ((G.store || {})[T.stones[0]] || 0) < T.stones[1]) return false; const tg = trainTarget(id); return Array.isArray(tg) ? tg.length > 0 : !!tg; }
+function doTrain(id, who) {
+  if (!trainAvailable(id)) return false; const T = TRAIN[id]; G.faith -= trainCost(id); faithLog('train', -trainCost(id)); if (T.stones) G.store[T.stones[0]] -= T.stones[1];
+  let tg = who ? G.idx[who] : trainTarget(id); const L = li0();
+  if (who && (!tg || !tg.alive || (id === 'mark' && (tg.marks || []).length >= (tg.id === G.heroId ? 3 : 1)) || (id === 'skill' && (tg.skills || []).length >= 2))) tg = trainTarget(id);
+  if (id === 'mark') { tg.marks = tg.marks || []; tg.marks.push(['atk', 'def', 'spd', 'mag'][tg.marks.length % 4]); }
+  else if (id === 'temple') { tg = trainTarget(id); tg.forEach(h => { h.temple = G.tick + SEASON_T; h.templeYear = yearOf(G.tick); h.away = 1; h.inside = 1; h.party = 0; h.act = null; }); }
+  else if (id === 'growth') { tg = trainTarget(id); tg.forEach(h => h.growthUntil = G.tick + TICK_YEAR); }
+  else if (id === 'skill') { tg.skills = tg.skills || []; tg.skills.push(SKILLS.find(s => tg.skills.indexOf(s) < 0)); }
+  else if (id === 'artifact') tg.artifact = (tg.artifact || 0) + 1;
+  G.stats.trains = (G.stats.trains || 0) + 1; const ids = Array.isArray(tg) ? tg.map(h => h.id) : [tg.id]; logEvent('divine_train', ids, { id }, ['growth'], 0.55, 0.6, Array.isArray(tg) ? tg[0] : tg); return true;
+}
+function li0() { return typeof LANG !== 'undefined' && LANG === 'zh' ? 1 : 0; }
+/* throne win chance after a training step (for the "+x%" on each button) */
+function trainDelta(id) { const P = expParty() || G.humans.filter(h => h.alive && isAdv(h)).sort((a, b) => advPower(b) - advPower(a)).slice(0, 4); if (!P.length) return 0; const p0 = floorWin(P, 4, 4);
+  const save = P.map(h => [h.lvl, (h.marks || []).slice(), h.artifact || 0, (h.skills || []).slice()]);
+  if (id === 'mark') { const h = trainTarget('mark'); if (h) (h.marks = h.marks || []).push('atk'); } if (id === 'temple' || id === 'growth') P.forEach(h => h.lvl += id === 'temple' ? 2 : 1); if (id === 'artifact') { const h = G.idx[G.heroId]; if (h) h.artifact = (h.artifact || 0) + 1; } if (id === 'skill') { const h = trainTarget('skill'); if (h) (h.skills = h.skills || []).push('heroStrike'); }
+  const p1 = floorWin(P, 4, 4); P.forEach((h, i) => { h.lvl = save[i][0]; h.marks = save[i][1]; h.artifact = save[i][2]; h.skills = save[i][3]; delete h._st; }); return p1 - p0; }
 
 /* ---- 08_faith.js ---- */
 /* ================= faith / divine powers / counsel / policy ================= */
@@ -2110,6 +2382,8 @@ function sceneFor(ev) {
     case 'assault_omen': return p.step === 3 && (p.a === 'dragon' || p.a === 'king') ? 'omen' : null;
     case 'assault_start': return p.a === 'dragon' || p.a === 'king' ? 'eve' : null;
     case 'assault_end': return p.win ? 'battle' : 'siege';
+    case 'exp_depart': return 'depart'; case 'exp_end': return p.how === 'lost' ? 'defeat' : 'return'; case 'new_king': return 'omen'; case 'king_slain_exp': return 'revelation'; case 'captive_lost': return 'funeral'; case 'captive_saved': return 'reunion'; case 'divine_train': return 'trial';
+    case 'lord_slain': return 'promotion'; case 'named_gear': return 'g_gear'; case 'inherit_gear': return 'g_gear';
     case 'festival': return 'family_day'; case 'hero_born': return 'promotion'; case 'dragon_pact': return p.ok ? 'answered' : null;
     case 'ending_doom': return 'finale_doom'; case 'ending_godleft': return 'finale_godleft'; case 'ending_stagnant': return 'finale_stagnant';
   }
@@ -2893,7 +3167,7 @@ function serializeState() {
 }
 function deserializeState(str) {
   const o = JSON.parse(str);
-  if (!o || o.ver !== 1) throw new Error('version');
+  if (!o || o.ver !== 2) throw new Error('version'); // V4.2: saves from before the big map cannot be migrated
   const fxOn = G ? G.fxOn : false, cbs = {};
   if (G) for (const k in G) if (typeof G[k] === 'function') cbs[k] = G[k];
   G = Object.assign({}, o, cbs); G.rng = new RNG(1); G.rng.s = o.rngS; ['arcs', 'fores', 'notes', 'bigActs'].forEach(k => { if (!G[k]) G[k] = []; }); if (!G.used) G.used = {}; if (!G.lastScene) G.lastScene = {}; if (G.main === undefined) G.main = 0; G.fx = []; G.fxOn = fxOn; delete G.rngS;

@@ -1,0 +1,5 @@
+const fs = require('fs'), vm = require('vm'); vm.runInThisContext(fs.readFileSync(__dirname + '/sim_bundle.js', 'utf8'), { filename: 'sim' });
+const RT = globalThis.__RT; const N = +process.argv[2] || 6; const acc = {};
+for (let s = 1; s <= N; s++) { RT.newGame({ seed: s * 7919 + 11, god: ['order', 'mercy', 'chaos'][s % 3], lang: 'ja' }); RT.policy('basic'); const G = RT.G(); const seen = {};
+  for (let i = 0; i < 20000 && !G.ending; i++) { RT.step(1); if (G.battle && !seen[G.battle.a]) { seen[G.battle.a] = 1; const p = defenseParts(); const a = (acc[G.battle.a] = acc[G.battle.a] || { n: 0 }); a.n++; for (const k in p) a[k] = (a[k] || 0) + p[k]; a.pop = (a.pop || 0) + G.humans.filter(h => h.alive).length; a.adv = (a.adv || 0) + G.humans.filter(h => h.alive && h.adv && !h.retired && h.age >= 16).length; a.food = (a.food || 0) + G.town.food; a.bal = (a.bal || 0) + G.balance; a.T = (a.T || 0) + threatOf(G.assaults.find(x => x.id === G.battle.a) || { id: G.battle.a }); } } }
+for (const k in acc) { const a = acc[k]; console.log(k, Object.keys(a).filter(x => x !== 'n').map(x => x + ' ' + (a[x] / a.n).toFixed(1)).join(' ')); }

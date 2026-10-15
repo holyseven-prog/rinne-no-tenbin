@@ -9,7 +9,7 @@ function serializeState() {
 }
 function deserializeState(str) {
   const o = JSON.parse(str);
-  if (!o || o.ver !== 1) throw new Error('version');
+  if (!o || o.ver !== 2) throw new Error('version'); // V4.2: saves from before the big map cannot be migrated
   const fxOn = G ? G.fxOn : false, cbs = {};
   if (G) for (const k in G) if (typeof G[k] === 'function') cbs[k] = G[k];
   G = Object.assign({}, o, cbs); G.rng = new RNG(1); G.rng.s = o.rngS; ['arcs', 'fores', 'notes', 'bigActs'].forEach(k => { if (!G[k]) G[k] = []; }); if (!G.used) G.used = {}; if (!G.lastScene) G.lastScene = {}; if (G.main === undefined) G.main = 0; G.fx = []; G.fxOn = fxOn; delete G.rngS;

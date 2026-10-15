@@ -78,7 +78,7 @@ Object.assign(Game, {
   loadSlot(n) {
     const str = Save.read(n); if (!str) { UI.toast(t('no_slot')); return; }
     try { deserializeState(str); Screens.closeAll(); Screens.clearScr(); G.fx = []; Game.afterNew(); UI.toast(t('loaded')); }
-    catch (e) { ERRS.push('load:' + e.message); UI.toast('Load error'); Game.toTitle(); }
+    catch (e) { if (e.message === 'version') { UI.toast(t('old_save')); return; } ERRS.push('load:' + e.message); UI.toast('Load error'); Game.toTitle(); }
   },
   cutscene() {
     Snd.se('awaken'); Render.shake = 8; Render.centerOn(58, 14); Snd.stopSong(0.5);
@@ -152,6 +152,7 @@ function onKeyDown(e) {
     case '1': case '2': case '3': case '4': case '5': selectPower(+kl - 1); break;
     case 'x': if (G.eye > 0) { Game.power = Game.power === 'eye' ? null : 'eye'; UI.refresh(true); } break;
     case 'h': Screens.chronicle(); break;
+    case 'Home': Render.centerOn(PLAZA.x, PLAZA.y); Game.follow = 0; break;
     case 'b': Screens.defense(); break;
     case 'r': Screens.residents(); break;
     case 's': if (!e.shiftKey || true) Screens.souls(); break;

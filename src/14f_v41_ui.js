@@ -152,3 +152,45 @@ Screens.council = function () {
       h('div', { style: 'text-align:center;margin-top:12px' }, h('span', { class: 'btn big' + (picked.length === 2 ? '' : ' dis'), onclick: () => { if (picked.length !== 2) return; closeCouncil(picked, edict); Snd.se('ok'); Screens.closeAll(); UI.refresh(true); } }, t('co_ok')))]);
   }, null, { noEsc: true });
 };
+
+/* ---------- V4.2 W0: region buttons under the minimap (red dot = something happened there), Home key ---------- */
+Object.assign(S, { reg_village: ['村', '村莊'], reg_plains: ['平原', '平原'], reg_forest: ['森', '森林'], reg_swamp: ['沼', '沼澤'], reg_mountain: ['山', '山岳'], reg_nest: ['竜巣', '龍巢'], reg_castle: ['魔王城', '魔王城'], tip_reg: ['地域へ移動', '移動到區域'], tip_reg_d: ['押すとその地域を映します。赤い点は、最近そこで大事なことが起きた印です。Homeキーで村へ戻ります。', '按下會移到該區域。紅點代表最近那裡發生了大事。按 Home 鍵回到村莊。'], old_save: ['このセーブは古い地図（V4.1以前）用なので読み込めません。新しく始めてください。', '這個存檔是舊地圖（V4.1 以前）用的，無法讀取，請重新開始。'] });
+const REGIONS = [['village', 28, 26], ['plains', 67, 23], ['forest', 90, 23], ['swamp', 109, 30], ['mountain', 126, 23], ['nest', 140, 23], ['castle', 152, 24]];
+const _ub42 = UI.build; UI.build = function () { _ub42.apply(this, arguments); const E = this.el; if (!E.miniWin) return;
+  E.regRow = h('div', { style: 'display:flex;flex-wrap:wrap;gap:2px;margin:3px 2px 0' }); E.regBtns = {};
+  REGIONS.forEach(([id, x, y]) => { const b = h('span', { class: 'btn', style: 'font-size:10px;padding:0 4px;position:relative;line-height:16px', onclick: () => { Render.centerOn(x, y); Game.follow = 0; UI.regionSeen[id] = G.tick; } }, t('reg_' + id)); b._dot = h('i', { style: 'position:absolute;right:-2px;top:-3px;width:6px;height:6px;border-radius:3px;background:#ff3a3a;display:none' }); b.appendChild(b._dot); E.regBtns[id] = b; E.regRow.appendChild(b); Tip.attach(b, () => [t('tip_reg'), t('tip_reg_d')]); });
+  E.miniWin.appendChild(E.regRow); UI.regionSeen = UI.regionSeen || {}; };
+function regionOfX(x) { if (x <= VIL_X1) return 'village'; if (x >= PLATEAU_X0) return 'castle'; const z = zoneAt(x); return z ? z.id : 'village'; }
+const _rw42 = UI.refreshWar; UI.refreshWar = function () { _rw42.apply(this, arguments); const E = this.el; if (!E.regBtns || !G) return; if ((this._regT = (this._regT || 0) + 1) % 20) return;
+  const hot = {}; for (let i = G.events.length - 1; i >= 0 && i > G.events.length - 60; i--) { const e = G.events[i]; if (!e.pos || G.tick - e.t > 2 * TICK_DAY) continue; const c = feedClass(e); if (c !== 'S' && c !== 'A') continue; const r = regionOfX(e.pos.x); if (e.t > (UI.regionSeen[r] || 0)) hot[r] = 1; }
+  for (const id in E.regBtns) E.regBtns[id]._dot.style.display = hot[id] ? 'block' : 'none'; };
+/* ---------- V4.2 W1/W2 UI: field monsters -> threat, storehouse, named gear on the person card, zone lords, signposts ---------- */
+Object.assign(S, { eco_t: ['野外の魔物', '野外魔物'], eco_many: ['多い', '多'], eco_normal: ['ふつう', '普通'], eco_few: ['少ない', '少'], eco_thr: ['脅威 {s}{n}%', '威脅 {s}{n}%'], tip_eco: ['野外の魔物', '野外魔物'],
+  tip_eco_d: ['冒険者が狩りをすると野外の魔物が減り、次の攻防の敵が弱くなります。放っておくと増え、村の近くにもあふれます。', '冒險者狩獵會減少野外魔物，下一場攻防的敵人就會變弱；放著不管會變多，還會溢到村莊附近。'],
+  store_t: ['倉庫', '倉庫'], store_none: ['まだ何もない', '還是空的'], gold_t: ['金庫 {n}G', '金庫 {n}G'], tip_store: ['倉庫', '倉庫'],
+  tip_store_d: ['冒険者が持ち帰った物。肉・きのこは糧食、薬草は薬、素材は鍛冶屋が名品にします。魔石は、神を信じる人ほど教会に奉納し（信仰力になる）、そうでない人は売ります（金庫→村の発展）。', '冒險者帶回的東西。肉和蘑菇變糧食，藥草變藥，素材由鐵匠做成名品。魔石：越信神的人越會奉納給教會（變成信仰力），其他人會賣掉（金庫→村莊發展）。'],
+  named_t: ['名品', '名品'], rare_t: ['宝', '寶物'], ev_lord: ['{A}が{n}を討ち取った！', '{A}討伐了{n}！'], ev_named: ['{A}が名品「{n}」を手に入れた', '{A}得到名品「{n}」'], ev_offer: ['{A}が魔石を教会に奉納した', '{A}把魔石奉納給教會'], ev_overflow: ['野の魔物が村の近くまであふれてきた', '野外魔物溢到村莊附近了'], ev_upg: ['倉の金で村が育った', '用金庫的錢讓村莊發展了'], ev_inherit: ['{A}が{B}の装備を受け継いだ', '{A}繼承了{B}的裝備'], ev_sage: ['賢者の石が{A}を死から救った', '賢者之石救了{A}一命'],
+  zone_star: ['{z}　推奨Lv{a}〜', '{z}　建議 Lv{a}～'] });
+function ecoBadge() { if (!G.eco) return null; const lv = ecoLevel(), m = ecoMod(); const col = lv === 'many' ? '#ff9a9a' : lv === 'few' ? '#9affb0' : '#ffe9a0'; const e = h('div', { class: 'sm', style: 'margin-top:3px;color:' + col }, '🐾 ' + t('eco_t') + '：' + t('eco_' + lv) + ' → ' + fmt(t('eco_thr'), { s: m >= 0 ? '+' : '', n: Math.round(m * 100) })); Tip.attach(e, () => [t('tip_eco'), t('tip_eco_d')]); return e; }
+function storePanel() { const L = li(); const S0 = G.store || {}; const items = Object.keys(S0).filter(k => S0[k] > 0); const box = h('div', { style: 'margin-top:6px' }, h('b', { class: 'gold' }, t('store_t')), h('span', { class: 'sm' }, '　' + fmt(t('gold_t'), { n: Math.floor(G.town.gold || 0) })));
+  const grid = h('div', { style: 'display:flex;flex-wrap:wrap;gap:3px 8px;font-size:12px' }); if (!items.length) grid.append(h('span', { class: 'sm dim' }, t('store_none'))); items.forEach(k => grid.append(h('span', null, ITEMS[k].n[L] + '×' + S0[k])));
+  Object.keys(G.rares || {}).forEach(k => { const o = G.idx[G.rares[k]]; if (o && o.alive) grid.append(h('span', { style: 'color:#ffd860' }, '★' + RARES[k].n[L] + '（' + o.name[L] + '）')); });
+  box.append(grid); Tip.attach(box, () => [t('tip_store'), t('tip_store_d')]); return box; }
+const _def42 = Screens.defense; Screens.defense = function () { _def42.apply(this, arguments); const top = this.stack[this.stack.length - 1]; if (!top || top.name !== 'defense') return; const r0 = top.build; top.build = () => { const el = r0(); try { const devKey = t('dev_lv').replace('{n}', ''); const dev = Array.from(el.querySelectorAll('.sm')).find(x => x.textContent.indexOf(devKey) === 0); const b = ecoBadge(); if (b && dev) dev.after(b); const acts = el.querySelector('.scroll'); if (acts) { acts.style.height = '330px'; acts.after(storePanel()); } } catch (e) { ERRS.push('def42:' + e.message); } return el; }; Screens.rerender(); };
+const _wb42 = UI.refreshWar; UI.refreshWar = function () { _wb42.apply(this, arguments); const E = this.el; if (!E.warTxt || !G || !G.eco) return; const lv = ecoLevel(); if (lv !== 'normal') E.warTxt.textContent += ' 🐾' + t('eco_' + lv); };
+/* person card: named gear / rare item */
+const _rr42 = UI.refreshRes; UI.refreshRes = function () { _rr42.apply(this, arguments); const R = this.resRefs; const hh = Game.selId ? hById(Game.selId) : null; if (!R || !hh) return; const L = li(); const bits = [];
+  if (hh.named) { if (hh.named.w) bits.push('⚔' + hh.named.w.n[L]); if (hh.named.a) bits.push('🛡' + hh.named.a.n[L]); } if (hh.rare && RARES[hh.rare]) bits.push('★' + RARES[hh.rare].n[L] + '（' + RARES[hh.rare].d[L] + '）'); if (hh.crown) bits.push('👑' + RARES.kingCrown.n[L]);
+  if (bits.length) R.gold.textContent += '　' + t('named_t') + '：' + bits.join(' '); };
+/* feed lines */
+const _ev42 = evLineV4; evLineV4 = function (ev) { const L = li(); const p = ev.payload || {}; const nm = i => { const e = G.idx[ev.actors[i]]; return e ? e.name[L] : (ev.names && ev.names[ev.actors[i]] ? ev.names[ev.actors[i]][L] : '?'); };
+  switch (ev.type) { case 'lord_slain': return fmt(t('ev_lord'), { A: nm(0), n: p.name ? p.name[L] : '' }); case 'named_gear': return fmt(t('ev_named'), { A: nm(0), n: p.n ? p.n[L] : '' }); case 'offering': return fmt(t('ev_offer'), { A: nm(0) }); case 'overflow': return t('ev_overflow'); case 'village_upgrade': return t('ev_upg'); case 'inherit_gear': return fmt(t('ev_inherit'), { A: nm(0), B: nm(1) }); case 'sage_saved': return fmt(t('ev_sage'), { A: nm(0) }); }
+  return _ev42(ev); };
+Object.assign(FEED_A, { named_gear: 1, village_upgrade: 1, inherit_gear: 1, sage_saved: 1 }); Object.assign(FEED_B, { offering: 1, overflow: 1 });
+/* map: zone lords are 1.5x with a glow; zone signposts show the stars */
+const _rd42 = Render.draw; Render.draw = function (alpha, opts) { _rd42.apply(this, arguments); if (!G || !G.lords) return; const c = this.c, cx = Math.round(this.cam.x), cy = Math.round(this.cam.y); const L = li();
+  for (const z in G.lords) { const lo = G.lords[z]; const m = lo.alive && G.idx[lo.id]; if (!m || !m.alive) continue; const sx = Math.round(lerp(m.px, m.x, alpha || 0) * TS + 8 - cx), sy = Math.round(lerp(m.py, m.y, alpha || 0) * TS + 14 - cy); if (sx < -40 || sx > 680 || sy < -40 || sy > 400) continue;
+    const spr = monsterSprite(m, (this.time >> 3) % 3); c.globalAlpha = 0.35 + 0.15 * Math.sin(this.time / 8); c.fillStyle = '#ff6040'; c.beginPath(); c.ellipse(sx, sy - 6, 16, 14, 0, 0, 7); c.fill(); c.globalAlpha = 1; c.drawImage(spr, sx - spr.width * 0.75, sy - spr.height * 1.5 + 2, spr.width * 1.5, spr.height * 1.5);
+    c.font = 'bold 8px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#1a1020'; c.fillText(lo.name[L], sx + 1, sy - spr.height * 1.5 - 1); c.fillStyle = '#ffb060'; c.fillText(lo.name[L], sx, sy - spr.height * 1.5 - 2); }
+  for (const sg of (W.signs || [])) { const sx = sg.x * TS - cx, sy = sg.y * TS - cy; if (sx < -40 || sx > 680 || sy < -40 || sy > 400) continue; const Z = ZONES.find(q => q.id === sg.zone); fr(c, '#3a2410', sx + 6, sy - 2, 3, 18); fr(c, '#181020', sx - 6, sy - 12, 28, 13); fr(c, '#e8d8a8', sx - 5, sy - 11, 26, 11); c.font = '7px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#c03020'; c.fillText('★'.repeat(Z.star), sx - 4, sy - 3); }
+};

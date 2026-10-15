@@ -104,3 +104,13 @@ monsterSprite = function (m, frame, dir) {
   return artCanvas(fr[f], 'ea.' + k + '.' + v + '.' + f);
 };
 function enemyBattleSprite(k, frame) { const A = typeof ENEMYART !== 'undefined' && ENEMYART[k]; if (!A) return null; const fr = A.bat.L; const f = (frame | 0) % fr.length; return artCanvas(fr[f], 'eb.' + k + '.' + f); }
+
+/* V4.2 W1: the new field monsters reuse a base form with a colour shift until their design sheet arrives (art spec Part E: "wait for SEVEN") */
+const MON_ALIAS = { slime: ['mush', 'hue-rotate(200deg) saturate(1.2)'], hornrab: ['wolf', 'hue-rotate(150deg) saturate(0.6) brightness(1.3)'], flower: ['mush', 'hue-rotate(260deg) saturate(1.4)'], mush2: ['mush', 'hue-rotate(80deg) saturate(1.2)'], slimeK: ['mush', 'hue-rotate(180deg) brightness(0.8) saturate(1.6)'], bat2: ['bat', 'hue-rotate(90deg) brightness(0.8)'],
+  gargoyle: ['bat', 'grayscale(1) brightness(1.1)'], griffin: ['bat', 'hue-rotate(160deg) saturate(1.5) brightness(1.3)'], snowwolf: ['wolf', 'grayscale(1) brightness(1.7)'], goblin2: ['goblin', 'hue-rotate(320deg) brightness(0.85)'], wyrm: ['wolf', 'hue-rotate(110deg) saturate(1.6)'], skel2: ['skel', 'sepia(0.8) brightness(0.8)'] };
+const _monSprite42 = monsterSprite;
+monsterSprite = function (m, frame, dir) {
+  const al = MON_ALIAS[m.type]; if (!al || m.boss || m.cad >= 0) return _monSprite42(m, frame, dir);
+  const src = _monSprite42(Object.assign({}, m, { type: al[0] }), frame, dir); const key = 'al.' + m.type + '.' + src.width + '.' + frame + '.' + (dir === undefined ? m.dir : dir); if (spriteCache[key]) return spriteCache[key];
+  const cv = mkCanvas(src.width, src.height), c = cv.getContext('2d'); c.filter = al[1]; c.drawImage(src, 0, 0); c.filter = 'none'; return (spriteCache[key] = cv);
+};

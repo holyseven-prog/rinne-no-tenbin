@@ -1,0 +1,4 @@
+const fs = require('fs'), vm = require('vm'); vm.runInThisContext(fs.readFileSync(__dirname + '/sim_bundle.js', 'utf8'), { filename: 'sim' });
+const R = globalThis.__RT; R.newGame({ seed: 7930, god: 'mercy', lang: 'ja' }); R.policy('basic'); const g = R.G(); const deaths = {};
+const ok = killHuman; globalThis.killHuman = function (h, cause) { deaths[cause] = (deaths[cause] || 0) + 1; return ok.apply(this, arguments); };
+for (let s = 0; s < 24 && !g.ending; s++) { for (let i = 0; i < TICK_YEAR / 4; i++) R.step(1); const al = g.humans.filter(h => h.alive); console.log('y' + (s / 4).toFixed(2), 'pop', al.length, 'kids', al.filter(h => h.child).length, 'food', Math.round(g.town.food), 'gold', Math.round(g.town.gold || 0), 'hp', Math.round(g.town.hp), 'mons', g.monsters.length, 'deaths', JSON.stringify(deaths), 'jobs', JSON.stringify(al.reduce((a, h) => (a[h.job] = (a[h.job] || 0) + 1, a), {}))); }

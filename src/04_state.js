@@ -18,7 +18,7 @@ function newGame(o) {
   const seed = (o.seed === undefined ? (Date.now() & 0xffffff) : o.seed) >>> 0;
   const god = GODS.find(g => g.id === (o.god || 'mercy')) || GODS[0];
   G = {
-    ver: 1, tutMode: !!o.tut, easy: !!o.easy, learn: !!o.learn, seed, god: god.id, gen: o.gen || 1, tick: START_TICK, rng: new RNG(seed), nid: 1,
+    ver: 2, tutMode: !!o.tut, easy: !!o.easy, learn: !!o.learn, seed, god: god.id, gen: o.gen || 1, tick: START_TICK, rng: new RNG(seed), nid: 1,
     humans: [], monsters: [], souls: [], quests: [], parties: [], prayers: [], events: [], chapters: [], log: [],
     faith: god.faith0, faithMax: 150, balance: 20, balAcc: 0, balYear: [], hist: [],
     eye: 3, eyeT: 0, town: { food: 140, gold: 200, hp: 100, potions: 8, gearStock: 4 },
@@ -31,7 +31,7 @@ function newGame(o) {
   initWorldState();
   rebuildIdx();
   G.main = G.flags.kyle || 0; G.mainLocked = false;
-  initAssaults(); G.godXp = 0; G.godLv = 1; G.decrees = []; G.cards = []; G.stats.decisions = 0; startPeriod();
+  initAssaults(); initField(); initCastle(); G.godXp = 0; G.godLv = 1; G.decrees = []; G.cards = []; G.stats.decisions = 0; startPeriod();
   chronPrologue();
   return G;
 }
@@ -156,8 +156,7 @@ function spawnMonster(tier, near, mode) {
   let p;
   if (near) { p = nearestWalkable(near.x + rint(-3, 3), near.y + rint(-3, 3)); }
   else {
-    const lo = tier === 1 ? 45 : tier === 2 ? 47 : 49;
-    p = randWalkableIn(lo, 3, 55, 38);
+    const z = ZONES[Math.min(ZONES.length - 1, Math.max(0, tier - 1))]; p = randWalkableIn(z.x0 + 1, 5, z.x1 - 1, MH - 6); // V4.2: wild monsters live in the field zones
   }
   const m = mkMonster(type, p.x, p.y);
   const mm = monMul();

@@ -6,6 +6,7 @@ function placeKey(pos) {
   const z = zoneOf(x);
   if (z === 'town' && x >= 24 && x <= 32 && y >= 16 && y <= 23) return 'plaza';
   if (z === 'field') { if (x >= 44 && x <= 54 && y >= 24 && y <= 36) return 'lake'; return 'field'; }
+  if (z === 'town' && y >= 37) return 'town';
   return z;
 }
 function logEvent(type, actors, payload, tags, tension, emotion, where) {
@@ -92,7 +93,7 @@ function dayUpdate() {
   if (rchance(0.12)) { const th = alive.filter(h => h.job === 'thief' && h.alive && h.age >= 16); if (th.length) { const t = rpick(th), v = rpick(alive.filter(h => h !== t && h.gold > 10 && h.age >= 14) || [t]); if (v && v !== t) { const amt = Math.min(v.gold, rint(8, 25)); v.gold -= amt; t.gold += amt; soulOf(t).k.evil += 1.5; t.guilt = 1; v.rel[t.id] = (v.rel[t.id] || 0) - 40; G.dayEvil += 0.5; logEvent('betrayal', [t.id, v.id], { amt }, ['crime'], 0.65, 0.8, t); } } }
   dailyQuests();
   if (d % 6 === 0 && G.humans.some(x => !x.alive && G.tick - (x.diedAt || 0) > TICK_YEAR)) { G.humans = G.humans.filter(x => x.alive || G.tick - (x.diedAt || 0) <= TICK_YEAR); rebuildIdx(); }
-  dailyDefense(); periodDaily();
+  dailyDefense(); periodDaily(); fieldDaily(); castleDaily();
   // monster raids (replaced by the assault timeline in V4)
   if (G.assaults) { } else if (!G.awakened) {
     if (yr >= 4 && d >= G.raidDay && rchance(0.5 + (0.5 - G.balance / 200) * 0.5)) { spawnRaid(2 + (yr >> 2), yr <= 5 ? 1 : 2, false); G.raidDay = d + rint(9, 15); }
@@ -161,7 +162,7 @@ function tick() {
   if (!G.assaults && G.town.hp < 70 && !G.sieged && G.awakened) { G.sieged = true; logEvent('siege', [], {}, ['raid'], 0.85, 0.8, PLAZA); } else if (G.town.hp > 95) G.sieged = false;
   if (G.raidAlive === 0) G.townAlert = 0; else G.townAlert = Math.max(G.townAlert, 12);
   if (tk % 6 === 0) { expirePrayers(); if (G.bossFight && !G.parties.some(p => p.boss && p.state !== 'done')) G.bossFight = false; if (G.awakened && !G.assaults) tryBossExpedition(); scripted(); }
-  assaultTick(); councilTick(); cardTick();
+  assaultTick(); councilTick(); cardTick(); fieldSpawnTick();
   if (tk % TICK_DAY === 0) dayUpdate();
   if (G.easy && tk % 12 === 0) easyAuto();
   if (G.policy === 'basic') policyBasic(); else if (G.policy === 'engaged') policyEngaged();

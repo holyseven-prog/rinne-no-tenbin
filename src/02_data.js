@@ -43,11 +43,11 @@ const MONS = {
 };
 const MON_BY_TIER = { 1: ['mush', 'bat'], 2: ['turtle', 'goblin'], 3: ['skel', 'wolf'] };
 const CADRES = [
-  { key: 'verna', n: ['霧の公爵ヴェルナ', '霧公爵 維爾娜'], hp: 380, atk: 19, def: 8, spd: 1.0, range: 4, home: { x: 50, y: 29 } },
-  { key: 'garum', n: ['骨の将軍ガルム', '骨將軍 加爾姆'], hp: 460, atk: 22, def: 11, spd: 0.9, range: 1.5, home: { x: 52, y: 11 } },
-  { key: 'serene', n: ['影の女王セレネ', '影之女王 瑟蕾娜'], hp: 340, atk: 21, def: 7, spd: 1.3, range: 1.5, home: { x: 46, y: 35 } },
+  { key: 'verna', n: ['霧の公爵ヴェルナ', '霧公爵 維爾娜'], hp: 380, atk: 19, def: 8, spd: 1.0, range: 4, home: { x: 150, y: 30 } },
+  { key: 'garum', n: ['骨の将軍ガルム', '骨將軍 加爾姆'], hp: 460, atk: 22, def: 11, spd: 0.9, range: 1.5, home: { x: 154, y: 30 } },
+  { key: 'serene', n: ['影の女王セレネ', '影之女王 瑟蕾娜'], hp: 340, atk: 21, def: 7, spd: 1.3, range: 1.5, home: { x: 157, y: 28 } },
 ];
-const BOSS = { key: 'noctal', n: ['黒冠の王ノクタール', '黑冠之王 諾克塔爾'], hp: TUNE.bossHp, atk: TUNE.bossAtk, def: TUNE.bossDef, spd: 1.0, range: 1.8, home: { x: 60, y: 17 } };
+const BOSS = { key: 'noctal', n: ['黒冠の王ノクタール', '黑冠之王 諾克塔爾'], hp: TUNE.bossHp, atk: TUNE.bossAtk, def: TUNE.bossDef, spd: 1.0, range: 1.8, home: { x: 152, y: 27 } };
 
 const POWERS = [
   { id: 'oracle', cost: 6, n: ['神託', '神諭'], d: ['住人に夢でお告げ。行動の傾向を一時的に変える', '以夢境向居民降下神諭，暫時改變其行動傾向'] },
@@ -85,4 +85,6 @@ const PLACES = { // key -> names
   guild: ['天秤亭', '天秤亭'], tavern: ['酒場', '酒館'], church: ['教会', '教會'], smithy: ['鍛冶屋', '鐵匠鋪'], fountain: ['噴水', '噴泉'], well: ['井戸', '水井'], shop: ['武器屋', '武器店'], armor: ['防具屋', '防具店'],
   apothecary: ['薬屋', '藥鋪'], inn: ['宿屋', '旅店'], house: ['民家', '民宅'], mill: ['風車小屋', '風車小屋'], hut: ['農家', '農舍'], castle: ['魔王城', '魔王城'],
   plaza: ['広場', '廣場'], lake: ['湖のほとり', '湖畔'], wood: ['森の道', '森林小徑'],
+  plains: ['東の平原', '東方平原'], forest: ['森', '森林'], swamp: ['沼と洞窟', '沼澤與洞窟'], mountain: ['山岳', '山岳'], nest: ['竜の巣', '龍之巢'],
+  manor: ['領主館', '領主館'], market: ['市場', '市場'], library: ['図書館', '圖書館'], itemshop: ['道具屋', '道具店'], barracks: ['兵舎', '兵舍'], watchtower: ['見張り塔', '瞭望塔'], cemetery: ['墓地', '墓地'],
 };

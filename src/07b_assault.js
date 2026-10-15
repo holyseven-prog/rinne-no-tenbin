@@ -1,11 +1,11 @@
 /* ================= V4-A1: assault timeline, village defense, 3-phase battles, consequences, chains ================= */
 const SEASON_T = 3 * TICK_DAY; // 1 season = 3 days
 const ASSAULT_DEF = {
-  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
-  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 47, kind: 'wave', mon: 'skel', scale: 1 },
-  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 49, kind: 'dragon', mon: 'dragon', scale: 1.3 },
-  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 40, kind: 'wave', mon: 'wolf', scale: 1.2 },
-  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 45, kind: 'king', mon: 'boss', scale: 1.6 },
+  wave1: { n: ['第1次 魔物の大群', '第1次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 42, grow: 0, kind: 'wave', mon: 'goblin', scale: 0.8 },
+  wave2: { n: ['第2次 魔物の大群', '第2次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 50, kind: 'wave', mon: 'skel', scale: 1 },
+  dragon: { n: ['巨竜の来襲', '巨龍來襲'], short: ['巨竜', '巨龍'], base: 57, kind: 'dragon', mon: 'dragon', scale: 1.3 },
+  wave3: { n: ['第3次 魔物の大群', '第3次 魔物大軍'], short: ['魔物の大群', '魔物大軍'], base: 41, kind: 'wave', mon: 'wolf', scale: 1.2 },
+  king: { n: ['魔王の進攻', '魔王進攻'], short: ['魔王軍', '魔王軍'], base: 41.5, kind: 'king', mon: 'boss', scale: 1.6 },
 };
 const ASSAULT_ORDER = ['wave1', 'wave2', 'dragon', 'wave3', 'king'];
 const GRADES = ['crush', 'win', 'pyrrhic', 'loss', 'rout']; // 大勝 勝利 慘勝 敗北 潰滅
@@ -43,11 +43,11 @@ function heroDaily() {
 }
 /* ---------- defense (0..100, 5 parts) ---------- */
 function defenseParts() {
-  let pw = 0; for (const h of G.humans) { if (!isAdv(h)) continue; pw += lvlMul(h.lvl) * (1 + 0.07 * h.gear) * (0.55 + 0.45 * h.hp / Math.max(1, h.maxHp)); }
+  let pw = 0; for (const h of G.humans) { if (!isAdv(h) || h.away) continue; pw += lvlMul(h.lvl) * (1 + 0.07 * h.gear) * (0.55 + 0.45 * h.hp / Math.max(1, h.maxHp)); }
   if (G.flags.aid) pw += 6;
   const combat = clamp(pw / 40, 0, 1) * 100;
   const works = clamp(G.walls * 20 * (G.wallHp / 100) + (G.ruins && Object.keys(G.ruins).length ? -5 * Object.keys(G.ruins).length : 0), 0, 100);
-  const ans = (G.stats.answered || 0) / ((G.stats.prayers || 0) + 6); const morale = clamp(44 + ans * 36 + (G.moraleMod || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
+  const ans = (G.stats.answered || 0) / ((G.stats.prayers || 0) + 6); const morale = clamp(44 + ans * 36 + (G.moraleMod || 0) + (G.moralePerm || 0) + (heroAlive() ? 10 : 0) + G.balance / 6 - (G.flags.evac ? 8 : 0), 0, 100);
   const supply = clamp(Math.min(40, G.town.food / 700 * 40) + Math.min(30, G.town.potions / 30 * 30) + Math.min(30, G.town.gearStock / 10 * 30), 0, 100);
   const divine = clamp(G.prep || 0, 0, 100);
   return { combat, works, morale, supply, divine };
@@ -56,9 +56,11 @@ const DEF_W = { combat: 0.35, works: 0.2, morale: 0.2, supply: 0.15, divine: 0.1
 function defenseScore(p) { p = p || defenseParts(); let s = 0; for (const k in DEF_W) s += p[k] * DEF_W[k]; return s; }
 function threatOf(a) {
   const d = ASSAULT_DEF[a.id]; let t = d.base;
-  t += Math.max(0, -G.balance) / 8; t += (G.territory || 0) * 3; t -= a.provoked ? 8 : 0; if (G.easy) t -= 2.5; // V4.1-A12-6 easy mode: about +10pp
+  t += Math.max(0, -G.balance) / 12; t += (G.territory || 0) * 3; t -= a.provoked ? 8 : 0; if (G.easy) t -= 2.5; // V4.1-A12-6 easy mode: about +10pp
   if (a.id === 'dragon') { const ty = G.chain.dragonType; t += ty === 'village' ? 6 : ty === 'expedition' ? -4 : 0; t += G.chain.dragonAngry || 0; }
   if (a.id === 'king') { t += (G.chain.cadres || 2) * 4 - 8; const o = G.chain.dragonOutcome; t += o === 'slain' ? -8 : o === 'repelled' ? 6 : o === 'pact' ? -12 : o === 'lost' ? 12 : 0; }
+  if (G.eco && !G.noEco) t *= 1 + ecoMod();
+  if (G.castle) { t *= angerMul(); if (a.id === 'king') t *= 1 + (G.castle.kingPow - 1) * 0.3; } // the king is about half of his army's strength // W3: the army's anger; a new king is stronger // V4.2: more monsters in the field -> a stronger assault
   return t;
 }
 function adaptT(D, a) { if (a && a.adRef != null) return 0.8 * Math.max(0, a.adRef - 36) + 0.35 * Math.max(0, D - a.adRef); return 0.8 * Math.max(0, D - 36); } // V4.1-A3: the enemy answers a stronger village; it stops adapting at the half-year scout report, so late preparation counts fully
@@ -146,6 +148,7 @@ function startBattle(a) {
   a.pred = Math.round(winProb(a) * 100); a.predHelp = Math.round(sigm((D - T + 3 + expHelp()) / WIN_K) * 100); const fc = G.forecasts && G.forecasts[a.id]; a.fcThen = fc ? fc.then : null;
   G.battle = { xp0: G.godXp || 0, prepGain: (G.prepGain || {})[a.id] || 0, a: a.id, D, T, L, phase: 0, bonus: 0, choices: [], parts: defenseParts(), done: false, startT: G.tick, partial: [], helpMon: 0 };
   if (a.id === 'dragon' && G.dragonPact) { G.battle.pact = true; }
+  { const hero = G.heroId && G.idx[G.heroId]; if (hero && hero.alive && !hero.away) { if (hero.crown) G.battle.bonus += 2.4; if ((hero.skills || []).indexOf('heroStrike') >= 0) G.battle.bonus += 2; } } // crown +10pt, hero's strike +8pt in the decisive phase
   logEvent('assault_start', [], { a: a.id, p: a.pred, mon: ASSAULT_DEF[a.id].mon }, ['assault'], 1, 0.9, a.id === 'king' ? PLAZA : { x: FIELD_X0, y: 23 });
   if (G.onBattle) G.onBattle(G.battle);
 }
@@ -182,8 +185,8 @@ function applyConsequences(a, grade) {
   // experience
   advs.forEach((h, i) => { const n = win ? (i < 3 ? rint(2, 4) : rint(1, 2)) : rint(0, 1); for (let j = 0; j < n; j++) addExp(h, 30 * h.lvl); if (n) res.levels.push([h.id, n]); });
   // casualties
-  const nd = { crush: [0, 1], win: [1, 2], pyrrhic: [2, 4], loss: [4, 7], rout: [7, 11] }[grade]; let dn = Math.round(rint(nd[0], nd[1]) * (k.kind === 'wave' ? 1 : 1.25));
-  const pool = G.humans.filter(h => h.alive && h.age >= 6); const w = h => (isAdv(h) ? 4 : 1) * ((h.child || h.age >= 56) ? (G.flags.evac ? 0.15 : 1) : 1) * (h.job === 'historian' ? 0.2 : 1);
+  const nd = { crush: [0, 1], win: [1, 2], pyrrhic: [2, 4], loss: [4, 7], rout: [7, 11] }[grade]; let dn = Math.round(rint(nd[0], nd[1]) * (k.kind === 'wave' ? 1 : 1.25) * (G.humans.some(h => h.alive && (h.skills || []).indexOf('holyShield') >= 0) ? 0.8 : 1) * (G.humans.some(h => h.alive && (h.skills || []).indexOf('healPrayer') >= 0) ? 0.75 : 1));
+  const pool = G.humans.filter(h => h.alive && h.age >= 6 && !h.away); const w = h => (isAdv(h) ? 4 : 1) * ((h.child || h.age >= 56) ? (G.flags.evac ? 0.15 : 1) : 1) * (h.job === 'historian' ? 0.2 : 1);
   for (let i = 0; i < dn && pool.length > 6; i++) { let tot = 0; pool.forEach(h => tot += w(h)); let r = rnd() * tot; let pick = pool[0]; for (const h of pool) { r -= w(h); if (r <= 0) { pick = h; break; } } pool.splice(pool.indexOf(pick), 1); killHuman(pick, 'battle', null); res.deaths.push(pick.id); G.humans.forEach(o => { if (o.alive && o.parent === pick.id && o.age < 16) o.vengeful = 1; }); }
   res.levels = res.levels.filter(l => !res.deaths.includes(l[0]));
   // buildings & walls
