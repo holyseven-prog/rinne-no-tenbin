@@ -1,0 +1,9 @@
+/* original sheet crop | delivered sprite, both x3 nearest, for the buildings: test/out/visual/100/bld_compare.png */
+const fs = require('fs'); const { load, savePng } = require('./imgdata');
+const man = fs.readFileSync('assets/sprites/world_manifest.md', 'utf8'); const rows = [];
+for (const l of man.split('\n')) { const m = l.match(/^\| village\/(bld_[a-z_]+?)\.png \| (docs\/figures\/[^；]+)；[^；]+；(\d+),(\d+),(\d+),(\d+)/); if (m && !/_winter$/.test(m[1]) && (!process.argv[2] || new RegExp(process.argv[2]).test(m[1]))) rows.push({ n: m[1], sheet: m[2], x: +m[3], y: +m[4], w: +m[5], h: +m[6] }); }
+(async () => { const files = [...new Set(rows.map(r => r.sheet))].concat(rows.map(r => 'assets/sprites/village/' + r.n + '.png')); const im = await load(files);
+  const S = 3, cellW = 2 * 130 * S + 20, cellH = 220 * S; const cols = 2; const W = cols * cellW, H = Math.ceil(rows.length / cols) * cellH; const out = new Uint8ClampedArray(W * H * 4); for (let i = 0; i < out.length; i += 4) { out[i] = 60; out[i + 1] = 110; out[i + 2] = 60; out[i + 3] = 255; }
+  const blit = (src, sx, sy, sw, sh, dx, dy) => { for (let y = 0; y < sh * S; y++) for (let x = 0; x < sw * S; x++) { const X = dx + x, Y = dy + y; if (X >= W || Y >= H) continue; const si = ((sy + (y / S | 0)) * src.w + sx + (x / S | 0)) * 4; const a = src.data[si + 3] / 255; const di = (Y * W + X) * 4; for (let k = 0; k < 3; k++) out[di + k] = out[di + k] * (1 - a) + src.data[si + k] * a; } };
+  rows.forEach((r, i) => { const ox = (i % cols) * cellW, oy = Math.floor(i / cols) * cellH; const sh = im[r.sheet]; blit(sh, r.x, r.y, Math.min(r.w, 130), Math.min(r.h, 215), ox, oy); const sp = im['assets/sprites/village/' + r.n + '.png']; blit(sp, 0, 0, Math.min(sp.w, 130), Math.min(sp.h, 215), ox + 130 * S + 10, oy); });
+  await savePng('test/out/visual/100/bld_compare' + (process.argv[2] ? '_' + process.argv[2].replace(/[^a-z]/g, '') : '') + '.png', W, H, out); console.log(rows.length, W, H); })();
