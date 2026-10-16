@@ -110,7 +110,7 @@ function battleSceneCanvas(B) {
   for (let x = 6; x < 70; x += 6) { c.fillStyle = '#5a3a22'; c.fillRect(x, 86 - (G.walls >= 3 ? 6 : 0), 4, 28 + (G.walls >= 3 ? 6 : 0)); c.fillStyle = '#8a5a30'; c.fillRect(x, 84 - (G.walls >= 3 ? 6 : 0), 4, 3); }
   const win = B.done && isWin(B.grade), lost = B.done && !win; const adv = Math.min(B.phase, 2) * 22;
   const advs = G.humans.filter(isAdv).sort((x, y) => advPower(y) - advPower(x)).slice(0, 5);
-  advs.forEach((hh, i) => { const s = humanSprite(hh, 3, (B.phase + i) % 2 ? 5 : 0); c.drawImage(s, 80 + i * 34 + (win ? 60 : lost ? -20 : adv), 76 + (i % 2) * 10, 32, 48); });
+  advs.forEach((hh, i) => { const x = 80 + i * 34 + (win ? 60 : lost ? -20 : adv), y = 76 + (i % 2) * 10; const sp = SPR_READY && (SPR[humanSprBase(hh) + '_right_0_hd'] || SPR[humanSprBase(hh) + '_right_0']); if (sp) { c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(sp, x + 16 - 24 * sp.width / sp.height, y, 48 * sp.width / sp.height, 48); c.imageSmoothingEnabled = false; } else { const s = humanSprite(hh, 3, (B.phase + i) % 2 ? 5 : 0); c.drawImage(s, x, y, 32, 48); } });
   if (lost) { for (let i = 0; i < 4; i++) { const fx = 20 + i * 15, fy = 80; c.fillStyle = '#ff8a2a'; c.fillRect(fx, fy - (i % 2) * 6, 6, 10); c.fillStyle = '#ffd24a'; c.fillRect(fx + 1, fy + 3 - (i % 2) * 6, 3, 5); } c.fillStyle = 'rgba(60,50,50,0.45)'; for (let i = 0; i < 6; i++) { c.beginPath(); c.arc(24 + i * 9, 70 - i * 7, 7 + i * 1.5, 0, 7); c.fill(); } }
   // enemy side
   const mon = ASSAULT_DEF[B.a].mon;

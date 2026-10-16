@@ -12,10 +12,11 @@ const PAL = {
 const spriteCache = {};
 /* ---------- renderer ---------- */
 const Render = {
-  cam: { x: 0, y: 0 }, cv: null, c: null, parts: [], nums: [], time: 0, flash: 0, dim: 0, sel: 0, shake: 0, rings: [],
+  cam: { x: 0, y: 0 }, Z: 1, get k() { return 2 * this.Z; }, get VW() { return 640 / this.Z; }, get VH() { return 360 / this.Z; }, cv: null, c: null, parts: [], nums: [], time: 0, flash: 0, dim: 0, sel: 0, shake: 0, rings: [],
   init(cv) { this.cv = cv; this.c = cv.getContext('2d'); this.c.imageSmoothingEnabled = false; this.cam.x = 18 * TS; this.cam.y = 10 * TS; },
-  clampCam() { this.cam.x = clamp(this.cam.x, 0, MW * TS - 640); this.cam.y = clamp(this.cam.y, 0, MH * TS - 360); },
-  centerOn(tx, ty) { this.cam.x = tx * TS + 8 - 320; this.cam.y = ty * TS - 180; this.clampCam(); },
+  clampCam() { this.cam.x = clamp(this.cam.x, 0, MW * TS - this.VW); this.cam.y = clamp(this.cam.y, 0, MH * TS - this.VH); },
+  centerOn(tx, ty) { this.cam.x = tx * TS + 8 - this.VW / 2; this.cam.y = ty * TS - this.VH / 2; this.clampCam(); },
+  setZoom(z, sx, sy) { z = clamp(z, 1, 2); if (z === this.Z) return; sx = sx === undefined ? 640 : sx; sy = sy === undefined ? 360 : sy; const wx = this.cam.x + sx / this.k, wy = this.cam.y + sy / this.k; this.Z = z; this.cam.x = wx - sx / this.k; this.cam.y = wy - sy / this.k; this.clampCam(); },
   consumeFx() {
     if (!G || !G.fx) return;
     for (const f of G.fx) {
@@ -39,8 +40,8 @@ const Render = {
     this.consumeFx();
     const sea = seasonOf(G.tick);
     const cam = this.cam; const cx = Math.round(cam.x + (this.shake ? (Math.random() - .5) * this.shake : 0)), cy = Math.round(cam.y);
-    c.setTransform(1, 0, 0, 1, 0, 0);
-    c.drawImage(getWorldCanvas(sea), cx, cy, 640, 360, 0, 0, 640, 360);
+    c.setTransform(this.k, 0, 0, this.k, 0, 0); c.imageSmoothingEnabled = false; // 1280x720 canvas, world units x k
+    c.drawImage(getWorldCanvas(sea), cx, cy, this.VW, this.VH, 0, 0, this.VW, this.VH);
     const hf = (G.tick % TICK_DAY) / 6; this.drawWaterAnim(c, cx, cy, sea); this.drawAnimProps(c, cx, cy, sea, opts.noNight ? 0 : darkness(hf)); if (G.assaults) this.drawDefense(c, cx, cy, sea);
     // plateau fog
     if (cx + 640 > PLATEAU_X0 * TS) { c.globalAlpha = 0.18 + (G.awakened ? 0.12 : 0) + Math.sin(this.time / 40) * 0.04; fr(c, '#9a50d0', PLATEAU_X0 * TS - cx, 0, 640, 360); c.globalAlpha = 1; }
@@ -66,7 +67,7 @@ const Render = {
         if (e.tgt && e.hurt === undefined) { }
         if (e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.2) { const t = G.idx[e.tgt]; const d = Math.hypot(t.x - e.x, t.y - e.y) || 1; const k = Math.max(0, Math.sin(this.time / 2.5 + e.id)) * 2.5; ox = (t.x - e.x) / d * k; oy = (t.y - e.y) / d * k; }
         if (e.hurt > 0) c.filter = 'brightness(2.6)';
-        c.drawImage(spr, Math.round(sx - 8 + ox), Math.round(sy - 22 + oy));
+        if (!drawHumanSpr(c, e, fm, sx + ox, sy + 2 + oy)) c.drawImage(spr, Math.round(sx - 8 + ox), Math.round(sy - 22 + oy)); // sheet sprites (11t), old drawing as fallback
         c.filter = 'none';
         // icons
         const iy = sy - 27;
@@ -78,15 +79,15 @@ const Render = {
         if (e.id === this.sel || e.hp < e.maxHp * 0.99 && (e.tgt || e.hurt > 0 || e.id === this.sel)) { const w = 14; fr(c, '#000a', sx - 7, sy - 29, w + 2, 4); fr(c, '#3a3a3a', sx - 6, sy - 28, w, 2); fr(c, e.hp / e.maxHp > 0.5 ? '#40e060' : e.hp / e.maxHp > 0.25 ? '#e0c040' : '#e04040', sx - 6, sy - 28, Math.max(1, Math.round(w * e.hp / e.maxHp)), 2); }
         if (e.id === this.sel) { const bob = Math.round(Math.sin(this.time / 6) * 1.5); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(sx - 4, sy - 36 + bob); c.lineTo(sx + 4, sy - 36 + bob); c.lineTo(sx, sy - 31 + bob); c.fill(); }
       } else {
-        const atk = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.4 && Math.sin(this.time / 2.5 + e.id) > 0.2; spr = monsterSprite(e, atk ? 2 : ((this.time >> 3) + e.id) % 3); const bw = spr.width, bh = spr.height;
+        const atk = e.tgt && G.idx[e.tgt] && Math.hypot(G.idx[e.tgt].x - e.x, G.idx[e.tgt].y - e.y) < 2.4 && Math.sin(this.time / 2.5 + e.id) > 0.2; const mfr = atk ? 2 : ((this.time >> 3) + e.id) % 3; spr = monsterSprite(e, mfr); const bw = spr.width; let bh = spr.height;
         const bob = e.type === 'bat' ? Math.round(Math.sin(this.time / 5 + e.id) * 2) - 6 : 0;
         if (e.hurt > 0) c.filter = 'brightness(2.6)';
-        if (false && e.dir === 2 && !e.boss) { c.save(); c.translate(Math.round(sx), 0); c.scale(-1, 1); c.drawImage(spr, Math.round(-bw / 2), Math.round(sy - bh + 2 + bob)); c.restore(); } else c.drawImage(spr, Math.round(sx - bw / 2), Math.round(sy - bh + 2 + bob)); c.filter = 'none';
+        if (false && e.dir === 2 && !e.boss) { c.save(); c.translate(Math.round(sx), 0); c.scale(-1, 1); c.drawImage(spr, Math.round(-bw / 2), Math.round(sy - bh + 2 + bob)); c.restore(); } else { const dh = drawMonSpr(c, e, mfr, sx, sy + 2 + bob); if (dh) bh = Math.round(dh); else c.drawImage(spr, Math.round(sx - bw / 2), Math.round(sy - bh + 2 + bob)); } c.filter = 'none';
         if (e.hp < e.maxHp || e.boss || e.cad >= 0) { const w = e.boss ? 40 : e.cad >= 0 ? 26 : 14; fr(c, '#000a', sx - w / 2 - 1, sy - bh - 3 + bob, w + 2, 4); fr(c, '#3a3a3a', sx - w / 2, sy - bh - 2 + bob, w, 2); fr(c, e.boss ? '#c040ff' : '#e04040', sx - w / 2, sy - bh - 2 + bob, Math.max(1, Math.round(w * e.hp / e.maxHp)), 2); }
       }
     }
     // V3.4 overhang layer: tree crowns / chimneys / spires above their base row cover the characters standing behind them
-    c.drawImage(getWorldOverlay(sea), cx, cy, 640, 360, 0, 0, 640, 360);
+    c.drawImage(getWorldOverlay(sea), cx, cy, this.VW, this.VH, 0, 0, this.VW, this.VH);
     // soul orbs, particles
     for (let i = this.parts.length - 1; i >= 0; i--) { const p = this.parts[i]; p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) { this.parts.splice(i, 1); continue; } c.globalAlpha = Math.min(1, p.life / 14); c.fillStyle = p.col; const sx = p.x - cx, sy = p.y - cy; if (p.glow) { c.globalAlpha *= 0.4; c.fillRect(Math.round(sx) - 2, Math.round(sy) - 2, 5, 5); c.globalAlpha = Math.min(1, p.life / 14); } c.fillRect(Math.round(sx), Math.round(sy), p.s, p.s); }
     c.globalAlpha = 1;
@@ -124,7 +125,7 @@ const Mini = {
     for (const h of G.humans) if (h.alive && !h.inside) { c.fillStyle = h.id === Render.sel ? '#fff' : isAdv(h) ? '#60a8ff' : '#e0e8ff'; c.fillRect(h.x * sx, h.y * sy, 2, 2); }
     for (const m of G.monsters) if (m.alive && !m.dormant) { c.fillStyle = m.boss ? '#d040ff' : m.cad >= 0 ? '#ff80c0' : '#ff4040'; const s = m.boss || m.cad >= 0 ? 4 : 2; c.fillRect(m.x * sx - s / 2 + 1, m.y * sy - s / 2 + 1, s, s); }
     G.prayers.forEach(p => { if (p.state === 'open') { const h = hById(p.hid); if (h) { c.fillStyle = '#ffe060'; c.fillRect(h.x * sx - 1, h.y * sy - 1, 4, 4); } } });
-    c.strokeStyle = '#fff'; c.lineWidth = 1; c.strokeRect(camx / TS * sx + 0.5, camy / TS * sy + 0.5, 640 / TS * sx, 360 / TS * sy);
+    c.strokeStyle = '#fff'; c.lineWidth = 1; c.strokeRect(camx / TS * sx + 0.5, camy / TS * sy + 0.5, Render.VW / TS * sx, Render.VH / TS * sy);
     if (!G.awakened) { c.fillStyle = '#7a30a0'; c.fillRect(60 * sx, 13 * sy, 3, 3); }
   },
 };
@@ -148,7 +149,7 @@ Render.drawLabels = function () {
   const list = [];
   for (const h of G.humans) {
     if (!h.alive || h.inside) continue;
-    const x = lerp(h.px, h.x, 0.5), y = lerp(h.py, h.y, 0.5); const sx = (x * TS + 8 - cx) * 2, top = (y * TS - 8 - cy) * 2;
+    const x = lerp(h.px, h.x, 0.5), y = lerp(h.py, h.y, 0.5); const sx = (x * TS + 8 - cx) * Render.k, top = (y * TS - 8 - cy) * Render.k;
     if (sx < -40 || sx > 1320 || top < -30 || top > 740) continue;
     const s = soulOf(h); const fav = !!(s && s.fav);
     let pri = 0;
@@ -163,8 +164,8 @@ Render.drawLabels = function () {
   const hit = r => placed.some(p => r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y);
   c.textBaseline = 'middle'; c.textAlign = 'left';
   { // building names (civic buildings always, houses on hover) - R: houses look alike
-    const mxw = Game.mouseCanvas ? Game.mouse.x / 2 + cam.x : -999, myw = Game.mouseCanvas ? Game.mouse.y / 2 + cam.y : -999; const m0 = this.nameMode();
-    const lab = (txt, wx, wy, col) => { const sx = (wx - cx) * 2, sy = (wy - cy) * 2; if (sx < -100 || sx > 1380 || sy < -30 || sy > 760) return; c.font = 'bold 13px ' + fam; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(txt, sx, sy); c.fillStyle = col; c.fillText(txt, sx, sy); c.textAlign = 'left'; };
+    const mxw = Game.mouseCanvas ? Game.mouse.x / Render.k + cam.x : -999, myw = Game.mouseCanvas ? Game.mouse.y / Render.k + cam.y : -999; const m0 = this.nameMode();
+    const lab = (txt, wx, wy, col) => { const sx = (wx - cx) * Render.k, sy = (wy - cy) * Render.k; if (sx < -100 || sx > 1380 || sy < -30 || sy > 760) return; c.font = 'bold 13px ' + fam; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.95)'; c.strokeText(txt, sx, sy); c.fillStyle = col; c.fillText(txt, sx, sy); c.textAlign = 'left'; };
     W.blds.forEach(b => { if (b.kind === 'castle' || b.kind === 'mill') return; const civic = b.kind !== 'house' && b.kind !== 'hut'; const hover = mxw >= b.x * TS && mxw < (b.x + b.w) * TS && myw >= b.y * TS - 10 && myw < (b.y + b.h) * TS; if (!(hover || (civic && m0 !== 'none'))) return; lab(PLACES[b.kind][L], (b.x + b.w / 2) * TS, b.y * TS + (b.kind === 'church' ? -46 : -2), civic ? '#ffe9a0' : '#ffffff'); });
     if (m0 !== 'none') { lab(PLACES.fountain[L], 28 * TS + 8, 19 * TS - 20, '#bfe4ff'); lab(PLACES.well[L], 25 * TS + 8, 21 * TS - 2, '#bfe4ff'); lab(PLACES.well[L], 31 * TS + 8, 21 * TS - 2, '#bfe4ff'); }
   }

@@ -201,7 +201,7 @@ Screens.guide = function (pg) {
 if (typeof document !== 'undefined') document.addEventListener('mousedown', ev => {
   if (!Game.whatMode) return; ev.preventDefault(); ev.stopPropagation(); Game.whatMode = false; document.body.style.cursor = '';
   let el = ev.target, lines = null; while (el && el !== document.body) { if (el._tipFn) { const v = typeof el._tipFn === 'function' ? el._tipFn() : el._tipFn; if (v) { lines = Array.isArray(v) ? v.slice(0, 3) : [v]; break; } } el = el.parentNode; }
-  if (!lines && ev.target.tagName === 'CANVAS' && G) { const sr = $('stage').getBoundingClientRect(), s = Scale.s; const wx = (ev.clientX - sr.left) / s / 2 + Render.cam.x, wy = (ev.clientY - sr.top) / s / 2 + Render.cam.y; const hh = pickEntityAt(wx, wy);
+  if (!lines && ev.target.tagName === 'CANVAS' && G) { const sr = $('stage').getBoundingClientRect(), s = Scale.s; const wx = (ev.clientX - sr.left) / s / Render.k + Render.cam.x, wy = (ev.clientY - sr.top) / s / Render.k + Render.cam.y; const hh = pickEntityAt(wx, wy);
     if (hh) lines = [fmt(t('q_person'), { n: hh.name[li()], j: JOBS[hh.job].n[li()] }), t('q_person_d')];
     else { const tx = Math.floor(wx / TS), ty = Math.floor(wy / TS); const b = W.blds.find(b => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h); const m = G.monsters.find(m => m.alive && !m.dormant && Math.hypot(m.x * TS + 8 - wx, m.y * TS + 8 - wy) < 14);
       if (m) lines = [MONS[m.type] ? MONS[m.type].n[li()] : '?', t('q_mon_d')]; else if (b) lines = [PLACES[b.kind] ? PLACES[b.kind][li()] : b.kind, t('q_bld_d')]; else lines = [t('q_ground'), t('q_ground_d')]; } }

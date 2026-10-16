@@ -298,7 +298,7 @@ function downloadText(name, txt) { try { const b = new Blob([txt], { type: 'text
 
 /* ---------- opening artwork ---------- */
 function drawOpening(c, o, dt) {
-  const T0 = o.t++; c.setTransform(1, 0, 0, 1, 0, 0);
+  const T0 = o.t++; c.setTransform(2, 0, 0, 2, 0, 0);
   const sky = (a, b) => { const g = c.createLinearGradient(0, 0, 0, 360); g.addColorStop(0, a); g.addColorStop(1, b); c.fillStyle = g; c.fillRect(0, 0, 640, 360); };
   const stars = n => { let s = 7; for (let i = 0; i < n; i++) { s = (s * 1103515245 + 12345) & 0x7fffffff; const x = s % 640; s = (s * 1103515245 + 12345) & 0x7fffffff; const y = s % 240; c.fillStyle = `rgba(255,255,255,${0.4 + 0.5 * Math.abs(Math.sin(T0 / 30 + i))})`; c.fillRect(x, y, 1, 1); } };
   const scale = (cx, cy, ang, big) => {

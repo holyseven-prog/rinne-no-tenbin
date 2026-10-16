@@ -90,7 +90,7 @@ Object.assign(Game, {
     const sc = this.scene; const c = Render.c;
     this.fitT = (this.fitT || 0) + dt; if (this.fitT > 0.5) { this.fitT = 0; if (window.innerWidth !== Scale.w || window.innerHeight !== Scale.h) Scale.fit(); }
     if (sc !== 'play' && sc !== 'ending' && !this.labelsCleared) { this.labelsCleared = true; const lc = $('labels'); if (lc) lc.getContext('2d').clearRect(0, 0, 1280, 720); } else if (sc === 'play') this.labelsCleared = false;
-    if (sc === 'boot') { c.fillStyle = '#000'; c.fillRect(0, 0, 640, 360); return; }
+    if (sc === 'boot') { c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#000'; c.fillRect(0, 0, 1280, 720); return; }
     if (sc === 'opening') { drawOpening(c, this.op, dt); return; }
     if (sc === 'title' || sc === 'godsel') { drawParallax(c, performance.now()); return; }
     if (!G) return;
@@ -110,10 +110,10 @@ Object.assign(Game, {
       if (this.mouseCanvas && !moved && !this.drag) { const m = this.mouse; if (m.x < 6) { Render.cam.x -= sp; moved = true; } if (m.x > 1274) { Render.cam.x += sp; moved = true; } if (m.y < 4) { Render.cam.y -= sp; moved = true; } if (m.y > 716) { Render.cam.y += sp; moved = true; } }
     }
     if (moved) this.follow = 0;
-    if (this.follow) { const e = G.idx[this.follow]; if (e && e.alive) { Render.cam.x += (e.x * TS + 8 - 320 - Render.cam.x) * Math.min(1, dt * 5); Render.cam.y += (e.y * TS - 180 - Render.cam.y) * Math.min(1, dt * 5); if (Math.abs(e.x * TS + 8 - 320 - Render.cam.x) < 2) { } } else this.follow = 0; }
+    if (this.follow) { const e = G.idx[this.follow]; if (e && e.alive) { Render.cam.x += (e.x * TS + 8 - Render.VW / 2 - Render.cam.x) * Math.min(1, dt * 5); Render.cam.y += (e.y * TS - Render.VH / 2 - Render.cam.y) * Math.min(1, dt * 5); if (Math.abs(e.x * TS + 8 - 320 - Render.cam.x) < 2) { } } else this.follow = 0; }
     if (this.drag && (this.modals.length || sc !== 'play')) endDrag();
     Render.clampCam(); Render.draw(stopped ? 0 : this.acc, {});
-    if (sc === 'play' || sc === 'ending') { if (this.mouseCanvas && !Game.modals.length) { const wx = Render.cam.x + this.mouse.x / 2, wy = Render.cam.y + this.mouse.y / 2; const hv = pickEntityAt(wx, wy); this.hoverId = hv ? hv.id : 0; } else this.hoverId = 0; Render.drawLabels(); }
+    if (sc === 'play' || sc === 'ending') { if (this.mouseCanvas && !Game.modals.length) { const wx = Render.cam.x + this.mouse.x / Render.k, wy = Render.cam.y + this.mouse.y / Render.k; const hv = pickEntityAt(wx, wy); this.hoverId = hv ? hv.id : 0; } else this.hoverId = 0; Render.drawLabels(); }
     const now = performance.now();
     this.miniT += dt; if (this.miniT > 0.12 && UI.el.miniCv) { this.miniT = 0; Mini.draw(UI.el.miniCv, Render.cam.x, Render.cam.y); }
     this.hudT += dt; if (this.hudT > 0.16) { this.hudT = 0; UI.refresh(); if (this.tut) this.tut.update(); }
@@ -150,6 +150,8 @@ function onKeyDown(e) {
     case 'q': Game.speedIdx = Math.max(0, Game.speedIdx - 1); Game.paused = false; UI.refresh(true); break;
     case 'e': Game.speedIdx = Math.min(3, Game.speedIdx + 1); Game.paused = false; UI.refresh(true); break;
     case '1': case '2': case '3': case '4': case '5': selectPower(+kl - 1); break;
+    case '+': case '=': case ';': { const zs = [1, 1.5, 2]; const i = zs.indexOf(Render.Z); Render.setZoom(zs[clamp((i < 0 ? 0 : i) + 1, 0, 2)]); break; } // camera zoom x1 / x1.5 / x2
+    case '-': case '_': { const zs = [1, 1.5, 2]; const i = zs.indexOf(Render.Z); Render.setZoom(zs[clamp((i < 0 ? 0 : i) - 1, 0, 2)]); break; }
     case 'x': if (G.eye > 0) { Game.power = Game.power === 'eye' ? null : 'eye'; UI.refresh(true); } break;
     case 'h': Screens.chronicle(); break;
     case 'b': Screens.defense(); break;
@@ -169,7 +171,7 @@ function onCanvasDown(e) {
 }
 function canvasClick(p) {
   if (Game.scene !== 'play' || Game.modals.length) return;
-  const wx = Render.cam.x + p.x / 2, wy = Render.cam.y + p.y / 2; const hh = pickEntityAt(wx, wy);
+  const wx = Render.cam.x + p.x / Render.k, wy = Render.cam.y + p.y / Render.k; const hh = pickEntityAt(wx, wy);
   Game.mouse = p;
   if (hh) {
     if (Game.power === 'eye') { Screens.eyeOn(hh.id); return; }
@@ -182,7 +184,7 @@ function dragMove(e) {
   const p = Scale.toStage(e); const dx = p.x - d.sx, dy = p.y - d.sy;
   if (!d.moved && Math.hypot(dx, dy) <= 4) return;
   if (!d.moved) { d.moved = true; Game.follow = 0; $('game').style.cursor = 'grabbing'; }
-  Render.cam.x = d.cx - dx / 2; Render.cam.y = d.cy - dy / 2; Render.clampCam();
+  Render.cam.x = d.cx - dx / Render.k; Render.cam.y = d.cy - dy / Render.k; Render.clampCam();
 }
 function endDrag() { Game.drag = null; const c = $('game'); if (c) c.style.cursor = ''; }
 function dragUp(e) {
@@ -195,13 +197,13 @@ function boot() {
   document.addEventListener('keydown', onKeyDown); document.addEventListener('keyup', onKeyUp);
   window.addEventListener('blur', () => { Game.keys = {}; });
   window.addEventListener('mousemove', dragMove); window.addEventListener('mouseup', dragUp); window.addEventListener('blur', endDrag);
-  cv.addEventListener('wheel', e => { if (Game.scene !== 'play' || Game.modals.length || e.ctrlKey) return; e.preventDefault(); Render.cam.x += e.deltaX / 2; Render.cam.y += e.deltaY / 2; Game.follow = 0; Render.clampCam(); }, { passive: false });
+  cv.addEventListener('wheel', e => { if (Game.scene !== 'play' || Game.modals.length || e.ctrlKey) return; e.preventDefault(); if (Math.abs(e.deltaY) >= 40 && Math.abs(e.deltaX) < 4) { const p = Scale.toStage(e); const zs = [1, 1.5, 2]; const i = zs.indexOf(Render.Z); Render.setZoom(zs[clamp((i < 0 ? 0 : i) + (e.deltaY < 0 ? 1 : -1), 0, 2)], p.x, p.y); return; } Render.cam.x += e.deltaX / Render.k; Render.cam.y += e.deltaY / Render.k; Game.follow = 0; Render.clampCam(); }, { passive: false });
   cv.addEventListener('mousedown', onCanvasDown); cv.addEventListener('contextmenu', e => e.preventDefault());
   $('stage').addEventListener('mousemove', e => { Game.mouse = Scale.toStage(e); Game.mouseCanvas = e.target === cv; });
   $('stage').addEventListener('mouseleave', () => { Game.mouseCanvas = false; });
   $('stage').addEventListener('click', e => { Snd.unlock(); const b = e.target.closest && e.target.closest('.btn,.card'); if (b && !b.classList.contains('dis')) Snd.se('ok'); }, true);
   document.addEventListener('visibilitychange', () => { if (document.hidden) { Snd.setPaused(true); } else Snd.setPaused(Screens.stack.some(s => s.name === 'pause')); });
-  Game.demo(); Mini.build(); loadAssets().then(() => Screens.boot());
+  Game.demo(); Mini.build(); loadAssets().then(() => { Screens.boot(); loadSprites(); }); /* sprites decode in the background: title / boot do not need them, the world falls back to the old drawing until SPR_READY */
   Game.last = performance.now();
   const loop = ts => { requestAnimationFrame(loop); try { const dt = Math.min(0.1, Math.max(0.001, (ts - Game.last) / 1000)); Game.last = ts; Game.frame(dt); } catch (err) { ERRS.push('frame:' + (err && err.stack ? err.stack.split('\n').slice(0, 3).join('|') : err)); } };
   requestAnimationFrame(loop);

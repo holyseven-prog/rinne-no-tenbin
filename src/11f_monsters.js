@@ -103,4 +103,4 @@ monsterSprite = function (m, frame, dir) {
   const d = dir === undefined ? (m.dir === undefined ? 2 : m.dir) : dir; const v = d === 0 ? 'F' : d === 1 ? 'B' : d === 2 ? 'L' : 'R'; const fr = A.map[v]; const f = frame === 2 ? fr.length - 1 : (frame | 0) % fr.length;
   return artCanvas(fr[f], 'ea.' + k + '.' + v + '.' + f);
 };
-function enemyBattleSprite(k, frame) { const A = typeof ENEMYART !== 'undefined' && ENEMYART[k]; if (!A) return null; const fr = A.bat.L; const f = (frame | 0) % fr.length; return artCanvas(fr[f], 'eb.' + k + '.' + f); }
+function enemyBattleSprite(k, frame) { { const nm = { mush: 'mushroom', skel: 'skeleton', verna: 'cadre_mist', garum: 'cadre_bone', serene: 'cadre_shadow' }[k] || k; const s = typeof battleSprCanvas === 'function' && battleSprCanvas(nm, frame || 0); if (s) return s; } const A = typeof ENEMYART !== 'undefined' && ENEMYART[k]; if (!A) return null; const fr = A.bat.L; const f = (frame | 0) % fr.length; return artCanvas(fr[f], 'eb.' + k + '.' + f); }

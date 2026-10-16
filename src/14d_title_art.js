@@ -31,7 +31,7 @@ function buildParallax() {
 }
 function drawParallax(c, ms) {
   buildParallax(); const t = ms / 1000; const mx = (typeof Game !== 'undefined' && Game.mouse ? (Game.mouse.x - 640) / 640 : 0), my = (typeof Game !== 'undefined' && Game.mouse ? (Game.mouse.y - 360) / 360 : 0);
-  c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(PARA.L.sky, 0, 0);
+  c.setTransform(2, 0, 0, 2, 0, 0); c.drawImage(PARA.L.sky, 0, 0);
   PARA.stars.forEach(s => { const a = 0.45 + 0.55 * Math.sin(t * 1.4 + s.p); c.globalAlpha = Math.max(0.1, a); fr(c, s.c, Math.round(s.x - mx * 2), Math.round(s.y - my), s.s, s.s); if (s.s === 2) { fr(c, s.c, Math.round(s.x - mx * 2) - 1, Math.round(s.y - my) + 0, 1, 1); } }); c.globalAlpha = 1;
   const sh = (t * 0.18) % 1; if (sh < 0.12) { const k = sh / 0.12; const sx = 520 - k * 160, sy = 40 + k * 70; c.globalAlpha = 1 - k; pxLine(c, '#ffffff', sx, sy, sx + 14, sy - 8, 1); pxLine(c, '#a8c0ff', sx + 14, sy - 8, sx + 28, sy - 16, 1); c.globalAlpha = 1; }
   // moon + halo
