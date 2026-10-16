@@ -1,0 +1,1707 @@
+{
+  "status": "CANDIDATE_NOT_APPROVED",
+  "technical_core_checks": "PASS",
+  "runtime_png_bytes": 7542560,
+  "runtime_png_count": 82,
+  "errors": [],
+  "visual_acceptance": "PENDING: exact object layout / details / palette / emblem and lettering match / full native pixel-grid drawing",
+  "backgrounds_not_640_upscales": true,
+  "png_checks": [
+    {
+      "file": "bg/op_01.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/op_02.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/op_03.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/op_04.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/op_05.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/title_00_boot_bg.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/title_01_title_bg.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/title_03_load_bg.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/title_04_settings_bg.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/title_05_mode_bg.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "bg/title_06_god_bg.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGB",
+      "colors_rgb": 40,
+      "alpha_values": [
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_1.png",
+      "size": [
+        336,
+        488
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_1_32.png",
+      "size": [
+        32,
+        32
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 30,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_1_64.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 32,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_1_selected.png",
+      "size": [
+        336,
+        488
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_2.png",
+      "size": [
+        336,
+        488
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_2_32.png",
+      "size": [
+        32,
+        32
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 31,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_2_64.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 31,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_2_selected.png",
+      "size": [
+        336,
+        488
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_3.png",
+      "size": [
+        336,
+        488
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_3_32.png",
+      "size": [
+        32,
+        32
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 31,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_3_64.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 31,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/god_3_selected.png",
+      "size": [
+        336,
+        488
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/mode_easy.png",
+      "size": [
+        384,
+        500
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/mode_easy_selected.png",
+      "size": [
+        384,
+        500
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 63,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/mode_normal.png",
+      "size": [
+        384,
+        500
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 64,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/mode_normal_selected.png",
+      "size": [
+        384,
+        500
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 63,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "card/mode_recommend.png",
+      "size": [
+        160,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 7,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "layer/title_00_boot_sparkle.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 2,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "layer/title_01_title_sparkle.png",
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 2,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "logo/logo_jp.png",
+      "size": [
+        800,
+        400
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 15,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "logo/logo_zh.png",
+      "size": [
+        800,
+        400
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 15,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_chaos_ja.png",
+      "size": [
+        138,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_chaos_zh.png",
+      "size": [
+        138,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_ja.png",
+      "size": [
+        418,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_mercy_ja.png",
+      "size": [
+        138,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_mercy_zh.png",
+      "size": [
+        138,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_order_ja.png",
+      "size": [
+        138,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_order_zh.png",
+      "size": [
+        138,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_god_zh.png",
+      "size": [
+        178,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_load_ja.png",
+      "size": [
+        138,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_load_zh.png",
+      "size": [
+        178,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_mode_easy_ja.png",
+      "size": [
+        78,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_mode_easy_zh.png",
+      "size": [
+        78,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_mode_ja.png",
+      "size": [
+        258,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_mode_normal_ja.png",
+      "size": [
+        78,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_mode_normal_zh.png",
+      "size": [
+        78,
+        44
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_mode_zh.png",
+      "size": [
+        178,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_recommend_ja.png",
+      "size": [
+        130,
+        28
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 5,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_recommend_zh.png",
+      "size": [
+        46,
+        28
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 5,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_save_ja.png",
+      "size": [
+        138,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_save_zh.png",
+      "size": [
+        98,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_settings_ja.png",
+      "size": [
+        98,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_settings_zh.png",
+      "size": [
+        98,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 6,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_title_ja.png",
+      "size": [
+        800,
+        400
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 15,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "text/txt_title_zh.png",
+      "size": [
+        800,
+        400
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 15,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/btn_menu_disabled.png",
+      "size": [
+        320,
+        64
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 18,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/btn_menu_hover.png",
+      "size": [
+        320,
+        64
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 35,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/btn_menu_normal.png",
+      "size": [
+        320,
+        64
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 23,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/btn_menu_press.png",
+      "size": [
+        320,
+        64
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 31,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/load_title_plate.png",
+      "size": [
+        400,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 23,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/load_window.png",
+      "size": [
+        1056,
+        616
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 9,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/save_slot_disabled.png",
+      "size": [
+        464,
+        188
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 18,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/save_slot_empty.png",
+      "size": [
+        464,
+        188
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 36,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/save_slot_filled.png",
+      "size": [
+        464,
+        188
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 9,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/save_slot_selected.png",
+      "size": [
+        464,
+        188
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 40,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/settings_window.png",
+      "size": [
+        920,
+        600
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 24,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/title_menu_frame.png",
+      "size": [
+        300,
+        330
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 24,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_button_back.png",
+      "size": [
+        160,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 23,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_button_back_disabled.png",
+      "size": [
+        160,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 18,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_button_back_hover.png",
+      "size": [
+        160,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 32,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_button_back_press.png",
+      "size": [
+        160,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 28,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_button_normal.png",
+      "size": [
+        160,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 23,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_button_selected.png",
+      "size": [
+        160,
+        56
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 35,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_dialog.png",
+      "size": [
+        400,
+        160
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 24,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_dialog_dark.png",
+      "size": [
+        400,
+        160
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 9,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_slider_thumb.png",
+      "size": [
+        32,
+        32
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 5,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_slider_track.png",
+      "size": [
+        240,
+        16
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 3,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_tab_normal.png",
+      "size": [
+        160,
+        48
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 21,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_tab_selected.png",
+      "size": [
+        160,
+        48
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 30,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_toggle_off.png",
+      "size": [
+        112,
+        48
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 3,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    },
+    {
+      "file": "ui/ui_toggle_on.png",
+      "size": [
+        112,
+        48
+      ],
+      "mode": "RGBA",
+      "colors_rgb": 3,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "nonempty": true
+    }
+  ],
+  "nine_slice_checks": [
+    {
+      "file": "ui/title_menu_frame.png",
+      "target": [
+        300,
+        330
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/title_menu_frame.png",
+      "target": [
+        343,
+        358
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/title_menu_frame.png",
+      "target": [
+        429,
+        386
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_normal.png",
+      "target": [
+        320,
+        64
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_normal.png",
+      "target": [
+        363,
+        92
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_normal.png",
+      "target": [
+        449,
+        120
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_hover.png",
+      "target": [
+        320,
+        64
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_hover.png",
+      "target": [
+        363,
+        92
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_hover.png",
+      "target": [
+        449,
+        120
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_press.png",
+      "target": [
+        320,
+        64
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_press.png",
+      "target": [
+        363,
+        92
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_press.png",
+      "target": [
+        449,
+        120
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_disabled.png",
+      "target": [
+        320,
+        64
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_disabled.png",
+      "target": [
+        363,
+        92
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/btn_menu_disabled.png",
+      "target": [
+        449,
+        120
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/load_window.png",
+      "target": [
+        1056,
+        616
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/load_window.png",
+      "target": [
+        1099,
+        644
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/load_window.png",
+      "target": [
+        1185,
+        672
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/load_title_plate.png",
+      "target": [
+        400,
+        56
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/load_title_plate.png",
+      "target": [
+        443,
+        84
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/load_title_plate.png",
+      "target": [
+        529,
+        112
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_filled.png",
+      "target": [
+        464,
+        188
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_filled.png",
+      "target": [
+        507,
+        216
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_filled.png",
+      "target": [
+        593,
+        244
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_empty.png",
+      "target": [
+        464,
+        188
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_empty.png",
+      "target": [
+        507,
+        216
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_empty.png",
+      "target": [
+        593,
+        244
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_selected.png",
+      "target": [
+        464,
+        188
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_selected.png",
+      "target": [
+        507,
+        216
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_selected.png",
+      "target": [
+        593,
+        244
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_disabled.png",
+      "target": [
+        464,
+        188
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_disabled.png",
+      "target": [
+        507,
+        216
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/save_slot_disabled.png",
+      "target": [
+        593,
+        244
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/settings_window.png",
+      "target": [
+        920,
+        600
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/settings_window.png",
+      "target": [
+        963,
+        628
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/settings_window.png",
+      "target": [
+        1049,
+        656
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_tab_normal.png",
+      "target": [
+        160,
+        48
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_tab_normal.png",
+      "target": [
+        203,
+        76
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_tab_normal.png",
+      "target": [
+        289,
+        104
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_tab_selected.png",
+      "target": [
+        160,
+        48
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_tab_selected.png",
+      "target": [
+        203,
+        76
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_tab_selected.png",
+      "target": [
+        289,
+        104
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_slider_track.png",
+      "target": [
+        240,
+        16
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_slider_track.png",
+      "target": [
+        283,
+        16
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_slider_track.png",
+      "target": [
+        369,
+        16
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_dialog.png",
+      "target": [
+        400,
+        160
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_dialog.png",
+      "target": [
+        443,
+        188
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_dialog.png",
+      "target": [
+        529,
+        216
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_dialog_dark.png",
+      "target": [
+        400,
+        160
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_dialog_dark.png",
+      "target": [
+        443,
+        188
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_dialog_dark.png",
+      "target": [
+        529,
+        216
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_normal.png",
+      "target": [
+        160,
+        56
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_normal.png",
+      "target": [
+        203,
+        84
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_normal.png",
+      "target": [
+        289,
+        112
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_selected.png",
+      "target": [
+        160,
+        56
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_selected.png",
+      "target": [
+        203,
+        84
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_selected.png",
+      "target": [
+        289,
+        112
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back.png",
+      "target": [
+        160,
+        56
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back.png",
+      "target": [
+        203,
+        84
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back.png",
+      "target": [
+        289,
+        112
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_hover.png",
+      "target": [
+        160,
+        56
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_hover.png",
+      "target": [
+        203,
+        84
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_hover.png",
+      "target": [
+        289,
+        112
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_press.png",
+      "target": [
+        160,
+        56
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_press.png",
+      "target": [
+        203,
+        84
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_press.png",
+      "target": [
+        289,
+        112
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_disabled.png",
+      "target": [
+        160,
+        56
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_disabled.png",
+      "target": [
+        203,
+        84
+      ],
+      "corners_equal": true
+    },
+    {
+      "file": "ui/ui_button_back_disabled.png",
+      "target": [
+        289,
+        112
+      ],
+      "corners_equal": true
+    }
+  ],
+  "unfinished": [
+    "Exact reference fidelity must be visually checked; generated reconstruction is not guaranteed exact",
+    "Component reference guides for generic shared UI/text use the corresponding screen crop; still need exact widget-region tracing references",
+    "Game integration/screenshots not performed; no GitHub changes"
+  ]
+}
