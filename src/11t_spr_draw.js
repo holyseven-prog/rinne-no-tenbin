@@ -19,5 +19,5 @@ function drawHumanSpr(c, h, fm, wx, wy) { const dir = SPR_DIR[h.dir === undefine
 const SPR_MON = { mush: 'mushroom', bat: 'bat', turtle: 'turtle', goblin: 'goblin', skel: 'skeleton', wolf: 'wolf', dragon: 'dragon', cad0: 'cadre_mist', cad1: 'cadre_bone', cad2: 'cadre_shadow', boss: 'king', slime: 'slime', hornrab: 'horn_rabbit', flower: 'poison_flower', gargoyle: 'gargoyle', griffin: 'griffin', snowwolf: 'snow_wolf' };
 function monSprBase(m) { const k = m.boss ? 'boss' : m.cad >= 0 ? 'cad' + m.cad : m.type; return SPR_MON[k] ? 'enemy_' + SPR_MON[k] : null; }
 function drawMonSpr(c, m, frame, wx, wy) { const b = monSprBase(m); if (!b) return 0; const dir = SPR_DIR[m.dir === undefined ? 2 : m.dir] || 'left'; const big = m.boss || m.cad >= 0 || m.type === 'dragon'; let f = frame % (big ? 2 : 3); if (!SPR[b + '_' + dir + '_' + f] && !SPR[b + '_' + dir + '_' + f + '_hd']) f = 0; return drawSprAt(c, b + '_' + dir + '_' + f, wx, wy); }
-/* battle screen (600x120 canvas in 14e): the hd frames facing left, scaled to the requested height */
-function battleSprCanvas(name, frame) { if (!SPR_READY) return null; const b = 'enemy_' + name + '_left_'; let s = SPR[b + (frame % 2) + '_hd'] || SPR[b + '0_hd'] || SPR[b + '0']; return s || null; }
+/* battle screen (600x150 canvas in 14e): frames facing left */
+function battleSprCanvas(name, frame) { if (!SPR_READY) return null; const b = 'enemy_' + name + '_left_'; let s = SPR[b + (frame % 2)] || SPR[b + '0']; return s || null; } /* the 48 px-scale set: same size relation to the 48 px people as in the field */

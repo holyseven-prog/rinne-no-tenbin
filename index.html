@@ -4730,8 +4730,8 @@ function drawHumanSpr(c, h, fm, wx, wy) { const dir = SPR_DIR[h.dir === undefine
 const SPR_MON = { mush: 'mushroom', bat: 'bat', turtle: 'turtle', goblin: 'goblin', skel: 'skeleton', wolf: 'wolf', dragon: 'dragon', cad0: 'cadre_mist', cad1: 'cadre_bone', cad2: 'cadre_shadow', boss: 'king', slime: 'slime', hornrab: 'horn_rabbit', flower: 'poison_flower', gargoyle: 'gargoyle', griffin: 'griffin', snowwolf: 'snow_wolf' };
 function monSprBase(m) { const k = m.boss ? 'boss' : m.cad >= 0 ? 'cad' + m.cad : m.type; return SPR_MON[k] ? 'enemy_' + SPR_MON[k] : null; }
 function drawMonSpr(c, m, frame, wx, wy) { const b = monSprBase(m); if (!b) return 0; const dir = SPR_DIR[m.dir === undefined ? 2 : m.dir] || 'left'; const big = m.boss || m.cad >= 0 || m.type === 'dragon'; let f = frame % (big ? 2 : 3); if (!SPR[b + '_' + dir + '_' + f] && !SPR[b + '_' + dir + '_' + f + '_hd']) f = 0; return drawSprAt(c, b + '_' + dir + '_' + f, wx, wy); }
-/* battle screen (600x120 canvas in 14e): the hd frames facing left, scaled to the requested height */
-function battleSprCanvas(name, frame) { if (!SPR_READY) return null; const b = 'enemy_' + name + '_left_'; let s = SPR[b + (frame % 2) + '_hd'] || SPR[b + '0_hd'] || SPR[b + '0']; return s || null; }
+/* battle screen (600x150 canvas in 14e): frames facing left */
+function battleSprCanvas(name, frame) { if (!SPR_READY) return null; const b = 'enemy_' + name + '_left_'; let s = SPR[b + (frame % 2)] || SPR[b + '0']; return s || null; } /* the 48 px-scale set: same size relation to the 48 px people as in the field */
 
 /* ---- 11u_spr_world.js ---- */
 /* ================= buildings from the visual team's sprites (village/bld_*, 1 source px = 1 world px, anchor = bottom centre of the footprint).
@@ -6496,7 +6496,7 @@ function battleSceneCanvas(B) {
   if (lost) { for (let i = 0; i < 4; i++) { const fx = 20 + i * 15, fy = 80; c.fillStyle = '#ff8a2a'; c.fillRect(fx, fy - (i % 2) * 6, 6, 10); c.fillStyle = '#ffd24a'; c.fillRect(fx + 1, fy + 3 - (i % 2) * 6, 3, 5); } c.fillStyle = 'rgba(60,50,50,0.45)'; for (let i = 0; i < 6; i++) { c.beginPath(); c.arc(24 + i * 9, 70 - i * 7, 7 + i * 1.5, 0, 7); c.fill(); } }
   // enemy side
   const mon = ASSAULT_DEF[B.a].mon;
-  if (mon === 'dragon') { const s = enemyBattleSprite('dragon', B.phase % 2) || dragonSprite(B.phase % 2); c.drawImage(s, 420 + (win ? 30 : 0) - (B.done ? 0 : adv), 22, 96, 96); }
+  if (mon === 'dragon') { const s = enemyBattleSprite('dragon', B.phase % 2) || dragonSprite(B.phase % 2); const dw = Math.round(96 * s.width / s.height); c.drawImage(s, 468 - dw / 2 + (win ? 30 : 0) - (B.done ? 0 : adv), 22, dw, 96); }
   else if (mon === 'boss') { for (let i = 0; i < Math.min(3, G.chain.cadres || 2); i++) { const s = enemyBattleSprite(['verna', 'garum', 'serene'][i], B.phase % 2); if (s) c.drawImage(s, 330 + i * 46, 112 - s.height * 0.75, s.width * 0.75, s.height * 0.75); } const ks = enemyBattleSprite('king', B.phase % 2); if (ks) c.drawImage(ks, 486, 112 - ks.height, ks.width, ks.height); }
   else { const n = win ? 2 : 7; for (let i = 0; i < n; i++) { const tk = [mon, mon, 'goblin', 'wolf', 'skel', mon, 'bat'][i]; const s = enemyBattleSprite(ENEMY_KEY[tk] || tk, B.phase + i); if (!s) continue; const x = 600 - 70 - i * 38 + (win ? 40 : lost ? -150 : -adv); if (win) { c.save(); c.translate(x + s.width, 0); c.scale(-1, 1); c.drawImage(s, 0, 112 - s.height + (i % 3) * 4); c.restore(); } else c.drawImage(s, x, 112 - s.height + (i % 3) * 4); } }
   // clash flash
