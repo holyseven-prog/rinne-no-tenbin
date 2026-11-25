@@ -316,3 +316,62 @@ if (typeof document !== 'undefined') document.addEventListener('pointerdown', e 
 /* "what's this?" mode (16b) answers on mousedown; the click that follows must not also press the v5 control under the cursor */
 if (typeof document !== 'undefined') { document.addEventListener('pointerdown', () => { if (typeof Game !== 'undefined' && Game.whatMode) V5.whatT = performance.now(); }, true);
   document.addEventListener('click', e => { if (V5.whatT && performance.now() - V5.whatT < 800) { V5.whatT = 0; e.stopImmediatePropagation(); e.preventDefault(); } }, true); }
+
+/* ================= 2026-11-25 SEVEN feedback: the era card says what each choice does and shows the result; 傾聴 says why it is off;
+   the event list fills the panel (newest first, wrapped, up to 40) ================= */
+Object.assign(S, {
+  v5_card_auto: ['{t}のうちに決めないと「放っておく」になります', '{t}內沒決定，就會變成「放著不管」'], v5_card_res: ['時代の兆し・結果', '時代的徵兆・結果'],
+  v5_card_did: ['選んだこと：{s}', '你的選擇：{s}'], v5_card_fx: ['結果：{s}', '結果：{s}'], v5_card_exp: ['期限が切れたので「放っておく」になりました', '期限已到，變成「放著不管」'], v5_ok: ['わかった', '知道了'],
+  v5_listen_n: ['傾聴 {n}/3', '傾聽 {n}/3'], v5_listen_done: ['傾聴済み', '已傾聽'], v5_listen_why0: ['今日の傾聴は使い切りました（1日3回、次の日に戻ります）', '今天的傾聽已用完（每天 3 次，隔天恢復）'],
+  v5_listen_why1: ['この祈りはもう傾聴しました（期限が1日のびています）', '這個祈禱已經傾聽過了（期限已延長 1 天）'],
+});
+/* what each choice does (same wording before and after choosing) */
+const V5_CARD_FX = {
+  caravan: { push: ['糧食+50・金+60', '糧食 +50・金錢 +60'], stop: ['士気−2', '士氣 −2'] },
+  recruit: { push: ['農夫1人が剣士（冒険者）になる', '一名農夫成為劍士（冒險者）'], stop: ['糧食+20', '糧食 +20'] },
+  plague: { stop: ['疫病を防ぐ', '防止疫病'], leave: ['老人や子供が亡くなることがある・士気−5', '老人或小孩可能會死去・士氣 −5'] },
+  nest: { push: ['冒険者が経験を積む（けがをすることも）', '冒險者獲得經驗（也可能受傷）'], stop: ['魔物の領地−1', '魔物領地 −1'], leave: ['魔物の領地+1', '魔物領地 +1'] },
+  festival: { push: ['糧食−40・士気+8', '糧食 −40・士氣 +8'] },
+  migrants: { push: ['糧食−30・住人+2', '糧食 −30・居民 +2'] },
+  rumor: { stop: ['うわさが静まる', '謠言平息'], leave: ['士気−6・畏怖+10', '士氣 −6・畏怖 +10'] },
+  smithIdea: { push: ['装備の在庫+3・冒険者2人の装備+1', '裝備庫存 +3・兩名冒險者裝備 +1'] },
+  envoy: { push: ['畏怖+20・魔王軍の幹部+1', '畏怖 +20・魔王軍幹部 +1'], stop: ['密使を追い払う', '趕走密使'] },
+};
+function v5CardFx(id, opt) { const f = V5_CARD_FX[id] && V5_CARD_FX[id][opt]; return f ? f[li()] : t('v5_rp_none'); }
+function v5CardOptName(id, opt) { const C = CARDS[id]; if (!C) return ''; return opt === 'leave' ? t('card_leave') : C.opts[opt] ? C.opts[opt].n[li()] : opt; }
+/* remember the player's decision (and notice cards that ran out) so the card area can show the result */
+const _decideCardV5 = decideCard; decideCard = function (n, opt) { const c = (G.cards || []).find(x => x.n === n); const r = _decideCardV5(n, opt);
+  if (r && c && G.uiAttached && !G.forceAuto && typeof document !== 'undefined') { UI.v5CardRes = { id: c.id, opt, n }; UI.toast('◆ ' + CARDS[c.id].n[li()] + '：' + v5CardOptName(c.id, opt) + ' → ' + v5CardFx(c.id, opt), '#f3dfaa'); } return r; };
+const _rwV5c = UI.refreshWar; UI.refreshWar = function () { _rwV5c.apply(this, arguments); const E = this.el; if (!E || !E.cardWin || !E.v5list || !G) return; const L = li(); const c = (G.cards || [])[0];
+  /* a card that vanished without a choice ran out of time */
+  if (this.v5CardSeenN && !(G.cards || []).some(x => x.n === this.v5CardSeenN.n) && !(this.v5CardRes && this.v5CardRes.n === this.v5CardSeenN.n)) this.v5CardRes = { id: this.v5CardSeenN.id, opt: 'leave', n: this.v5CardSeenN.n, auto: 1 };
+  this.v5CardSeenN = c ? { id: c.id, n: c.n } : null;
+  if (c) { if (E.cardWin._v5 !== this.cardSig) { E.cardWin._v5 = this.cardSig; const C = CARDS[c.id]; const row = E.cardWin.lastChild; if (row && row.querySelectorAll) {
+        Array.from(row.querySelectorAll('.btn')).forEach(b => { const k = Object.keys(C.opts).find(o => C.opts[o].n[L] === b.textContent) || 'leave'; const wrap = h('div', { style: 'display:flex;flex-direction:column;gap:2px;width:100%;margin-bottom:6px' });
+          b.parentNode.insertBefore(wrap, b); wrap.append(b, h('div', { class: 'sm', style: 'padding-left:4px' }, '→ ' + v5CardFx(c.id, k))); });
+        E.cardWin.appendChild(E.cardWin._left = h('div', { class: 'sm', style: 'color:#b6c5d4;margin-top:2px' })); } }
+      if (E.cardWin._left) v5setText(E.cardWin._left, fmt(t('v5_card_auto'), { t: fmtLeft(c.t + 2 * TICK_DAY - G.tick) })); return; }
+  const R = this.v5CardRes; if (!R) return; const sig = 'res' + R.n + LANG; E.cardWin.style.display = 'block';
+  if (E.cardWin._v5 !== sig) { E.cardWin._v5 = sig; E.cardWin.innerHTML = ''; const C = CARDS[R.id];
+    E.cardWin.append(h('div', { class: 'gold', style: 'font-weight:bold' }, '◆ ' + t('v5_card_res') + '：' + C.n[L]), R.auto ? h('div', { class: 'sm' }, t('v5_card_exp')) : h('div', { class: 'sm' }, fmt(t('v5_card_did'), { s: v5CardOptName(R.id, R.opt) })),
+      h('div', { class: 'sm', style: 'color:#f6f2e8' }, fmt(t('v5_card_fx'), { s: v5CardFx(R.id, R.opt) })),
+      h('div', null, h('span', { class: 'btn', onclick: () => { UI.v5CardRes = null; E.cardWin._v5 = ''; UI.cardSig = ''; E.cardWin.style.display = 'none'; E.cardWin.innerHTML = ''; Snd.se('cursor'); } }, t('v5_ok')))); } };
+/* 傾聴: remaining count on the button, the reason when it cannot be used */
+const _rpV5l = UI.refreshPrayers; UI.refreshPrayers = function () { if (G && this._v5ll !== G.listenLeft) { this._v5ll = G.listenLeft; this.lastPray = ''; } _rpV5l.apply(this, arguments); const E = this.el; if (!E || !E.v5list || !E.prayList) return;
+  Array.from(E.prayList.querySelectorAll('.card')).forEach(card => { const p = card._p, b = card.firstChild; if (!p || !b || !b.classList || !b.classList.contains('btn') || b._v5) return; b._v5 = 1;
+    b.textContent = p.listened ? '✓ ' + t('v5_listen_done') : fmt(t('v5_listen_n'), { n: G.listenLeft || 0 });
+    if (b.classList.contains('dis')) b.addEventListener('click', ev => { ev.stopPropagation(); Snd.se('fail'); UI.toast(p.listened ? t('v5_listen_why1') : t('v5_listen_why0'), '#ffb19b'); }); }); };
+/* event list: newest first, wrapped, fills the panel */
+UI.renderFeed = function () { const E = this.el; if (!E.feedList) return; if (!E.v5list) { E.feedList.innerHTML = ''; this.feed.slice(-5).forEach(f => E.feedList.appendChild(h('div', { style: 'color:' + f.col + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis' }, '・' + f.text))); return; }
+  E.feedList.innerHTML = ''; const list = this.feed.slice(-40).reverse(); if (!list.length) E.feedList.appendChild(h('div', { class: 'sm dim' }, t('feed_none')));
+  list.forEach(f => E.feedList.appendChild(h('div', { style: 'color:' + f.col + ';cursor:' + (f.pos ? 'pointer' : 'default') + ';padding:4px 2px;border-bottom:1px solid #2a3a52;line-height:1.45;font-size:16px;' + (f.imp ? 'font-weight:bold;' : ''),
+    onclick: () => { if (f.pos) { Render.centerOn(f.pos.x, f.pos.y); Game.follow = 0; Render.rings.push({ x: f.pos.x * TS + 8, y: f.pos.y * TS + 8, r: 4, life: 14, col: '#ffe060' }); } } }, (f.pos ? '▸ ' : '・') + f.text))); };
+/* 2026-11-25 SEVEN: every window has a way out (×), every message closes by itself after a few seconds */
+(function () { if (typeof document === 'undefined') return; const st = document.createElement('style');
+  st.textContent = '#ui.v5 .v5sel>div:first-child>.btn{min-width:44px;min-height:44px;font-size:18px!important;display:inline-flex;align-items:center;justify-content:center} #ui.v5 .hint-bubble{font-size:16px} #ui.v5 .hint-bubble div{font-size:16px!important} #v5disp .v5dx{position:absolute;right:0;top:0;width:44px;min-width:44px;margin:0}';
+  document.head.appendChild(st); })();
+const _bv5x = UI.buildV5; UI.buildV5 = function () { _bv5x.apply(this, arguments); const E = this.el; if (!E.v5disp) return; E.v5disp.style.position = 'absolute';
+  const x = v5btn('✕', () => v5Display(false), { 'aria-label': t('v5_close'), title: t('v5_close') + '（Esc）' }); x.classList.add('v5dx'); E.v5disp.appendChild(x); };
+/* era-card result: closes by itself after 10 s (or with わかった) */
+const _rwV5t = UI.refreshWar; UI.refreshWar = function () { _rwV5t.apply(this, arguments); const R = this.v5CardRes; if (!R) return; if (R._t === undefined) R._t = performance.now();
+  if (performance.now() - R._t > 10000) { const E = this.el; this.v5CardRes = null; if (E && E.cardWin && !(G.cards || []).length) { E.cardWin._v5 = ''; this.cardSig = ''; E.cardWin.style.display = 'none'; E.cardWin.innerHTML = ''; } } };

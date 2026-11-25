@@ -16,7 +16,7 @@ Object.assign(S, {
 function v5WinCss() { if (typeof document === 'undefined' || document.getElementById('v5wcss')) return; const fr = (k, n) => `border:${n}px solid transparent;border-image:${v5url(k)} ${n} fill stretch;image-rendering:pixelated;background:none`;
   const small = [9, 10, 11, 12, 13, 14, 15].map(n => `#modal.v5play .win [style*="font-size: ${n}px"]`).join(',');
   const css = `
-#modal.v5play>.win{${fr('ui_modal', 16)};box-shadow:none;border-radius:0;color:#f6f2e8;font-size:18px;line-height:1.5;padding:6px 14px}
+#modal.v5play .win.v5w,#modal.v5play>.win{${fr('ui_modal', 16)};box-shadow:none;border-radius:0;color:#f6f2e8;font-size:18px;line-height:1.5;padding:6px 14px}
 #modal.v5play .win h3{font-size:22px;line-height:33px;color:#f3dfaa;margin:2px 0 6px}
 #modal.v5play .win .sm,#modal.v5play .win .dim{font-size:16px} #modal.v5play .win .gold{color:#f3dfaa}
 ${small}{font-size:16px!important}
@@ -101,3 +101,14 @@ const _btV5 = Screens.battle; Screens.battle = function () { _btV5.apply(this, a
   this.render(); };
 /* while a window is open, notifications sit under it instead of over its title */
 const _toastV5w = UI.toast; UI.toast = function (text, col) { _toastV5w.apply(this, arguments); const el = this.el && this.el.v5toast; if (el) el.style.top = Screens.stack.length ? '664px' : ''; };
+/* 2026-11-25 SEVEN: every closable in-game window gets a fixed × (top right, outside the scrolling content); content that is still too
+   long scrolls inside the window instead of running past its frame. The defense screen's action list is shorter so the 神旨 lines fit. */
+(function () { if (typeof document === 'undefined') return; const st = document.createElement('style'); st.textContent = '#modal.v5play .win.v5w{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#bea271 #080f20} #modal.v5play>.win.v5def .scroll{height:300px!important} #modal.v5play>.win.v5def>div:last-child{display:none} #modal .v5x{position:absolute;z-index:5} #modal.v5play .win.v5w>h3:first-child,#modal.v5play .win.v5w>div:first-child{padding-right:76px}'; document.head.appendChild(st); })();
+const _srV5x = Screens.render; Screens.render = function () { _srV5x.apply(this, arguments); const m = $('modal'); if (!m || !m.classList.contains('v5play') || !this.stack.length) return; const top = this.stack[this.stack.length - 1];
+  const w = Array.from(m.querySelectorAll('.win')).find(e => e.offsetParent !== null); if (!w) return; w.classList.add('v5w'); if (top.name === 'defense') w.classList.add('v5def'); if (top.opts.noEsc || top.opts.clear) return;
+  /* the old bottom row with only 閉じる / 戻る is replaced by the × (it was the part that ran past the frame) */
+  { const last = w.lastElementChild; const bs = last ? last.querySelectorAll('.btn') : []; if (last && bs.length === 1 && last.children.length === 1 && [t('close'), t('back')].indexOf(bs[0].textContent.trim()) >= 0) last.style.display = 'none'; }
+  /* inside the frame, top-right corner, just inside the gold border */
+  const b = v5btn(v5icon('icon_close_32'), () => { Snd.se('cancel'); Screens.pop(); }, { 'aria-label': t('v5_close'), title: t('v5_close') + '（Esc）', class: 'v5b v5x' }); m.appendChild(b);
+  let x = 0, y = 0, e = w; while (e && e !== m) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } /* layout box: not affected by the opening animation's scale */
+  b.style.left = Math.round(x + w.offsetWidth - 16 - 10 - b.offsetWidth) + 'px'; b.style.top = Math.round(y + 16 + 2) + 'px'; };
