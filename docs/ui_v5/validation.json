@@ -1,0 +1,98 @@
+{
+  "checks": [
+    {
+      "name": "zh safe center",
+      "pass": true,
+      "detail": {
+        "cover": 0.405,
+        "safeClear": true,
+        "overflow": [],
+        "minHit": 44
+      }
+    },
+    {
+      "name": "zh labels fit",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "zh hit >=40 (battle exception)",
+      "pass": true,
+      "detail": 44
+    },
+    {
+      "name": "zh top off restore accessible",
+      "pass": true
+    },
+    {
+      "name": "zh view hides zones",
+      "pass": true
+    },
+    {
+      "name": "zh notice does not restore zones",
+      "pass": true
+    },
+    {
+      "name": "zh U restores zones",
+      "pass": true
+    },
+    {
+      "name": "zh council needs two",
+      "pass": true
+    },
+    {
+      "name": "zh council two enabled",
+      "pass": true
+    },
+    {
+      "name": "ja safe center",
+      "pass": true,
+      "detail": {
+        "cover": 0.405,
+        "safeClear": true,
+        "overflow": [],
+        "minHit": 44
+      }
+    },
+    {
+      "name": "ja labels fit",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "ja hit >=40 (battle exception)",
+      "pass": true,
+      "detail": 44
+    },
+    {
+      "name": "ja top off restore accessible",
+      "pass": true
+    },
+    {
+      "name": "ja view hides zones",
+      "pass": true
+    },
+    {
+      "name": "ja notice does not restore zones",
+      "pass": true
+    },
+    {
+      "name": "ja U restores zones",
+      "pass": true
+    },
+    {
+      "name": "ja council needs two",
+      "pass": true
+    },
+    {
+      "name": "ja council two enabled",
+      "pass": true
+    },
+    {
+      "name": "no JS errors",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

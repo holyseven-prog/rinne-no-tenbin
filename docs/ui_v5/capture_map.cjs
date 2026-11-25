@@ -1,0 +1,11 @@
+const {chromium}=require('playwright');
+const path=require('path');
+(async()=>{const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+const page=await browser.newPage({viewport:{width:1280,height:720}});
+await page.addInitScript(()=>localStorage.setItem('rinne_tenbin_v1_settings',JSON.stringify({bgm:0,se:0,speed:1,text:3,lang:'zh',tutDone:true,autoSlow:false,advisor:false})));
+await page.goto('file:///'+path.resolve('index.html').replaceAll('\\','/'));
+await page.waitForTimeout(1200);await page.mouse.click(640,360);await page.waitForTimeout(300);
+await page.evaluate(()=>{__RT.ui.Game.pendingGod='mercy';__RT.ui.Screens.opEnd()});
+await page.waitForTimeout(2000);
+await page.evaluate(()=>{const G=__RT.G();if(G.council&&!G.council.done)closeCouncil(G.council.offer.slice(0,2),null);__RT.ui.Screens.closeAll();for(let i=0;i<160;i++)tick();__RT.ui.Game.paused=true;document.getElementById('ui').style.display='none';});
+await page.waitForTimeout(500);await page.screenshot({path:'docs/ui_v5/game_map.png'});await browser.close();})();

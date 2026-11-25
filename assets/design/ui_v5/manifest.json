@@ -1,0 +1,1468 @@
+{
+  "version": "5.0",
+  "coordinate_system": "1280x720, native UI pixels",
+  "nine_slice_order": [
+    "top",
+    "right",
+    "bottom",
+    "left"
+  ],
+  "text": "runtime only",
+  "assets": [
+    {
+      "file": "ui_topbar.png",
+      "width": 64,
+      "height": 64,
+      "colors": 4,
+      "bytes": 331,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "7670888fd9a26d9fdf83dc45cbd2b409e206a79114d9a6043cc8d31d9ee76337"
+    },
+    {
+      "file": "ui_side_panel.png",
+      "width": 64,
+      "height": 64,
+      "colors": 4,
+      "bytes": 408,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "623ef73a463989c5138e9f71fbec0785caabc36478f251d7c2dacccdb6b78362"
+    },
+    {
+      "file": "ui_power_tray.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "ui_map_window.png",
+      "width": 64,
+      "height": 64,
+      "colors": 4,
+      "bytes": 408,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "623ef73a463989c5138e9f71fbec0785caabc36478f251d7c2dacccdb6b78362"
+    },
+    {
+      "file": "ui_modal.png",
+      "width": 64,
+      "height": 64,
+      "colors": 4,
+      "bytes": 408,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "623ef73a463989c5138e9f71fbec0785caabc36478f251d7c2dacccdb6b78362"
+    },
+    {
+      "file": "ui_tooltip.png",
+      "width": 48,
+      "height": 48,
+      "colors": 4,
+      "bytes": 301,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "5bb502c17fd0ba1f97faa8ccaa4a3a869dfc707ec31338d220762c15e5fd4b4f"
+    },
+    {
+      "file": "ui_notification.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "ui_titlebar.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "ui_display_menu.png",
+      "width": 64,
+      "height": 64,
+      "colors": 4,
+      "bytes": 331,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "7670888fd9a26d9fdf83dc45cbd2b409e206a79114d9a6043cc8d31d9ee76337"
+    },
+    {
+      "file": "ui_battle_normal.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "ui_battle_danger.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 301,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "d6c1644a2e7846c99b08705dd8fc0e1ce79d188b687605d25982028b93ffab89"
+    },
+    {
+      "file": "ui_tab_normal.png",
+      "width": 48,
+      "height": 40,
+      "colors": 4,
+      "bytes": 291,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "sha256": "4affe6e384c382f3c0740e625fccf28b076488c7415045f2089a7863cfb74867"
+    },
+    {
+      "file": "ui_tab_selected.png",
+      "width": 48,
+      "height": 40,
+      "colors": 4,
+      "bytes": 291,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "sha256": "82c9d6175bf88ac959ef29ff0eb5201913de3a2b800b4bba64ecda7ae03bd8d1"
+    },
+    {
+      "file": "ui_tab_unread.png",
+      "width": 48,
+      "height": 40,
+      "colors": 5,
+      "bytes": 316,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "sha256": "25cb323d3aa0c5176d54b225756edc6f9b7959812f84a2c044b5bc3e247a0844"
+    },
+    {
+      "file": "ui_card_normal.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "ui_card_hover.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 299,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "416c75e8a6dd404c6247d8f10562ea92ccbcc9d230e54691c86e887961c45e91"
+    },
+    {
+      "file": "ui_card_selected.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 308,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "c3b28008ff02c83c24f4080c14e5f32853e81b03631d63df3e9373f7978ffff5"
+    },
+    {
+      "file": "ui_card_urgent.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 301,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "d6c1644a2e7846c99b08705dd8fc0e1ce79d188b687605d25982028b93ffab89"
+    },
+    {
+      "file": "ui_button_normal.png",
+      "width": 48,
+      "height": 48,
+      "colors": 4,
+      "bytes": 301,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "5bb502c17fd0ba1f97faa8ccaa4a3a869dfc707ec31338d220762c15e5fd4b4f"
+    },
+    {
+      "file": "ui_button_hover.png",
+      "width": 48,
+      "height": 48,
+      "colors": 4,
+      "bytes": 289,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "7d9f8c0c8d1a13cc7c49fa2acecd194f58b8a993582da9034ca37e139ecae3dc"
+    },
+    {
+      "file": "ui_button_pressed.png",
+      "width": 48,
+      "height": 48,
+      "colors": 4,
+      "bytes": 292,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "77fb8b563971aee858c48bb3d8fdaf76f3389317296d5207430b79bf1e7b040e"
+    },
+    {
+      "file": "ui_button_selected.png",
+      "width": 48,
+      "height": 48,
+      "colors": 4,
+      "bytes": 301,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "7c13bb9f001c2dac897ad67b536c5dde93c9016f1979af1343bdba65096837de"
+    },
+    {
+      "file": "ui_button_disabled.png",
+      "width": 48,
+      "height": 48,
+      "colors": 4,
+      "bytes": 303,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "904555d27d5d82d772d07a605fd304489c36988fe368b52d623d73b41d2937e2"
+    },
+    {
+      "file": "power_oracle_normal.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "power_oracle_hover.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 299,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "416c75e8a6dd404c6247d8f10562ea92ccbcc9d230e54691c86e887961c45e91"
+    },
+    {
+      "file": "power_oracle_selected.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 308,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "c3b28008ff02c83c24f4080c14e5f32853e81b03631d63df3e9373f7978ffff5"
+    },
+    {
+      "file": "power_oracle_disabled.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 313,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "bdc9ae200803bc823ff09f69ed74230589dee8b0ff22b1a508841dbca26957cf"
+    },
+    {
+      "file": "power_grace_normal.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "power_grace_hover.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 299,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "416c75e8a6dd404c6247d8f10562ea92ccbcc9d230e54691c86e887961c45e91"
+    },
+    {
+      "file": "power_grace_selected.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 308,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "c3b28008ff02c83c24f4080c14e5f32853e81b03631d63df3e9373f7978ffff5"
+    },
+    {
+      "file": "power_grace_disabled.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 313,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "bdc9ae200803bc823ff09f69ed74230589dee8b0ff22b1a508841dbca26957cf"
+    },
+    {
+      "file": "power_trial_normal.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "power_trial_hover.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 299,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "416c75e8a6dd404c6247d8f10562ea92ccbcc9d230e54691c86e887961c45e91"
+    },
+    {
+      "file": "power_trial_selected.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 308,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "c3b28008ff02c83c24f4080c14e5f32853e81b03631d63df3e9373f7978ffff5"
+    },
+    {
+      "file": "power_trial_disabled.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 313,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "bdc9ae200803bc823ff09f69ed74230589dee8b0ff22b1a508841dbca26957cf"
+    },
+    {
+      "file": "power_soul_normal.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "power_soul_hover.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 299,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "416c75e8a6dd404c6247d8f10562ea92ccbcc9d230e54691c86e887961c45e91"
+    },
+    {
+      "file": "power_soul_selected.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 308,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "c3b28008ff02c83c24f4080c14e5f32853e81b03631d63df3e9373f7978ffff5"
+    },
+    {
+      "file": "power_soul_disabled.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 313,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "bdc9ae200803bc823ff09f69ed74230589dee8b0ff22b1a508841dbca26957cf"
+    },
+    {
+      "file": "power_force_normal.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "power_force_hover.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 299,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "416c75e8a6dd404c6247d8f10562ea92ccbcc9d230e54691c86e887961c45e91"
+    },
+    {
+      "file": "power_force_selected.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 308,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "c3b28008ff02c83c24f4080c14e5f32853e81b03631d63df3e9373f7978ffff5"
+    },
+    {
+      "file": "power_force_disabled.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 313,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "power button nine-slice",
+      "nine_slice": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "sha256": "bdc9ae200803bc823ff09f69ed74230589dee8b0ff22b1a508841dbca26957cf"
+    },
+    {
+      "file": "ui_visibility_open.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "ui_visibility_closed.png",
+      "width": 64,
+      "height": 48,
+      "colors": 4,
+      "bytes": 311,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "fd741f56148d571e4d1f712f0df95a011eb7ac386c0f8416ff67d174743e9e57"
+    },
+    {
+      "file": "ui_visibility_notification.png",
+      "width": 64,
+      "height": 48,
+      "colors": 5,
+      "bytes": 339,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "nine-slice panel",
+      "nine_slice": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "sha256": "c058e5ef127b5a8131277a413c957a751567fe7b9a55599a8dacf97ad8be74aa"
+    },
+    {
+      "file": "ui_scroll_track.png",
+      "width": 8,
+      "height": 32,
+      "colors": 2,
+      "bytes": 98,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "meter/scroll repeat strip",
+      "nine_slice": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "sha256": "79f8ca9b9a5b50f495685cbed3ab1c33e4f82e65bd15f579dd4e39f43701a991"
+    },
+    {
+      "file": "ui_scroll_thumb.png",
+      "width": 8,
+      "height": 32,
+      "colors": 2,
+      "bytes": 98,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "meter/scroll repeat strip",
+      "nine_slice": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "sha256": "dfa821051ca69cac27c118ac9e366cc4a42e422d1e8f847f6268444012dded3a"
+    },
+    {
+      "file": "ui_meter_track.png",
+      "width": 32,
+      "height": 8,
+      "colors": 2,
+      "bytes": 96,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "meter/scroll repeat strip",
+      "nine_slice": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "sha256": "2710e1c49331a83f26c16460e8a6a6cb3c0efcc34bfc4aa2cd5f8993d6c1db14"
+    },
+    {
+      "file": "ui_meter_faith.png",
+      "width": 32,
+      "height": 8,
+      "colors": 2,
+      "bytes": 96,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "meter/scroll repeat strip",
+      "nine_slice": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "sha256": "68feaa9e35eec64258edd12bd8aa1537d3891422ef2586d8724f4a5e35cb3e19"
+    },
+    {
+      "file": "ui_meter_light.png",
+      "width": 32,
+      "height": 8,
+      "colors": 2,
+      "bytes": 96,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "meter/scroll repeat strip",
+      "nine_slice": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "sha256": "f28e4c82ced1e14bf28206f5dcd7b78eae74246245f3dd1cfbc8f01d41afa16f"
+    },
+    {
+      "file": "ui_meter_dark.png",
+      "width": 32,
+      "height": 8,
+      "colors": 2,
+      "bytes": 96,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "meter/scroll repeat strip",
+      "nine_slice": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "sha256": "bf04c027689b59fdeade2ea7fe73747f5ca98a547b603d06cbb325449743f455"
+    },
+    {
+      "file": "ui_focus.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 128,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "focus overlay",
+      "nine_slice": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "sha256": "0e9fbf1b2415fb6b26a1b9ef229856638378e2a20c7c97248e3716425d7f4b24"
+    },
+    {
+      "file": "ui_tooltip_arrow.png",
+      "width": 16,
+      "height": 8,
+      "colors": 2,
+      "bytes": 124,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "tooltip arrow",
+      "nine_slice": null,
+      "sha256": "5aceb66c0319012e30440523a2af9f2cd8ee9868b54c1cc3e56ae26221a6427e"
+    },
+    {
+      "file": "icon_power_oracle_64.png",
+      "width": 64,
+      "height": 64,
+      "colors": 6,
+      "bytes": 834,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "a2818e047374a05e9d243dbc6c3972908bbe19f1187c26641cd9e0dacad8f3b0"
+    },
+    {
+      "file": "icon_power_oracle_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 6,
+      "bytes": 480,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "3bf547952e80e4fd18a8e0948e2de63438c93c4f992c7a5acdea4c19840b1766"
+    },
+    {
+      "file": "icon_power_grace_64.png",
+      "width": 64,
+      "height": 64,
+      "colors": 6,
+      "bytes": 851,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "37d14701046c13bb051e2bebf5d29360322fbf2ebc0bf64014222e8ac28757c9"
+    },
+    {
+      "file": "icon_power_grace_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 6,
+      "bytes": 482,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "286c2969fc5ffac7f6e42c1c759973c46e54a78bbbe5c4d5f0816c0493842fd0"
+    },
+    {
+      "file": "icon_power_trial_64.png",
+      "width": 64,
+      "height": 64,
+      "colors": 6,
+      "bytes": 774,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "e41354fa9a4d85652fe9429e46457cfaa725aee7d59329e1e728b57dd2a18367"
+    },
+    {
+      "file": "icon_power_trial_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 6,
+      "bytes": 465,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "cf649de7d0d214cb3ad987d80edad26a5c6e461fa4b14a7b6113f9a5e76fc732"
+    },
+    {
+      "file": "icon_power_soul_64.png",
+      "width": 64,
+      "height": 64,
+      "colors": 6,
+      "bytes": 822,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "96011922abcf0b300c9166018b2105765b38ae1d50636164f7b6aec639a0ab72"
+    },
+    {
+      "file": "icon_power_soul_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 6,
+      "bytes": 484,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "a41bfefb2709b940e1a67cd0ab7efee86a4e70d62a393b5ca881783e91f02882"
+    },
+    {
+      "file": "icon_power_force_64.png",
+      "width": 64,
+      "height": 64,
+      "colors": 6,
+      "bytes": 916,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "5e5afda0b9f48fa43f4e1d440d1f820ae07ebcaf88f9257c0fd3b20ed70b4e29"
+    },
+    {
+      "file": "icon_power_force_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 6,
+      "bytes": 532,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "3789c0603b9f1fd1df607e4130663bd0e983511b9e053a0751963bfb399e9921"
+    },
+    {
+      "file": "icon_faith_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 179,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "fe9598ab289d62a69640c7cfab747fdfa2d1771a174c88a84e431b3d1c704f0e"
+    },
+    {
+      "file": "icon_eye_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 3,
+      "bytes": 219,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "bd62851976e6c346723548910edde258ef19020c1f14cfca78e1c5397b440239"
+    },
+    {
+      "file": "icon_awe_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 3,
+      "bytes": 235,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "e7365e839089ce11853f0faf038ea9c452081800670a1929d9987a9617917262"
+    },
+    {
+      "file": "icon_light_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 182,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "5889b4f1ad9947355cd6cbe83bd4245960f27aefd7494e380dc52de649972065"
+    },
+    {
+      "file": "icon_dark_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 186,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "b9b263da6acf53fe3a8f369c1c2299cd90eab1662bb28fcc121dca5c939133c4"
+    },
+    {
+      "file": "icon_spring_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 179,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "fe9598ab289d62a69640c7cfab747fdfa2d1771a174c88a84e431b3d1c704f0e"
+    },
+    {
+      "file": "icon_summer_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 182,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "5889b4f1ad9947355cd6cbe83bd4245960f27aefd7494e380dc52de649972065"
+    },
+    {
+      "file": "icon_autumn_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 3,
+      "bytes": 241,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "fc74c3647200d49b96d3809a8c48dfaedecaaeb1b7df94500a632a1a17a1c607"
+    },
+    {
+      "file": "icon_winter_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 221,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "0fade4a717848b58631f11c06c68c499b7f93791b9df346bf8da05212a799368"
+    },
+    {
+      "file": "icon_speed_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 181,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "879c7e46e8c82afecf06f74c626d05546ed13f57dbbaacc276ee116736b47586"
+    },
+    {
+      "file": "icon_pause_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 122,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "143bfa4832a2a7e61d6df9d0703a22078206c4750f5678ca5d4b2e1b9f04e62d"
+    },
+    {
+      "file": "icon_ui_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 140,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "d7c6ddd672fbb18c9bbfcb20b63f535d9fe5163aba493d94363e03f859dc8c22"
+    },
+    {
+      "file": "icon_menu_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 115,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "b7b6f3fc8da746a35832c07e187f2a5383d49a379a21f4f16ec81b84d65816dc"
+    },
+    {
+      "file": "icon_map_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 179,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "cf2fcb0e1d4a89bbb4c22dca4373f218fab22be0af58686a77d642e0a86eb12c"
+    },
+    {
+      "file": "icon_warning_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 3,
+      "bytes": 235,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "e7365e839089ce11853f0faf038ea9c452081800670a1929d9987a9617917262"
+    },
+    {
+      "file": "icon_hero_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 3,
+      "bytes": 189,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "3daf714003091235d57ec32fe21efbb537a22681d755caa3f17f7e54125ec16b"
+    },
+    {
+      "file": "icon_close_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 210,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "fdbfe308130f8e8441ba254a5a68e7f97790b94c0306f7669cffec64e341fa7c"
+    },
+    {
+      "file": "icon_check_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 200,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "8589680e3729adcae75c3beab0bfdfc67df4a009390efbc0a389db9ef8d25014"
+    },
+    {
+      "file": "icon_arrow_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 176,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "8f6518472d05088ce943bed3365495d5e78b731318b57ed439d9dceb764ccca3"
+    },
+    {
+      "file": "icon_bell_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 166,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "5fce9c76d84a5bed071f1ec51163af641596be04b73802499d9b81d92c33ec89"
+    },
+    {
+      "file": "icon_balance_32.png",
+      "width": 32,
+      "height": 32,
+      "colors": 2,
+      "bytes": 190,
+      "alpha": [
+        0,
+        255
+      ],
+      "role": "native pixel glyph; no text",
+      "nine_slice": null,
+      "sha256": "115c27040daefac46dd093b37857f062b6b298e7a52a6af70142f371ec923488"
+    }
+  ]
+}
