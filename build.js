@@ -13,10 +13,13 @@ if(fs.existsSync(ADIR)){
     for(const f of fs.readdirSync(d).filter(f=>f.endsWith('.png')).sort()){ if(sub==='text'&&/^txt_title_/.test(f)) continue; /* same picture as logo/ */ assetKeys.push(sub+'/'+f); } }
 }
 const assetsJs='const ASSETS = {\n'+assetKeys.map(k=>JSON.stringify(k)+': "data:image/png;base64,'+fs.readFileSync(path.join(ADIR,k)).toString('base64')+'"').join(',\n')+'\n};\n';
+// UI v5 (docs/ui_v5/implementation.md §6-7): runtime PNGs of assets/design/ui_v5 only, own namespace UI_V5_ASSETS (no docs / mockups / sources).
+const UDIR=path.join(__dirname,'assets','design','ui_v5'); const v5Keys=fs.existsSync(UDIR)?fs.readdirSync(UDIR).filter(f=>f.endsWith('.png')).sort():[];
+const v5Js='const UI_V5_ASSETS = {\n'+v5Keys.map(f=>JSON.stringify(f.replace(/\.png$/,''))+': "data:image/png;base64,'+fs.readFileSync(path.join(UDIR,f)).toString('base64')+'"').join(',\n')+'\n};\n';
 const head=fs.existsSync(path.join(dir,'head.html'))?fs.readFileSync(path.join(dir,'head.html'),'utf8'):null;
 if(head){
-  const js='/* ---- ASSETS (build.js) ---- */\n'+assetsJs+cat(files);
+  const js='/* ---- ASSETS (build.js) ---- */\n'+assetsJs+v5Js+cat(files);
   fs.writeFileSync(path.join(__dirname,'index.html'),head.replace('/*__SCRIPT__*/',()=>js));
-  console.log('index.html',fs.statSync(path.join(__dirname,'index.html')).size,'assets',assetKeys.length,Math.round(assetsJs.length/1024)+'KB');
+  console.log('index.html',fs.statSync(path.join(__dirname,'index.html')).size,'assets',assetKeys.length,Math.round(assetsJs.length/1024)+'KB','ui_v5',v5Keys.length,Math.round(v5Js.length/1024)+'KB');
 }
 console.log('built sim',simFiles.length,'files');

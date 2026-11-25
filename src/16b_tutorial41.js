@@ -72,7 +72,7 @@ Tut.build = function () {
   T.steps = [
     { id: 'l1card', les: 1, art: 'god', text: () => t('l1_card'), next: true, noHole: true },
     { id: 'l1a', les: 1, art: 'pray', text: () => t('l1_a'), target: () => T.humanRect(), cond: () => Game.selId === T.hid },
-    { id: 'l1b', les: 1, text: () => T.wrong ? fmt(t('l1_wrong'), { rec: recN() }) : fmt(t('l1_b'), { rec: recN() }), target: () => T.rect(E.powBtns[rec().idx]), cond: () => Game.power === rec().pid || G.stats.casts > 0 },
+    { id: 'l1b', les: 1, text: () => T.wrong ? fmt(t('l1_wrong'), { rec: recN() }) : fmt(t('l1_b'), { rec: recN() }), target: () => T.rect((E.v5powBtns || E.powBtns)[rec().idx]), cond: () => Game.power === rec().pid || G.stats.casts > 0 },
     { id: 'l1c', les: 1, text: () => Game.modals.indexOf('menu') >= 0 ? t('l1_dir') : t('l1_c'), target: () => T.humanRect(), cond: () => G.stats.casts > 0, back: () => !Game.power && G.stats.casts === 0 && Game.modals.indexOf('menu') < 0 },
     { id: 'l1done', les: 1, text: () => t('l1_done'), target: () => T.rect(E.faithWin), next: true, stamp: true },
     { id: 'l2card', les: 2, art: 'shield', text: () => t('l2_card'), next: true, noHole: true },

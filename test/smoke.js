@@ -15,7 +15,7 @@ const out = [];
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const shot = async n => { await pg.screenshot({ path: path.join(__dirname, 'shots', lang + '_' + n + '.png') }); };
   const ev = f => pg.evaluate(f);
-  const clickBtn = txt => pg.evaluate(t => { const els = Array.from(document.querySelectorAll('#modal .btn,#modal .card,#ui .btn')); const e = els.find(x => x.textContent.indexOf(t) >= 0 && x.offsetParent !== null); if (e) { e.click(); return true; } return false; }, txt);
+  const clickBtn = txt => pg.evaluate(t => { const els = Array.from(document.querySelectorAll('#modal .btn,#modal .card,#ui .btn,#modal .v5b,#ui .v5b')); const e = els.find(x => x.textContent.indexOf(t) >= 0 && x.offsetParent !== null); if (e) { e.click(); return true; } return false; }, txt);
   const key = async k => { await pg.keyboard.press(k); await wait(120); };
   const state = () => ev(() => ({ scene: __RT.ui.Game.scene, modals: __RT.ui.Game.modals.join(','), tick: __RT.G().tick, faith: Math.round(__RT.G().faith), casts: __RT.G().stats.casts }));
   const ck = async (name, cond, extra) => { out.push((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' ' + extra : '')); };
@@ -69,7 +69,7 @@ const out = [];
   // eye
   await key('x'); const pe = await ev(() => __RT.ui.Game.power); await ck('X eye mode', pe === 'eye'); await key('Escape'); 
   // speed buttons
-  await clickBtn('×64'); sp = await ev(() => __RT.ui.Game.speedIdx); await ck('speed button ×64', sp === 3);
+  await ev(() => __RT.ui.UI.el.v5speed.click()); await clickBtn('×64'); sp = await ev(() => __RT.ui.Game.speedIdx); /* UI v5: the speed button opens the ×1..×64 choices */ await ck('speed button ×64', sp === 3);
   await ev(() => { __RT.ui.Game.speedIdx = 1; });
   // zoom screenshots after longer run
   await ev(() => { __RT.ui.Game.speedIdx = 3; }); await wait(12000); await ev(() => { __RT.ui.Game.speedIdx = 1; });
