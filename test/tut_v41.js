@@ -39,10 +39,10 @@ const out = []; const ck = (n, c, x) => out.push((c ? 'PASS ' : 'FAIL ') + n + (
   for (let ph = 0; ph < 3; ph++) { await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn.big')).find(x => !x.classList.contains('dis') && x.style.color); if (b) b.click(); }); await wait(350); }
   ck('L3 helping always wins', await pg.evaluate(() => { const B = __RT.G().battle; return !!B && B.done && ['crush', 'win', 'pyrrhic'].indexOf(B.grade) >= 0; }), await pg.evaluate(() => __RT.G().battle && __RT.G().battle.grade)); await shot(pg, 'l3_report');
   ck('L3 report shows the god\'s help', await pg.evaluate(() => /勝率 \+|勝率 \+/.test(document.querySelector('#modal').textContent)));
-  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn.big')).pop(); b.click(); }); ck('L3 hero card step', await until(pg, 'l3c', 5000)); await shot(pg, 'l3_hero'); await clickNext(pg);
+  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .v5b')).pop(); b.click(); }); /* UI v5 report: 村へ戻る */ ck('L3 hero card step', await until(pg, 'l3c', 5000)); await shot(pg, 'l3_hero'); await clickNext(pg);
   ck('graduation council', await until(pg, 'gra', 3000)); await wait(300);
-  await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .card')); cs[0].click(); }); await wait(120); await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .card')); cs[1].click(); }); await wait(120);
-  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn.big')).find(x => !x.classList.contains('dis')); b.click(); });
+  await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .v5choice')); cs[0].click(); }); await wait(120); await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .v5choice')); cs[1].click(); }); await wait(120); /* UI v5 council */
+  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal footer .v5b')).pop(); b.click(); });
   ck('graduation card', await until(pg, 'grcard', 3000)); await shot(pg, 'graduate');
   await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#tut .btn.on')).pop(); b.click(); }); await wait(900);
   ck('real game after graduation (easy mode)', await pg.evaluate(() => !__RT.G().tutMode && __RT.G().easy === true && __RT.G().humans.filter(h => h.alive).length > 30));

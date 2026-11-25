@@ -22,7 +22,7 @@ const out = []; const ck = (n, c, x) => out.push((c ? 'PASS ' : 'FAIL ') + n + (
   ck('lost battle ruins buildings', res.ruined >= 2, JSON.stringify(res));
   ck('report shows ruined thumbnails', await pg.evaluate(() => document.querySelectorAll('#modal canvas').length >= 2)); await pg.screenshot({ path: path.join(OUT, 'c_report_' + lang + '.png') });
   // close the report -> tour starts
-  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn.big')).pop(); b.click(); }); await wait(700);
+  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .v5b')).pop(); b.click(); }); await wait(700); /* UI v5 report: 村へ戻る */
   ck('tour started', await pg.evaluate(() => !!__RT.ui.UI.tour)); const sum = await pg.evaluate(() => __RT.ui.UI.tourEl ? __RT.ui.UI.tourEl.textContent : ''); ck('damage summary shown', /死者/.test(sum), sum.slice(0, 60));
   const cams = []; for (let i = 0; i < 4; i++) { cams.push(await pg.evaluate(() => [Math.round(__RT.ui.Render.cam.x), Math.round(__RT.ui.Render.cam.y)])); await pg.screenshot({ path: path.join(OUT, 'c_tour' + i + '_' + lang + '.png') }); await wait(1500); }
   ck('camera moves between ruins', new Set(cams.map(c => c.join(','))).size >= 2, JSON.stringify(cams));

@@ -14,8 +14,8 @@ const out = []; const ck = (n, c, x) => out.push((c ? 'PASS ' : 'FAIL ') + n + (
   let s = await st(); ck('council opens in the first autumn', s.modals === 'council', JSON.stringify(s)); await pg.screenshot({ path: path.join(OUT, 'v4_council_' + lang + '.png') });
   const t0 = s.tick; await wait(800); ck('time frozen during council', (await st()).tick === t0);
   // pick two decrees and confirm
-  await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .card')); cs[0].click(); }); await wait(150); await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .card')); cs[2].click(); }); await wait(150);
-  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn')).find(x => /決定/.test(x.textContent)); b.click(); }); await wait(400);
+  await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .v5choice')); cs[0].click(); }); await wait(150); await pg.evaluate(() => { const cs = Array.from(document.querySelectorAll('#modal .v5choice')); cs[2].click(); }); await wait(150); /* UI v5 council */
+  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn,#modal .v5b')).find(x => /決定|確定/.test(x.textContent)); b.click(); }); await wait(400);
   s = await st(); ck('council closed, decrees set', s.modals === '' && !s.council, JSON.stringify(s)); ck('2 decrees active', await pg.evaluate(() => __RT.G().decrees.filter(d => d.state === 'active').length === 2));
   // next-assault bar visible
   const bar = await pg.evaluate(() => { const w = __RT.ui.UI.el.warBar; return w ? w.textContent : ''; }); ck('next-assault bar shows prediction', /%/.test(bar), bar);
@@ -31,7 +31,7 @@ const out = []; const ck = (n, c, x) => out.push((c ? 'PASS ' : 'FAIL ') + n + (
   const tb = s.tick; await wait(600); ck('time frozen in battle', (await st()).tick === tb);
   for (let ph = 0; ph < 3; ph++) { await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn')).filter(x => !x.classList.contains('dis')); b[0].click(); }); await wait(400); if (ph === 1) await pg.screenshot({ path: path.join(OUT, 'v4_battle2_' + lang + '.png') }); }
   s = await st(); ck('battle finished after 3 phases', s.battle && s.battle.done, JSON.stringify(s)); await pg.screenshot({ path: path.join(OUT, 'v4_report_' + lang + '.png') });
-  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn')).pop(); b.click(); }); await wait(500);
+  await pg.evaluate(() => { const b = Array.from(document.querySelectorAll('#modal .btn,#modal .v5b')).pop(); b.click(); }); await wait(500); /* v5 report: the last button is 村へ戻る */
   s = await st(); ck('report closed, game continues', s.modals === '' && !s.battle, JSON.stringify(s));
   for (let i = 0; i < 40 && await pg.evaluate(() => !!__RT.ui.UI.tour); i++) await wait(500); // after a lost battle the damage tour runs first (C)
   const t1 = (await st()).tick; await wait(1500); ck('time runs again', (await st()).tick > t1);
